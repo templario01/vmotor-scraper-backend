@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Brand {
+  id        Int       @id @default(autoincrement())
+  uuid      String    @unique @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  models    Model[]
+  vehicles  Vehicle[]
+
+  @@map("brand")
+}
+
+model Model {
+  id        Int       @id @default(autoincrement())
+  uuid      String    @default(cuid())
+  name      String    
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  Brand     Brand?    @relation(fields: [brandId], references: [id])
+  brandId   Int?
+  Vehicle   Vehicle[]
+
+  @@unique([brandId, name])
+  @@map("model")
+}
+
+model Website {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(cuid())
+  name      String
+  url       String
+  status    Status   @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  Vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
+  vehicleId Int?
+
+  @@map("website")
+}
+
+model Vehicle {
+  id        Int       @id @default(autoincrement())
+  uuid      String    @unique @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  model     Model?    @relation(fields: [modelId], references: [id])
+  modelId   Int?
+  websites  Website[]
+  status    Status    @default(ACTIVE)
+  year      Int
+  Brand     Brand?    @relation(fields: [brandId], references: [id])
+  brandId   Int?
+
+  @@map("vehicle")
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
