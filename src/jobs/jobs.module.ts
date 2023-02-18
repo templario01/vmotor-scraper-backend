@@ -3,9 +3,16 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { BrandsSyncService } from './services/brands-sync.service';
 import { HttpModule } from '@nestjs/axios';
 import { PersistenceModule } from '../persistence/persistence.module';
+import { EnvConfigModule } from '../config/env-config.module';
+import { NeoAutoSyncService } from './services/neo-auto-sync.service';
 
 @Module({
-  imports: [PersistenceModule, HttpModule, ScheduleModule.forRoot()],
-  providers: [BrandsSyncService],
+  imports: [
+    EnvConfigModule,
+    PersistenceModule,
+    HttpModule,
+    ScheduleModule.forRoot(),
+  ],
+  providers: [BrandsSyncService, NeoAutoSyncService],
 })
 export class JobsModule {}

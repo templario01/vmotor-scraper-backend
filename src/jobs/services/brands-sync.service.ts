@@ -3,20 +3,24 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import * as cheerio from 'cheerio';
 import * as puppeteer from 'puppeteer';
 import { BrandsRepository } from '../../persistence/repositories/brands.repository';
-
-const NEOAUTO_URL = 'https://neoauto.com/';
+import { EnvConfigService } from '../../config/env-config.service';
 
 @Injectable()
 export class BrandsSyncService {
   private readonly logger: Logger;
-  constructor(private readonly brandsRepository: BrandsRepository) {
+  constructor(
+    private readonly brandsRepository: BrandsRepository,
+    private readonly config: EnvConfigService,
+  ) {
     this.logger = new Logger(BrandsSyncService.name);
   }
 
   @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
   async syncBrands() {
+    const NEOAUTO_URL = this.config.neoauto().url;
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
+
     await page.goto(NEOAUTO_URL, { timeout: 0 });
     let html = await page.content();
     let $ = cheerio.load(html);
