@@ -25,7 +25,7 @@ model Brand {
 model Model {
   id        Int       @id @default(autoincrement())
   uuid      String    @default(cuid())
-  name      String    
+  name      String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
   Brand     Brand?    @relation(fields: [brandId], references: [id])
@@ -37,32 +37,45 @@ model Model {
 }
 
 model Website {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(cuid())
-  name      String
-  url       String
-  status    Status   @default(ACTIVE)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  Vehicle   Vehicle? @relation(fields: [vehicleId], references: [id])
-  vehicleId Int?
+  id        Int       @id @default(autoincrement())
+  uuid      String    @unique @default(cuid())
+  name      String    @unique
+  url       String    @unique
+  status    Status    @default(ACTIVE)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  Vehicle   Vehicle[]
 
   @@map("website")
 }
 
 model Vehicle {
-  id        Int       @id @default(autoincrement())
-  uuid      String    @unique @default(cuid())
-  name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-  model     Model?    @relation(fields: [modelId], references: [id])
-  modelId   Int?
-  websites  Website[]
-  status    Status    @default(ACTIVE)
-  year      Int
-  Brand     Brand?    @relation(fields: [brandId], references: [id])
-  brandId   Int?
+  id             Int      @id @default(autoincrement())
+  uuid           String   @unique @default(cuid())
+  externalId     String?  @unique
+  url            String   @unique
+  description    String?
+  year           Int
+  transmission   String?
+  mileage        Decimal? @default(0) @db.Decimal(12, 2)
+  engineType     String?
+  enginePowerRpm Int?
+  enginePowerHp  Int?
+  engineFuelType String?
+  speeds         Int?
+  frontImage     String?
+  images         String?
+  usdPrice       Decimal?  @default(0) @db.Decimal(12, 2)
+  penPrice       Decimal?  @default(0) @db.Decimal(12, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  model          Model?   @relation(fields: [modelId], references: [id])
+  modelId        Int?
+  website        Website? @relation(fields: [websiteId], references: [id])
+  websiteId      Int?
+  status         Status   @default(ACTIVE)
+  Brand          Brand?   @relation(fields: [brandId], references: [id])
+  brandId        Int?
 
   @@map("vehicle")
 }

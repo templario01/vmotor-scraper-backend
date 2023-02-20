@@ -7,5 +7,16 @@ async function bootstrap() {
 
   const config = app.get(ConfigService);
   await app.listen(config.get('PORT'));
+
+  function handleShutdown() {
+    console.log('Closing server gracefully...');
+    app.close().then(() => {
+      console.log('Server closed.');
+      process.exit(0);
+    });
+  }
+
+  process.on('SIGINT', handleShutdown);
+  process.on('SIGTERM', handleShutdown);
 }
 bootstrap();
