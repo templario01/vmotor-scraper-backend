@@ -7,6 +7,27 @@ import { CreateVehicleDto } from '../../application/vehicles/dtos/requests/creat
 export class VehicleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findFirst(brand: string, model: string) {
+    return this.prisma.vehicle.findFirst({
+      where: {
+        AND: [
+          {
+            description: {
+              contains: brand,
+              mode: 'insensitive',
+            },
+          },
+          {
+            description: {
+              contains: model,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      },
+    });
+  }
+
   async upsert({
     vehicle,
     brandId,
