@@ -13,20 +13,24 @@ export class VehicleRepository {
     modelId,
     websiteId,
   }: CreateVehicleDto): Promise<Vehicle> {
-    return this.prisma.vehicle.upsert({
-      where: {
-        externalId: vehicle?.externalId,
-      },
-      create: {
-        ...vehicle,
-        brandId,
-        websiteId,
-      },
-      update: {
-        ...vehicle,
-        modelId,
-        websiteId,
-      },
-    });
+    try {
+      return this.prisma.vehicle.upsert({
+        where: {
+          externalId: vehicle?.externalId,
+        },
+        create: {
+          ...vehicle,
+          brandId,
+          websiteId,
+        },
+        update: {
+          ...vehicle,
+          modelId,
+          websiteId,
+        },
+      });
+    } catch (error) {
+      return null;
+    }
   }
 }

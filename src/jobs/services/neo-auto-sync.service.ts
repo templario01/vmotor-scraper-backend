@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import * as puppeteer from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/enums/vehicle.enums';
 import { VehicleSyncDto } from '../../application/vehicles/dtos/requests/neoauto.dto';
@@ -40,15 +41,16 @@ export class NeoAutoSyncService {
     this.NEOAUTO_URL = this.config.neoauto().url;
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
+  @Cron('0 2 * * 1')
   async syncNewCars(): Promise<void> {
+    const vehicleCondition = NeoautoVehicleConditionEnum.NEW;
     const hostname = new URL(this.NEOAUTO_URL).hostname;
     const [name] = hostname.split('.');
+
     const currentWebsite = await this.websiteRepository.findByName(name);
-    const vehicleCondition = NeoautoVehicleConditionEnum.NEW;
+    const currentPages = await this.getPages(vehicleCondition);
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
-    const currentPages = await this.getPages(vehicleCondition);
 
     for (let index = 1; index <= currentPages; index++) {
       await page.goto(
@@ -145,7 +147,9 @@ export class NeoAutoSyncService {
 
     const newVehicle = await this.vehicleRepository.upsert(vehicleInfo);
 
-    this.logger.verbose(`New vehicle synced: ${newVehicle.description}`);
+    if (newVehicle) {
+      this.logger.verbose(`New vehicle synced: ${newVehicle?.description}`);
+    }
   }
 
   async getPages(condition: string): Promise<number> {
