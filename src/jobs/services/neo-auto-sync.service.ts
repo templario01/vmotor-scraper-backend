@@ -41,7 +41,7 @@ export class NeoAutoSyncService {
   }
 
   @Cron(CronExpression.EVERY_MINUTE)
-  async syncNewCars() {
+  async syncNewCars(): Promise<void> {
     const hostname = new URL(this.NEOAUTO_URL).hostname;
     const [name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
@@ -85,7 +85,7 @@ export class NeoAutoSyncService {
     await browser.close();
   }
 
-  async syncInfoForNewVehicle(params: SyncNeoautoPageParams) {
+  async syncInfoForNewVehicle(params: SyncNeoautoPageParams): Promise<void> {
     const { browser, cheerioInstance$, mainHtml, websiteId } = params;
     const frontImage = cheerioInstance$(mainHtml)
       .find(HTML_QUERY_IMAGE)
@@ -148,7 +148,7 @@ export class NeoAutoSyncService {
     this.logger.verbose(`New vehicle synced: ${newVehicle.description}`);
   }
 
-  async getPages(condition: string) {
+  async getPages(condition: string): Promise<number> {
     let pages = 1;
     const NEOAUTO_URL = this.config.neoauto().url;
     const browser = await puppeteer.launch();
