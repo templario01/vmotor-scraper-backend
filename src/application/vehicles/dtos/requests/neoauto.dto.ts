@@ -1,17 +1,52 @@
-export interface NeoAutoDto {
-  externalId: string;
-  url: string;
-  description?: string;
-  year?: number;
-  transmission?: string;
-  mileage?: number;
-  engineType?: string;
-  enginePowerRpm?: number;
-  enginePowerHp?: number;
-  engineFuelType?: string;
-  speeds?: number;
-  frontImage?: string;
-  images?: string;
-  usdPrice?: number;
-  penPrice?: number;
+import { Exclude, Expose } from 'class-transformer';
+
+@Exclude()
+export class VehicleSyncDto {
+  @Expose()
+  readonly externalId: string;
+
+  @Expose()
+  readonly url: string;
+
+  @Expose()
+  readonly description?: string;
+
+  @Expose()
+  readonly year?: number;
+
+  @Expose()
+  readonly transmission?: string;
+
+  @Expose()
+  readonly mileage?: number;
+
+  @Expose()
+  readonly engineType?: string;
+
+  @Expose()
+  readonly enginePowerRpm?: string;
+
+  @Expose()
+  readonly enginePowerHp?: string;
+
+  @Expose()
+  readonly engineFuelType?: string;
+
+  @Expose()
+  readonly speeds?: number;
+
+  @Expose()
+  readonly frontImage?: string;
+
+  @Expose()
+  readonly images?: string;
+
+  @Expose()
+  readonly usdPrice?: number;
+
+  @Expose()
+  readonly penPrice?: number;
+
+  @Expose()
+  readonly doors?: number;
 }

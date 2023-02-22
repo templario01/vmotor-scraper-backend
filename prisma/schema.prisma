@@ -28,9 +28,9 @@ model Model {
   name      String
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
-  Brand     Brand?    @relation(fields: [brandId], references: [id])
+  brand     Brand?    @relation(fields: [brandId], references: [id])
   brandId   Int?
-  Vehicle   Vehicle[]
+  vehicle   Vehicle[]
 
   @@unique([brandId, name])
   @@map("model")
@@ -44,7 +44,7 @@ model Website {
   status    Status    @default(ACTIVE)
   createdAt DateTime  @default(now())
   updatedAt DateTime  @default(now()) @updatedAt
-  Vehicle   Vehicle[]
+  vehicle   Vehicle[]
 
   @@map("website")
 }
@@ -55,18 +55,19 @@ model Vehicle {
   externalId     String?  @unique
   url            String   @unique
   description    String?
-  year           Int
+  year           Int?
   transmission   String?
   mileage        Decimal? @default(0) @db.Decimal(12, 2)
   engineType     String?
-  enginePowerRpm Int?
-  enginePowerHp  Int?
+  enginePowerRpm String?
+  enginePowerHp  String?
   engineFuelType String?
   speeds         Int?
   frontImage     String?
   images         String?
-  usdPrice       Decimal?  @default(0) @db.Decimal(12, 2)
-  penPrice       Decimal?  @default(0) @db.Decimal(12, 2)
+  doors          Int?
+  usdPrice       Decimal? @default(0) @db.Decimal(12, 2)
+  penPrice       Decimal? @default(0) @db.Decimal(12, 2)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @default(now()) @updatedAt
   model          Model?   @relation(fields: [modelId], references: [id])
@@ -74,7 +75,7 @@ model Vehicle {
   website        Website? @relation(fields: [websiteId], references: [id])
   websiteId      Int?
   status         Status   @default(ACTIVE)
-  Brand          Brand?   @relation(fields: [brandId], references: [id])
+  brand          Brand?   @relation(fields: [brandId], references: [id])
   brandId        Int?
 
   @@map("vehicle")

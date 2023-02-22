@@ -3,8 +3,14 @@ import { PrismaService } from './services/prisma.service';
 import { BrandsRepository } from './repositories/brands.repository';
 import { ModelsRepository } from './repositories/models.repository';
 import { WebsiteRepository } from './repositories/website.repository';
+import { VehicleRepository } from './repositories/vehicle.repository';
 
-const repositories = [BrandsRepository, ModelsRepository, WebsiteRepository];
+const repositories = [
+  BrandsRepository,
+  ModelsRepository,
+  WebsiteRepository,
+  VehicleRepository,
+];
 @Module({
   imports: [],
   providers: [PrismaService, ...repositories],

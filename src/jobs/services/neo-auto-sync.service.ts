@@ -4,8 +4,26 @@ import * as puppeteer from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/enums/vehicle.enums';
-import { NeoAutoDto } from '../../application/vehicles/dtos/requests/neoauto.dto';
+import { VehicleSyncDto } from '../../application/vehicles/dtos/requests/neoauto.dto';
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
+import {
+  getVehicleInfoByNeoauto,
+  parsePrice,
+} from '../../shared/utils/neoauto.utils';
+import { plainToInstance } from 'class-transformer';
+import { BrandsRepository } from '../../persistence/repositories/brands.repository';
+import { ModelsRepository } from '../../persistence/repositories/models.repository';
+import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
+import { CreateVehicleDto } from '../../application/vehicles/dtos/requests/create-vehicle.dto';
+import {
+  HTML_QUERY_DESCRIPTION,
+  HTML_QUERY_IMAGE,
+  HTML_QUERY_MOTOR,
+  HTML_QUERY_TRANSMISSION,
+  HTML_QUERY_YEAR,
+  HTML_VEHICLE_VIEW,
+} from '../../application/vehicles/constants/neoauto.constants';
+import { SyncNeoautoPageParams } from '../../application/vehicles/dtos/requests/neoauto-sync.dto';
 
 @Injectable()
 export class NeoAutoSyncService {
@@ -14,6 +32,9 @@ export class NeoAutoSyncService {
   constructor(
     private readonly config: EnvConfigService,
     private readonly websiteRepository: WebsiteRepository,
+    private readonly brandRepository: BrandsRepository,
+    private readonly modelRepository: ModelsRepository,
+    private readonly vehicleRepository: VehicleRepository,
   ) {
     this.logger = new Logger(NeoAutoSyncService.name);
     this.NEOAUTO_URL = this.config.neoauto().url;
@@ -40,87 +61,91 @@ export class NeoAutoSyncService {
 
       const vehicleBlock = $('.c-results-concessionaire');
 
-      await Promise.all(
-        vehicleBlock.map(async (_, element) => {
-          const price =
-            $(element)
-              .find(
-                'div.c-results-concessionaire-content div.c-results-concessionaire__contact ' +
-                  'p.c-results-concessionaire__price strong.c-results-concessionaire__price--black',
-              )
-              .html() || 'consultar';
+      for (let i = 0; i < vehicleBlock.length; i++) {
+        const element = vehicleBlock[i];
+        const price =
+          $(element)
+            .find(
+              'div.c-results-concessionaire-content div.c-results-concessionaire__contact ' +
+                'p.c-results-concessionaire__price strong.c-results-concessionaire__price--black',
+            )
+            .html() || 'consultar';
 
-          if (!price.toLowerCase().includes('consultar')) {
-            await this.syncInfoForNewVehicle(
-              browser,
-              $,
-              element,
-              currentWebsite.id,
-            );
-          }
-        }),
-      );
+        if (!price.toLowerCase().includes('consultar')) {
+          await this.syncInfoForNewVehicle({
+            browser,
+            cheerioInstance$: $,
+            mainHtml: element,
+            websiteId: currentWebsite.id,
+          });
+        }
+      }
     }
 
     await browser.close();
   }
 
-  async syncInfoForNewVehicle(
-    browser: puppeteer.Browser,
-    $: cheerio.CheerioAPI,
-    element: cheerio.Element,
-    websiteId?: number,
-  ) {
-    const frontImage = $(element)
-      .find(
-        'div.c-results-concessionaire__slider div.c-gallery figure.c-gallery__images a img',
-      )
+  async syncInfoForNewVehicle(params: SyncNeoautoPageParams) {
+    const { browser, cheerioInstance$, mainHtml, websiteId } = params;
+    const frontImage = cheerioInstance$(mainHtml)
+      .find(HTML_QUERY_IMAGE)
       .attr('src');
-    const vehicleURL = $(element)
+    const vehicleURL = cheerioInstance$(mainHtml)
       .find('a.c-results-concessionaire__link')
       .attr('href');
 
-    const parts = vehicleURL.split('/');
-    const lastPart = parts[parts.length - 1];
-    const regex = /^([a-z]+)-([\w-]+)-(\d+)$/i;
-    const [, brand, model, id] = lastPart.match(regex) || [];
-
-    const vehicle: NeoAutoDto = {
-      externalId: id,
-      frontImage: frontImage.trim(),
-      url: `${this.NEOAUTO_URL}/${vehicleURL.trim()}`,
-    };
-
-    console.log(vehicle, brand, model);
+    const { brand, model, id } = getVehicleInfoByNeoauto(vehicleURL);
 
     const vehiclePage = await browser.newPage();
     await vehiclePage.goto(`${this.NEOAUTO_URL}/${vehicleURL}`, {
       timeout: 0,
     });
+    await vehiclePage.waitForSelector(HTML_VEHICLE_VIEW);
     const vehicleHtml = await vehiclePage.content();
     const $vehicle = cheerio.load(vehicleHtml);
 
-    const vehicleDescription = $vehicle(
-      'div.c-slider-ficha-detail div.c-slider-ficha-detail__content-child h1.c-slider-ficha-detail__title',
+    const vehicleDescription = $vehicle(HTML_QUERY_DESCRIPTION);
+    const vehicleYear = $vehicle(HTML_QUERY_YEAR);
+    const vehiclePrice = vehicleYear.parent().next().find('strong');
+    const speeds = $vehicle(HTML_QUERY_TRANSMISSION).next();
+    const transmission = $vehicle(HTML_QUERY_TRANSMISSION).next().next();
+    const doors = $vehicle(HTML_QUERY_TRANSMISSION).next().next().next();
+    const engineType = $vehicle(HTML_QUERY_MOTOR);
+    const engineFuelType = $vehicle(HTML_QUERY_MOTOR).nextAll().eq(3);
+    const enginePowerRpm = $vehicle(HTML_QUERY_MOTOR).nextAll().eq(4);
+    const enginePowerHp = $vehicle(HTML_QUERY_MOTOR).nextAll().eq(5);
+
+    const { id: brandId } = await this.brandRepository.findByName(brand);
+    const { id: modelId } = await this.modelRepository.findByNameAndBrandId(
+      model,
+      brandId,
     );
-    const vehicleYear = $vehicle('ul.c-table__column li.c-table__cell strong');
-    const vehiclePrice = vehicleYear.next();
-    const vehiclePriceParsed = vehiclePrice.html().trim().toLowerCase();
 
-    vehicle.year = parseInt(vehicleYear.html().trim());
-    vehicle.description = vehicleDescription.html().trim();
+    const vehicleInfo = plainToInstance(CreateVehicleDto, {
+      vehicle: plainToInstance(VehicleSyncDto, {
+        mileage: 0,
+        externalId: id,
+        frontImage: frontImage.trim(),
+        url: `${this.NEOAUTO_URL}/${vehicleURL.trim()}`,
+        usdPrice: parsePrice(vehiclePrice.html()),
+        description: vehicleDescription.html(),
+        transmission: transmission.html(),
+        engineType: engineType.html(),
+        engineFuelType: engineFuelType.html(),
+        enginePowerRpm: enginePowerRpm.html(),
+        enginePowerHp: enginePowerHp.html(),
+        year: Number(vehicleYear.html()) || undefined,
+        speeds: Number(speeds.html()) || undefined,
+        doors: Number(doors.html()) || undefined,
+      }),
+      brandId,
+      modelId,
+      websiteId,
+    });
 
-    if (
-      vehiclePriceParsed.includes('$') ||
-      vehiclePriceParsed.includes('u$s') ||
-      vehiclePriceParsed.includes('usd')
-    ) {
-      vehicle.usdPrice = Number(
-        vehiclePriceParsed.replace(/\$|u\$s|usd/g, '').trim(),
-      );
-    }
+    const newVehicle = await this.vehicleRepository.upsert(vehicleInfo);
 
-    console.log(vehicle, brand, model, websiteId);
+    this.logger.verbose(`New vehicle synced: ${newVehicle.description}`);
   }
 
   async getPages(condition: string) {
