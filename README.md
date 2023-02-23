@@ -26,6 +26,9 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Software Architecture
+![My Image](images/software-architecture.PNG.PNG)
+
 ## Installation
 
 ```bash

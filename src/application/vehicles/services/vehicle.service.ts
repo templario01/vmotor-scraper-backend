@@ -13,9 +13,9 @@ export class VehicleService {
 
     return plainToInstance(VehicleModel, {
       ...result,
-      mileage: mileage?.toNumber() || null,
-      usdPrice: usdPrice?.toNumber() || null,
-      penPrice: penPrice?.toNumber() || null,
+      mileage: mileage?.toNumber(),
+      usdPrice: usdPrice?.toNumber(),
+      penPrice: penPrice?.toNumber(),
     });
   }
 }
