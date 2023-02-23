@@ -88,7 +88,9 @@ export class NeoAutoSyncService {
   }
 
   @Cron(CronExpression.EVERY_10_MINUTES)
-  async syncUsedCars(): Promise<void> {}
+  async syncUsedCars(): Promise<void> {
+    console.log('implement method');
+  }
 
   async syncInfoForNewVehicle(params: SyncNeoautoPageParams): Promise<void> {
     const { browser, cheerioInstance$, mainHtml, websiteId } = params;
