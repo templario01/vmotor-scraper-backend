@@ -5,6 +5,7 @@ import { HttpModule } from '@nestjs/axios';
 import { PersistenceModule } from '../persistence/persistence.module';
 import { EnvConfigModule } from '../config/env-config.module';
 import { NeoAutoSyncService } from './services/neo-auto-sync.service';
+import { MercadolibreSyncService } from './services/mercadolibre-sync.service';
 
 @Module({
   imports: [
@@ -13,6 +14,6 @@ import { NeoAutoSyncService } from './services/neo-auto-sync.service';
     HttpModule,
     ScheduleModule.forRoot(),
   ],
-  providers: [BrandsSyncService, NeoAutoSyncService],
+  providers: [BrandsSyncService, NeoAutoSyncService, MercadolibreSyncService],
 })
 export class JobsModule {}
