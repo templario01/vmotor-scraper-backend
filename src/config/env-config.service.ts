@@ -5,9 +5,15 @@ import { ConfigService } from '@nestjs/config';
 export class EnvConfigService {
   constructor(private readonly configService: ConfigService) {}
 
-  neoauto() {
+  public neoauto() {
     return {
       url: this.configService.get<string>('NEOAUTO_URL'),
+    };
+  }
+
+  public mercadolibre() {
+    return {
+      url: this.configService.get<string>('MERCADOLIBRE_URL'),
     };
   }
 }

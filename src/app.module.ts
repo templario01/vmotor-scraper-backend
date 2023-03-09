@@ -14,6 +14,7 @@ import { ApiModule } from './api/api.module';
       isGlobal: true,
       validationSchema: Joi.object({
         NEOAUTO_URL: Joi.string().required(),
+        MERCADOLIBRE_URL: Joi.string().required(),
         PORT: Joi.number().required(),
       }),
       envFilePath: '.env',
