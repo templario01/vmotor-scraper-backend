@@ -8,7 +8,7 @@ export class VehicleResolver {
   @Query(() => VehicleModel)
   getVehicle(
     @Args('brand') brand: string,
-    @Args('model') model: string,
+    @Args('model') model?: string,
   ): Promise<VehicleModel> {
     return this.vehicleService.findVehicle(brand, model);
   }
