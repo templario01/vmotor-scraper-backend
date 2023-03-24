@@ -32,6 +32,7 @@ import { SyncNeoautoPageParams } from '../../application/vehicles/dtos/requests/
 export class NeoAutoSyncService {
   private readonly logger = new Logger(NeoAutoSyncService.name);
   private readonly NEOAUTO_URL: string;
+  private SyncedVehiclesIds: string[];
   constructor(
     private readonly config: EnvConfigService,
     private readonly websiteRepository: WebsiteRepository,
@@ -40,6 +41,7 @@ export class NeoAutoSyncService {
     private readonly vehicleRepository: VehicleRepository,
   ) {
     this.NEOAUTO_URL = this.config.neoauto().url;
+    this.SyncedVehiclesIds = [];
   }
 
   @Cron('0 2 * * 1')
@@ -47,7 +49,6 @@ export class NeoAutoSyncService {
     const vehicleCondition = NeoautoVehicleConditionEnum.NEW;
     const hostname = new URL(this.NEOAUTO_URL).hostname;
     const [name] = hostname.split('.');
-
     const currentWebsite = await this.websiteRepository.findByName(name);
     const currentPages = await this.getPages(vehicleCondition);
     const browser: Browser = await puppeteer.launch();
@@ -79,6 +80,11 @@ export class NeoAutoSyncService {
       }
     }
 
+    await this.vehicleRepository.updateStatusForAllInventory(
+      this.SyncedVehiclesIds,
+    );
+    this.SyncedVehiclesIds = [];
+
     await browser.close();
   }
 
@@ -92,6 +98,7 @@ export class NeoAutoSyncService {
       .attr('href');
 
     const { brand, model, id } = getVehicleInfoByNeoauto(vehicleURL);
+    this.SyncedVehiclesIds.push(id);
 
     const vehiclePage: Page = await browser.newPage();
     await vehiclePage.goto(`${this.NEOAUTO_URL}/${vehicleURL}`, {
