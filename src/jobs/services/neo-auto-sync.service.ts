@@ -1,9 +1,10 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { Cheerio, CheerioAPI, Element as CheerioElement } from 'cheerio';
 import * as cheerio from 'cheerio';
+import { Browser, Page } from 'puppeteer';
 import * as puppeteer from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/enums/vehicle.enums';
 import { VehicleSyncDto } from '../../application/vehicles/dtos/requests/neoauto.dto';
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
@@ -22,13 +23,14 @@ import {
   HTML_QUERY_MOTOR,
   HTML_QUERY_TRANSMISSION,
   HTML_QUERY_YEAR,
+  HTML_VEHICLE_PRICE,
   HTML_VEHICLE_VIEW,
 } from '../../application/vehicles/constants/neoauto.constants';
 import { SyncNeoautoPageParams } from '../../application/vehicles/dtos/requests/neoauto-sync.dto';
 
 @Injectable()
 export class NeoAutoSyncService {
-  private readonly logger: Logger;
+  private readonly logger = new Logger(NeoAutoSyncService.name);
   private readonly NEOAUTO_URL: string;
   constructor(
     private readonly config: EnvConfigService,
@@ -37,7 +39,6 @@ export class NeoAutoSyncService {
     private readonly modelRepository: ModelsRepository,
     private readonly vehicleRepository: VehicleRepository,
   ) {
-    this.logger = new Logger(NeoAutoSyncService.name);
     this.NEOAUTO_URL = this.config.neoauto().url;
   }
 
@@ -49,8 +50,8 @@ export class NeoAutoSyncService {
 
     const currentWebsite = await this.websiteRepository.findByName(name);
     const currentPages = await this.getPages(vehicleCondition);
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    const browser: Browser = await puppeteer.launch();
+    const page: Page = await browser.newPage();
 
     for (let index = 1; index <= currentPages; index++) {
       await page.goto(
@@ -58,22 +59,16 @@ export class NeoAutoSyncService {
         { timeout: 0 },
       );
 
-      const html = await page.content();
-      const $ = cheerio.load(html);
+      const html: string = await page.content();
+      const $: CheerioAPI = cheerio.load(html);
 
-      const vehicleBlock = $('.c-results-concessionaire');
+      const vehiclesBlock: Cheerio<CheerioElement> = $(
+        '.c-results-concessionaire',
+      );
 
-      for (let i = 0; i < vehicleBlock.length; i++) {
-        const element = vehicleBlock[i];
-        const price =
-          $(element)
-            .find(
-              'div.c-results-concessionaire-content div.c-results-concessionaire__contact ' +
-                'p.c-results-concessionaire__price strong.c-results-concessionaire__price--black',
-            )
-            .html() || 'consultar';
-
-        if (!price.toLowerCase().includes('consultar')) {
+      for (const element of vehiclesBlock) {
+        const hasPrice: boolean = this.isPriceAvailableInHtmlBlock($, element);
+        if (hasPrice) {
           await this.syncInfoForNewVehicle({
             browser,
             cheerioInstance$: $,
@@ -98,13 +93,13 @@ export class NeoAutoSyncService {
 
     const { brand, model, id } = getVehicleInfoByNeoauto(vehicleURL);
 
-    const vehiclePage = await browser.newPage();
+    const vehiclePage: Page = await browser.newPage();
     await vehiclePage.goto(`${this.NEOAUTO_URL}/${vehicleURL}`, {
       timeout: 0,
     });
     await vehiclePage.waitForSelector(HTML_VEHICLE_VIEW);
-    const vehicleHtml = await vehiclePage.content();
-    const $vehicle = cheerio.load(vehicleHtml);
+    const vehicleHtml: string = await vehiclePage.content();
+    const $vehicle: CheerioAPI = cheerio.load(vehicleHtml);
 
     const vehicleDescription = $vehicle(HTML_QUERY_DESCRIPTION);
     const vehicleYear = $vehicle(HTML_QUERY_YEAR);
@@ -154,9 +149,9 @@ export class NeoAutoSyncService {
 
   async getPages(condition: string): Promise<number> {
     let pages = 1;
-    const NEOAUTO_URL = this.config.neoauto().url;
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
+    const NEOAUTO_URL: string = this.config.neoauto().url;
+    const browser: Browser = await puppeteer.launch();
+    const page: Page = await browser.newPage();
 
     while (true) {
       await page.goto(
@@ -164,9 +159,9 @@ export class NeoAutoSyncService {
         { timeout: 0 },
       );
 
-      const html = await page.content();
-      const $ = cheerio.load(html);
-      const cards = $(
+      const html: string = await page.content();
+      const $: CheerioAPI = cheerio.load(html);
+      const cards: Cheerio<CheerioElement> = $(
         '.c-results-concessionaire div.c-results-concessionaire-content',
       );
 
@@ -178,5 +173,21 @@ export class NeoAutoSyncService {
     await browser.close();
 
     return pages - 1;
+  }
+
+  private isPriceAvailableInHtmlBlock(
+    page: CheerioAPI,
+    htmlElement: CheerioElement,
+  ): boolean {
+    const price: string = page(htmlElement).find(HTML_VEHICLE_PRICE).html();
+
+    if (price !== null) {
+      if (price.toLowerCase().includes('consultar')) {
+        return false;
+      }
+      return true;
+    }
+
+    return false;
   }
 }

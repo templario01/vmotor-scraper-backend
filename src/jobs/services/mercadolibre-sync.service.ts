@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as puppeteer from 'puppeteer';
 import * as cheerio from 'cheerio';
-import { Cron, CronExpression } from '@nestjs/schedule';
 import { EnvConfigService } from '../../config/env-config.service';
 
 @Injectable()
@@ -13,7 +12,6 @@ export class MercadolibreSyncService {
     this.MERCADOLIBRE_URL = this.config.mercadolibre().url;
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
   async syncCars() {
     const totalPages = await this.getPages();
     console.log('syncCars', totalPages);

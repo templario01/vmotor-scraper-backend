@@ -1,3 +1,9 @@
+/* HTML for extract info from general HTML */
+export const HTML_VEHICLE_PRICE =
+  'div.c-results-concessionaire-content div.c-results-concessionaire__contact ' +
+  'p.c-results-concessionaire__price strong.c-results-concessionaire__price--black';
+
+/* HTML Queries for extract data from vehicle Html block */
 export const HTML_QUERY_MOTOR =
   'div.c-table__scroller div.c-table__overflow div.c-table ul.c-table__column ' +
   'li.c-table__cell[data-label="Motor"]';
