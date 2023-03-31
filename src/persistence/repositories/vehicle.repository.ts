@@ -44,11 +44,13 @@ export class VehicleRepository {
           ...vehicle,
           brandId,
           websiteId,
+          status: 'ACTIVE',
         },
         update: {
           ...vehicle,
           modelId,
           websiteId,
+          status: 'ACTIVE',
         },
       });
     } catch (error) {

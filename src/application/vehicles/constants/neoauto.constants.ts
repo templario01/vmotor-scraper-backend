@@ -20,7 +20,8 @@ export const HTML_QUERY_YEAR =
   'ul.c-table__column li.c-table__cell strong';
 
 export const HTML_QUERY_IMAGE =
-  'div.c-results-concessionaire__slider div.c-gallery figure.c-gallery__images a img';
+  'div.c-results-concessionaire__slider div.c-gallery figure.c-gallery__images a img' +
+  ', div.c-results-used__slider div.c-slider div.c-slider__wrap div.slick-list div.slick-track div.c-gallery figure.c-gallery__images a img';
 
 export const HTML_VEHICLE_VIEW =
   'div.s-versions div.s-row div.s-content div.c-table__wrapper div.c-table__scroller div.c-table__overflow div.c-table ';

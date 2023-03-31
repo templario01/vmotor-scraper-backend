@@ -8,12 +8,7 @@ import { NeoAutoSyncService } from './services/neo-auto-sync.service';
 import { MercadolibreSyncService } from './services/mercadolibre-sync.service';
 
 @Module({
-  imports: [
-    EnvConfigModule,
-    PersistenceModule,
-    HttpModule,
-    ScheduleModule.forRoot(),
-  ],
+  imports: [EnvConfigModule, PersistenceModule, HttpModule, ScheduleModule.forRoot()],
   providers: [BrandsSyncService, NeoAutoSyncService, MercadolibreSyncService],
 })
 export class JobsModule {}
