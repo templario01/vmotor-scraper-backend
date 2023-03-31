@@ -18,6 +18,16 @@ import { BrandsRepository } from '../../persistence/repositories/brands.reposito
 import { ModelsRepository } from '../../persistence/repositories/models.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/requests/create-vehicle.dto';
+import {
+  HTML_IMAGE_CONCESSIONARIE,
+  HTML_IMAGE_USED,
+  HTML_PRICE_CONCESSIONAIRE,
+  HTML_PRICE_USED,
+  HTML_URL_CONCESSIONARIE,
+  HTML_URL_USED,
+  OR,
+} from '../../application/vehicles/constants/neoauto.constants';
+import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/requests/neoauto-sync.dto';
 
 @Injectable()
 export class NeoAutoSyncService {
@@ -53,7 +63,6 @@ export class NeoAutoSyncService {
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page: Page = await browser.newPage();
-    console.log(currentPages);
 
     for (let index = 1; index <= currentPages; index++) {
       await page.goto(
@@ -66,15 +75,15 @@ export class NeoAutoSyncService {
       const vehiclesBlock: Cheerio<CheerioElement> = $('div.s-results').find('article');
 
       for (const vehicleHtmlBlock of vehiclesBlock) {
-        const vehiclePrice = this.isPriceAvailableInHtmlBlock($, vehicleHtmlBlock);
+        const vehiclePrice = this.getPriceFromHtmlBlock($, vehicleHtmlBlock);
 
         if (vehiclePrice !== undefined) {
           const vehicleHtmlImage = $(vehicleHtmlBlock).find(
-            'div.c-slider__item figure.c-slider__images a img, div.c-gallery figure.c-gallery__images a img',
+            HTML_IMAGE_CONCESSIONARIE + OR + HTML_IMAGE_USED,
           );
           const imageUrl = vehicleHtmlImage.attr('data-original');
           const vehicleURL = $(vehicleHtmlBlock)
-            .find('a.c-results-concessionaire__link, a.c-results-use__link')
+            .find(HTML_URL_CONCESSIONARIE + OR + HTML_URL_USED)
             .attr('href');
 
           const carSynced = await this.syncVehicle(
@@ -104,21 +113,9 @@ export class NeoAutoSyncService {
     await browser.close();
   }
 
-  async syncVehicle(
-    {
-      imageUrl,
-      vehicleURL,
-      vehiclePrice,
-      websiteId,
-    }: {
-      imageUrl?: string;
-      vehicleURL?: string;
-      vehiclePrice?: number;
-      websiteId?: number;
-    },
-    condition: NeoautoVehicleConditionEnum,
-  ) {
+  async syncVehicle(data: SyncNeoautoVehicle, condition: NeoautoVehicleConditionEnum) {
     try {
+      const { imageUrl, vehicleURL, vehiclePrice, websiteId } = data;
       const { brand, modelWithYear, id } = getVehicleInfoByNeoauto(vehicleURL);
       const { model, year } = getModelAndYearFromUrl(modelWithYear);
 
@@ -169,16 +166,9 @@ export class NeoAutoSyncService {
     return +maxPages;
   }
 
-  private isPriceAvailableInHtmlBlock(
-    page: CheerioAPI,
-    htmlElement: CheerioElement,
-  ): number {
+  private getPriceFromHtmlBlock(page: CheerioAPI, htmlElement: CheerioElement): number {
     const price: string = page(htmlElement)
-      .find(
-        'div.c-results-concessionaire-content div.c-results-concessionaire__contact ' +
-          'p.c-results-concessionaire__price strong.c-results-concessionaire__price--black' +
-          ', div.c-results-used-content div.c-results-used__contact div.c-results-used__price strong.c-results-used__price--black',
-      )
+      .find(HTML_PRICE_CONCESSIONAIRE + OR + HTML_PRICE_USED)
       .html();
 
     if (price === null || price.toLowerCase().includes('consultar')) {
