@@ -4,7 +4,7 @@ import * as cheerio from 'cheerio';
 import { Browser, Page } from 'puppeteer';
 import * as puppeteer from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Cron } from '@nestjs/schedule';
 import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/enums/vehicle.enums';
 import { VehicleSyncDto } from '../../application/vehicles/dtos/requests/neoauto.dto';
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
@@ -33,10 +33,18 @@ export class NeoAutoSyncService {
     this.NEOAUTO_URL = this.config.neoauto().url;
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
-  async syncNeoautoNewCars(): Promise<void> {
+  @Cron('0 0 * * *')
+  async syncNeoautoNewVehicles() {
+    await this.syncAllInventory(NeoautoVehicleConditionEnum.NEW);
+  }
+
+  @Cron('0 2 */2 * *')
+  async syncNeoautoUsedVehicles() {
+    await this.syncAllInventory(NeoautoVehicleConditionEnum.USED);
+  }
+
+  async syncAllInventory(vehicleCondition: NeoautoVehicleConditionEnum) {
     const vehiclesSyncedIds = [];
-    const vehicleCondition = NeoautoVehicleConditionEnum.NEW;
     const hostname = new URL(this.NEOAUTO_URL).hostname;
     const [name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
@@ -45,6 +53,7 @@ export class NeoAutoSyncService {
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page: Page = await browser.newPage();
+    console.log(currentPages);
 
     for (let index = 1; index <= currentPages; index++) {
       await page.goto(
@@ -68,16 +77,19 @@ export class NeoAutoSyncService {
             .find('a.c-results-concessionaire__link, a.c-results-use__link')
             .attr('href');
 
-          const carSynced = await this.syncNewCar({
-            imageUrl,
-            vehiclePrice,
-            vehicleURL,
-            websiteId: currentWebsite.id,
-          });
+          const carSynced = await this.syncVehicle(
+            {
+              imageUrl,
+              vehiclePrice,
+              vehicleURL,
+              websiteId: currentWebsite.id,
+            },
+            vehicleCondition,
+          );
 
           if (carSynced) {
             vehiclesSyncedIds.push(carSynced.externalId);
-            this.logger.verbose(`New vehicle synced: ${carSynced?.url}`);
+            this.logger.verbose(`Used vehicle synced: ${carSynced?.url}`);
           }
         }
       }
@@ -86,23 +98,26 @@ export class NeoAutoSyncService {
       vehiclesSyncedIds,
     );
     this.logger.log(
-      `Job to sync new vehicles finished successfully, deleted cars: ${deletedCars.count}`,
+      `Job to sync used vehicles finished successfully, deleted cars: ${deletedCars.count}`,
     );
 
     await browser.close();
   }
 
-  async syncNewCar({
-    imageUrl,
-    vehicleURL,
-    vehiclePrice,
-    websiteId,
-  }: {
-    imageUrl?: string;
-    vehicleURL?: string;
-    vehiclePrice?: number;
-    websiteId?: number;
-  }) {
+  async syncVehicle(
+    {
+      imageUrl,
+      vehicleURL,
+      vehiclePrice,
+      websiteId,
+    }: {
+      imageUrl?: string;
+      vehicleURL?: string;
+      vehiclePrice?: number;
+      websiteId?: number;
+    },
+    condition: NeoautoVehicleConditionEnum,
+  ) {
     try {
       const { brand, modelWithYear, id } = getVehicleInfoByNeoauto(vehicleURL);
       const { model, year } = getModelAndYearFromUrl(modelWithYear);
@@ -116,6 +131,7 @@ export class NeoAutoSyncService {
       const vehicleInfo = plainToInstance(CreateVehicleDto, {
         vehicle: plainToInstance(VehicleSyncDto, {
           mileage: 0,
+          condition: condition === NeoautoVehicleConditionEnum.NEW ? 'NEW' : 'USED',
           externalId: id,
           frontImage: imageUrl,
           url: `${this.NEOAUTO_URL}/${vehicleURL}`,

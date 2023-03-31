@@ -45,12 +45,14 @@ export class VehicleRepository {
           brandId,
           websiteId,
           status: 'ACTIVE',
+          condition: vehicle.condition,
         },
         update: {
           ...vehicle,
           modelId,
           websiteId,
           status: 'ACTIVE',
+          condition: vehicle.condition,
         },
       });
     } catch (error) {
