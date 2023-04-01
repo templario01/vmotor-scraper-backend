@@ -12,7 +12,7 @@ export class MercadolibreSyncService {
     this.MERCADOLIBRE_URL = this.config.mercadolibre().url;
   }
 
-  async syncCars() {
+  async syncInventory() {
     const totalPages = await this.getPages();
     console.log('syncCars', totalPages);
   }
@@ -30,6 +30,6 @@ export class MercadolibreSyncService {
 
     await browser.close();
 
-    return Number(totalPages);
+    return +totalPages;
   }
 }

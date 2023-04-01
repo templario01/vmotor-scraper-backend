@@ -33,6 +33,11 @@ export class VehicleResolver {
     return this.vehicleService.syncNeoautoInventory(input);
   }
 
+  @Mutation(syncInventoryJobEntityReturnType)
+  syncMercadolibreInvetory(): Promise<SyncInventoryJobEntity> {
+    return this.vehicleService.syncMercadolibreInventory();
+  }
+
   @Mutation(syncBrandsJobEntityReturnType)
   syncInventoryBrands(): Promise<SyncBrandsJobEntity> {
     return this.vehicleService.syncInventoryBrands();

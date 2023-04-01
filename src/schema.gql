@@ -16,6 +16,7 @@ enum GetVehicleCondition {
 
 type Mutation {
   syncInventoryBrands: SyncBrandsJobEntity!
+  syncMercadolibreInvetory: SyncInventoryJobEntity!
   syncNeoautoInvetory(syncNeoautoInvetoryInput: SyncNeoautoInventoryInput!): SyncInventoryJobEntity!
 }
 

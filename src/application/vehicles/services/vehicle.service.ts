@@ -8,12 +8,14 @@ import { SyncInventoryJobEntity } from '../entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../../shared/utils/time.utils';
 import { BrandsSyncService } from '../../../jobs/services/brands-sync.service';
 import { SyncBrandsJobEntity } from '../entities/sync-brands-job.entity';
+import { MercadolibreSyncService } from '../../../jobs/services/mercadolibre-sync.service';
 
 @Injectable()
 export class VehicleService {
   constructor(
     private readonly vehicleRepository: VehicleRepository,
     private readonly neoautoSyncService: NeoAutoSyncService,
+    private readonly mercadolibreSyncService: MercadolibreSyncService,
     private readonly brandsSyncService: BrandsSyncService,
   ) {}
 
@@ -50,6 +52,18 @@ export class VehicleService {
     }
 
     await Promise.all(syncPromises);
+    const endTime = new Date();
+
+    return {
+      startTime,
+      endTime,
+      duration: getDurationTime(startTime, endTime),
+    };
+  }
+
+  async syncMercadolibreInventory(): Promise<SyncInventoryJobEntity> {
+    const startTime = new Date();
+    await this.mercadolibreSyncService.syncInventory();
     const endTime = new Date();
 
     return {
