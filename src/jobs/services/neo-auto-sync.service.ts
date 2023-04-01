@@ -36,6 +36,10 @@ import {
 import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/neoauto-sync.dto';
 import { VehicleSyncDto } from '../../application/vehicles/dtos/neoauto.dto';
 
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36';
+const PUPPETEER_ARGS = ['--no-sandbox', '--disable-setuid-sandbox'];
+
 @Injectable()
 export class NeoAutoSyncService {
   private readonly logger = new Logger(NeoAutoSyncService.name);
@@ -70,21 +74,18 @@ export class NeoAutoSyncService {
     const [name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
     const currentPages = await this.getPages(vehicleCondition);
+    const currentUrl = `${this.NEOAUTO_URL}/venta-de-autos-${vehicleCondition}`;
     const browser: Browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: PUPPETEER_ARGS,
     });
     const page: Page = await browser.newPage();
     await page.setExtraHTTPHeaders({
-      'User-Agent':
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
-      Referer: 'https://www.google.com',
+      'User-Agent': USER_AGENT,
+      Referer: currentUrl,
     });
 
     for (let index = 1; index <= currentPages; index++) {
-      await page.goto(
-        `${this.NEOAUTO_URL}/venta-de-autos-${vehicleCondition}?page=${index}`,
-        { timeout: 0 },
-      );
+      await page.goto(`${currentUrl}?page=${index}`, { timeout: 0 });
 
       const html: string = await page.content();
       const $: CheerioAPI = cheerio.load(html);
@@ -168,9 +169,13 @@ export class NeoAutoSyncService {
   }
 
   async getPages(condition: string): Promise<number> {
-    const browser: Browser = await puppeteer.launch();
+    const browser: Browser = await puppeteer.launch({ args: PUPPETEER_ARGS });
     const puppeteerPage: Page = await browser.newPage();
 
+    await puppeteerPage.setExtraHTTPHeaders({
+      'User-Agent': USER_AGENT,
+      Referer: this.NEOAUTO_URL,
+    });
     await puppeteerPage.goto(`${this.NEOAUTO_URL}/venta-de-autos-${condition}?page=1`, {
       timeout: 0,
     });
