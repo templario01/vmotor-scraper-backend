@@ -13,4 +13,5 @@ export interface SyncNeoautoVehicle {
   vehicleURL?: string;
   vehiclePrice?: number;
   websiteId?: number;
+  vehicleDescription?: string;
 }

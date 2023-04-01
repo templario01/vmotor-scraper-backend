@@ -8,8 +8,8 @@ import { Cron } from '@nestjs/schedule';
 import {
   NeoautoVehicleConditionEnum,
   VehicleCondition,
-} from '../../application/vehicles/dtos/enums/vehicle.enums';
-import { VehicleSyncDto } from '../../application/vehicles/dtos/requests/neoauto.dto';
+} from '../../application/vehicles/dtos/vehicle.enums';
+
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
 import {
   getEnumKeyByValue,
@@ -21,8 +21,10 @@ import { plainToInstance } from 'class-transformer';
 import { BrandsRepository } from '../../persistence/repositories/brands.repository';
 import { ModelsRepository } from '../../persistence/repositories/models.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
-import { CreateVehicleDto } from '../../application/vehicles/dtos/requests/create-vehicle.dto';
+import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import {
+  HTML_DESCRIPTION_CONCESSIONARIE,
+  HTML_DESCRIPTION_USED,
   HTML_IMAGE_CONCESSIONARIE,
   HTML_IMAGE_USED,
   HTML_PRICE_CONCESSIONAIRE,
@@ -31,7 +33,8 @@ import {
   HTML_URL_USED,
   OR,
 } from '../../application/vehicles/constants/neoauto.constants';
-import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/requests/neoauto-sync.dto';
+import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/neoauto-sync.dto';
+import { VehicleSyncDto } from '../../application/vehicles/dtos/neoauto.dto';
 
 @Injectable()
 export class NeoAutoSyncService {
@@ -71,6 +74,11 @@ export class NeoAutoSyncService {
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
     const page: Page = await browser.newPage();
+    await page.setExtraHTTPHeaders({
+      'User-Agent':
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.93 Safari/537.36',
+      Referer: 'https://www.google.com',
+    });
 
     for (let index = 1; index <= currentPages; index++) {
       await page.goto(
@@ -93,16 +101,18 @@ export class NeoAutoSyncService {
           const vehicleURL = $(vehicleHtmlBlock)
             .find(HTML_URL_CONCESSIONARIE + OR + HTML_URL_USED)
             .attr('href');
+          const vehicleDescription = $(vehicleHtmlBlock)
+            .find(HTML_DESCRIPTION_CONCESSIONARIE + OR + HTML_DESCRIPTION_USED)
+            .text();
 
-          const carSynced = await this.syncVehicle(
-            {
-              imageUrl,
-              vehiclePrice,
-              vehicleURL,
-              websiteId: currentWebsite.id,
-            },
-            vehicleCondition,
-          );
+          const neoautoVehicle: SyncNeoautoVehicle = {
+            imageUrl,
+            vehiclePrice,
+            vehicleURL,
+            vehicleDescription,
+            websiteId: currentWebsite.id,
+          };
+          const carSynced = await this.syncVehicle(neoautoVehicle, vehicleCondition);
 
           if (carSynced) {
             vehiclesSyncedIds.push(carSynced.externalId);
@@ -124,7 +134,7 @@ export class NeoAutoSyncService {
 
   async syncVehicle(data: SyncNeoautoVehicle, condition: NeoautoVehicleConditionEnum) {
     try {
-      const { imageUrl, vehicleURL, vehiclePrice, websiteId } = data;
+      const { imageUrl, vehicleURL, vehiclePrice, websiteId, vehicleDescription } = data;
       const { brand, modelWithYear, id } = getVehicleInfoByNeoauto(vehicleURL);
       const { model, year } = getModelAndYearFromUrl(modelWithYear);
 
@@ -140,6 +150,7 @@ export class NeoAutoSyncService {
           condition: condition === NeoautoVehicleConditionEnum.NEW ? 'NEW' : 'USED',
           externalId: id,
           frontImage: imageUrl,
+          description: vehicleDescription,
           url: `${this.NEOAUTO_URL}/${vehicleURL}`,
           usdPrice: vehiclePrice,
           year: +year,
@@ -151,7 +162,7 @@ export class NeoAutoSyncService {
 
       return this.vehicleRepository.upsert(vehicleInfo);
     } catch (error) {
-      this.logger.error('fail to sync vehicle, ', error, `${data?.vehicleURL || ''}`);
+      this.logger.error(`fail to sync vehicle, ${data?.vehicleURL || ''}`, error);
       return undefined;
     }
   }

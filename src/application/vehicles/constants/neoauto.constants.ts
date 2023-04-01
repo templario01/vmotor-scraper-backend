@@ -40,3 +40,8 @@ export const HTML_IMAGE_USED = 'div.c-gallery figure.c-gallery__images a img';
 
 export const HTML_URL_CONCESSIONARIE = 'a.c-results-concessionaire__link';
 export const HTML_URL_USED = 'a.c-results-use__link';
+
+export const HTML_DESCRIPTION_CONCESSIONARIE =
+  'div.c-results-concessionaire__header h2.c-results-concessionaire__title';
+export const HTML_DESCRIPTION_USED =
+  'div.c-results-used__header h2.c-results-used__title';

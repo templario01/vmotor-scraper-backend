@@ -3,7 +3,7 @@ import { VehicleRepository } from '../../../persistence/repositories/vehicle.rep
 import { VehicleEntity } from '../entities/vehicle.entity';
 import { NeoAutoSyncService } from '../../../jobs/services/neo-auto-sync.service';
 import { SyncNeoautoInventoryInput } from '../inputs/sync-neoauto-inventory.input';
-import { GetVehicleCondition } from '../dtos/enums/vehicle.enums';
+import { GetVehicleCondition } from '../dtos/vehicle.enums';
 import { SyncInventoryJobEntity } from '../entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../../shared/utils/time.utils';
 import { BrandsSyncService } from '../../../jobs/services/brands-sync.service';
