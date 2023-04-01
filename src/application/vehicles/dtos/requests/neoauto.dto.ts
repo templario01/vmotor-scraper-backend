@@ -1,5 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
-import { VehicleCondition } from '../../../../shared/dtos/vehicle.enum';
+import { VehicleCondition } from '../enums/vehicle.enums';
 
 @Exclude()
 export class VehicleSyncDto {

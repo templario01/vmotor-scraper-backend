@@ -1,10 +1,10 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { VehicleCondition } from '../dtos/enums/vehicle.enums';
+import { GetVehicleCondition } from '../dtos/enums/vehicle.enums';
 
-export const SyncNeoautoInventoryTypeFunc = () => VehicleCondition;
+export const SyncNeoautoInventoryTypeFunc = () => GetVehicleCondition;
 
 @InputType()
 export class SyncNeoautoInventoryInput {
   @Field(SyncNeoautoInventoryTypeFunc, { description: 'Vehicle condition for sync' })
-  readonly condition: VehicleCondition;
+  readonly condition: GetVehicleCondition;
 }

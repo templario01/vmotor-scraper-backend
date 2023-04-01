@@ -2,7 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../services/prisma.service';
 import { Vehicle } from '@prisma/client';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/requests/create-vehicle.dto';
-import { VehicleStatusEnum } from '../../application/vehicles/dtos/enums/vehicle.enums';
+import {
+  VehicleCondition,
+  VehicleStatusEnum,
+} from '../../application/vehicles/dtos/enums/vehicle.enums';
 
 @Injectable()
 export class VehicleRepository {
@@ -60,12 +63,23 @@ export class VehicleRepository {
     }
   }
 
-  async updateStatusForAllInventory(syncedVehiclesIds: string[]) {
+  async updateStatusForAllInventory(
+    syncedVehiclesIds: string[],
+    vehicleCondition: VehicleCondition,
+  ) {
+    console.log(vehicleCondition);
     return this.prisma.vehicle.updateMany({
       where: {
-        externalId: {
-          notIn: syncedVehiclesIds,
-        },
+        AND: [
+          {
+            externalId: {
+              notIn: syncedVehiclesIds,
+            },
+          },
+          {
+            condition: vehicleCondition,
+          },
+        ],
       },
       data: {
         status: VehicleStatusEnum.INACTIVE,

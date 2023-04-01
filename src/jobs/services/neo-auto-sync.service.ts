@@ -5,10 +5,14 @@ import { Browser, Page } from 'puppeteer';
 import * as puppeteer from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import { Cron } from '@nestjs/schedule';
-import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/enums/vehicle.enums';
+import {
+  NeoautoVehicleConditionEnum,
+  VehicleCondition,
+} from '../../application/vehicles/dtos/enums/vehicle.enums';
 import { VehicleSyncDto } from '../../application/vehicles/dtos/requests/neoauto.dto';
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
 import {
+  getEnumKeyByValue,
   getModelAndYearFromUrl,
   getVehicleInfoByNeoauto,
   parsePrice,
@@ -55,6 +59,10 @@ export class NeoAutoSyncService {
 
   async syncAllInventory(vehicleCondition: NeoautoVehicleConditionEnum) {
     const vehiclesSyncedIds = [];
+    const condition = getEnumKeyByValue(
+      NeoautoVehicleConditionEnum,
+      vehicleCondition,
+    ) as VehicleCondition;
     const hostname = new URL(this.NEOAUTO_URL).hostname;
     const [name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
@@ -98,16 +106,17 @@ export class NeoAutoSyncService {
 
           if (carSynced) {
             vehiclesSyncedIds.push(carSynced.externalId);
-            this.logger.verbose(`Used vehicle synced: ${carSynced?.url}`);
+            this.logger.verbose(`[${condition} CAR] Vehicle synced: ${carSynced?.url}`);
           }
         }
       }
     }
     const deletedCars = await this.vehicleRepository.updateStatusForAllInventory(
       vehiclesSyncedIds,
+      condition,
     );
     this.logger.log(
-      `Job to sync used vehicles finished successfully, deleted cars: ${deletedCars.count}`,
+      `[${condition} CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
     );
 
     await browser.close();

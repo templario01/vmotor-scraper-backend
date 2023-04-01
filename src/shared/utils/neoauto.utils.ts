@@ -43,3 +43,7 @@ export function getModelAndYearFromUrl(vehicleURL: string): {
     };
   }
 }
+
+export function getEnumKeyByValue(object: any, value: any): string {
+  return Object.keys(object).find((key) => object[key] === value);
+}

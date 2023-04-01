@@ -3,7 +3,7 @@ import { VehicleRepository } from '../../../persistence/repositories/vehicle.rep
 import { VehicleEntity } from '../entities/vehicle.entity';
 import { NeoAutoSyncService } from '../../../jobs/services/neo-auto-sync.service';
 import { SyncNeoautoInventoryInput } from '../inputs/sync-neoauto-inventory.input';
-import { VehicleCondition } from '../dtos/enums/vehicle.enums';
+import { GetVehicleCondition } from '../dtos/enums/vehicle.enums';
 import { SyncInventoryJobEntity } from '../entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../../shared/utils/time.utils';
 
@@ -32,13 +32,13 @@ export class VehicleService {
     const syncPromises: Promise<void>[] = [];
     const startTime = new Date();
     switch (input.condition) {
-      case VehicleCondition.NEW:
+      case GetVehicleCondition.NEW:
         syncPromises.push(this.neoautoSyncService.syncNeoautoNewVehicles());
         break;
-      case VehicleCondition.USED:
+      case GetVehicleCondition.USED:
         syncPromises.push(this.neoautoSyncService.syncNeoautoUsedVehicles());
         break;
-      case VehicleCondition.ALL:
+      case GetVehicleCondition.ALL:
         syncPromises.push(
           this.neoautoSyncService.syncNeoautoUsedVehicles(),
           this.neoautoSyncService.syncNeoautoUsedVehicles(),
@@ -52,7 +52,7 @@ export class VehicleService {
     return {
       startTime,
       endTime,
-      durationInMinutes: getDurationTime(startTime, endTime),
+      duration: getDurationTime(startTime, endTime),
     };
   }
 }

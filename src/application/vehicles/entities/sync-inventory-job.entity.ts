@@ -9,7 +9,7 @@ export class SyncInventoryJobEntity {
   readonly endTime: Date;
 
   @Field()
-  readonly durationInMinutes: number;
+  readonly duration: string;
 }
 
 export const syncInventoryJobEntityReturnType = () => SyncInventoryJobEntity;
