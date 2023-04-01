@@ -15,11 +15,18 @@ enum GetVehicleCondition {
 }
 
 type Mutation {
+  syncInventoryBrands: SyncBrandsJobEntity!
   syncNeoautoInvetory(syncNeoautoInvetoryInput: SyncNeoautoInventoryInput!): SyncInventoryJobEntity!
 }
 
 type Query {
   getVehicle(brand: String!, model: String!): VehicleEntity!
+}
+
+type SyncBrandsJobEntity {
+  duration: String!
+  endTime: DateTime!
+  startTime: DateTime!
 }
 
 type SyncInventoryJobEntity {

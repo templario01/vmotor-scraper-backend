@@ -9,6 +9,10 @@ import {
   SyncInventoryJobEntity,
   syncInventoryJobEntityReturnType,
 } from '../../application/vehicles/entities/sync-inventory-job.entity';
+import {
+  SyncBrandsJobEntity,
+  syncBrandsJobEntityReturnType,
+} from '../../application/vehicles/entities/sync-brands-job.entity';
 @Resolver()
 export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
@@ -27,5 +31,10 @@ export class VehicleResolver {
     input: SyncNeoautoInventoryInput,
   ): Promise<SyncInventoryJobEntity> {
     return this.vehicleService.syncNeoautoInventory(input);
+  }
+
+  @Mutation(syncBrandsJobEntityReturnType)
+  syncInventoryBrands(): Promise<SyncBrandsJobEntity> {
+    return this.vehicleService.syncInventoryBrands();
   }
 }

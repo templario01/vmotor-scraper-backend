@@ -151,7 +151,7 @@ export class NeoAutoSyncService {
 
       return this.vehicleRepository.upsert(vehicleInfo);
     } catch (error) {
-      this.logger.error('fail to sync vehicle, ', error);
+      this.logger.error('fail to sync vehicle, ', error, `${data?.vehicleURL || ''}`);
       return undefined;
     }
   }

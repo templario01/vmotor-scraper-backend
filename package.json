@@ -20,6 +20,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "prisma:seed": "ts-node ./prisma/seed.ts",
+    "prisma:up": "npx prisma migrate dev && npm run prisma:seed",
     "clean": "rm -rf ./node_modules/.cache && rm -rf ./dist && rm -rf ./coverage && find . -type f -name '*.log' -delete"
   },
   "dependencies": {

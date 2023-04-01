@@ -6,12 +6,15 @@ import { SyncNeoautoInventoryInput } from '../inputs/sync-neoauto-inventory.inpu
 import { GetVehicleCondition } from '../dtos/enums/vehicle.enums';
 import { SyncInventoryJobEntity } from '../entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../../shared/utils/time.utils';
+import { BrandsSyncService } from '../../../jobs/services/brands-sync.service';
+import { SyncBrandsJobEntity } from '../entities/sync-brands-job.entity';
 
 @Injectable()
 export class VehicleService {
   constructor(
     private readonly vehicleRepository: VehicleRepository,
     private readonly neoautoSyncService: NeoAutoSyncService,
+    private readonly brandsSyncService: BrandsSyncService,
   ) {}
 
   async findVehicle(brand: string, model: string): Promise<VehicleEntity> {
@@ -40,13 +43,25 @@ export class VehicleService {
         break;
       case GetVehicleCondition.ALL:
         syncPromises.push(
-          this.neoautoSyncService.syncNeoautoUsedVehicles(),
+          this.neoautoSyncService.syncNeoautoNewVehicles(),
           this.neoautoSyncService.syncNeoautoUsedVehicles(),
         );
         break;
     }
 
     await Promise.all(syncPromises);
+    const endTime = new Date();
+
+    return {
+      startTime,
+      endTime,
+      duration: getDurationTime(startTime, endTime),
+    };
+  }
+
+  async syncInventoryBrands(): Promise<SyncBrandsJobEntity> {
+    const startTime = new Date();
+    await this.brandsSyncService.syncBrands();
     const endTime = new Date();
 
     return {
