@@ -38,15 +38,15 @@ export class VehicleService {
     const startTime = new Date();
     switch (input.condition) {
       case GetVehicleCondition.NEW:
-        syncPromises.push(this.neoautoSyncService.syncNeoautoNewVehicles());
+        syncPromises.push(this.neoautoSyncService.syncNeoautoNewInventory());
         break;
       case GetVehicleCondition.USED:
-        syncPromises.push(this.neoautoSyncService.syncNeoautoUsedVehicles());
+        syncPromises.push(this.neoautoSyncService.syncNeoautoUsedInventory());
         break;
       case GetVehicleCondition.ALL:
         syncPromises.push(
-          this.neoautoSyncService.syncNeoautoNewVehicles(),
-          this.neoautoSyncService.syncNeoautoUsedVehicles(),
+          this.neoautoSyncService.syncNeoautoNewInventory(),
+          this.neoautoSyncService.syncNeoautoUsedInventory(),
         );
         break;
     }
@@ -63,7 +63,7 @@ export class VehicleService {
 
   async syncMercadolibreInventory(): Promise<SyncInventoryJobEntity> {
     const startTime = new Date();
-    await this.mercadolibreSyncService.syncInventory();
+    await this.mercadolibreSyncService.syncMercadolibreInventory();
     const endTime = new Date();
 
     return {
