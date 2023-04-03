@@ -12,15 +12,13 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class InventorySyncService {
-  private readonly logger: Logger;
+  private readonly logger = new Logger(InventorySyncService.name);
   constructor(
     private readonly envConfigService: EnvConfigService,
     private readonly neoautoSyncService: NeoAutoSyncService,
     private readonly mercadolibreSyncService: MercadolibreSyncService,
     private readonly httpService: HttpService,
-  ) {
-    this.logger = new Logger(InventorySyncService.name);
-  }
+  ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async syncAllInventory() {
@@ -35,6 +33,8 @@ export class InventorySyncService {
       this.neoautoSyncService.syncNeoautoUsedInventory(proxyIP),
       this.mercadolibreSyncService.syncMercadolibreInventory(proxyIP),
     ]);
+
+    this.logger.log('[syncAllInventory]: All inventory synced successfully');
   }
 
   async getProxy(): Promise<Proxy> {
