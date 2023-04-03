@@ -24,7 +24,7 @@ export class InventorySyncService {
 
   @Cron(CronExpression.EVERY_DAY_AT_1AM)
   async syncAllInventory() {
-    let proxyIP;
+    let proxyIP: string;
     const { environment } = this.envConfigService.app();
     if (environment === Environment.PROD) {
       const { host, port } = await this.getProxy();
