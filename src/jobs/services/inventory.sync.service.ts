@@ -20,7 +20,7 @@ export class InventorySyncService {
     private readonly httpService: HttpService,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_1AM)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async syncAllInventory() {
     let proxyIP: string;
     const { environment } = this.envConfigService.app();
