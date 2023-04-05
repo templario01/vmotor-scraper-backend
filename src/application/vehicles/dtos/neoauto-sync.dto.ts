@@ -15,3 +15,9 @@ export interface SyncNeoautoVehicle {
   websiteId?: number;
   vehicleDescription?: string;
 }
+
+export type VehicleBrandAndModel = {
+  brand: string;
+  modelWithYear: string;
+  id: string;
+};

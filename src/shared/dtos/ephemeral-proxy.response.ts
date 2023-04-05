@@ -15,7 +15,7 @@ interface Visibility {
   readonly ip: string;
   readonly country: string;
   readonly country_iso: string;
-  readonly country_eu: false;
+  readonly country_eu: boolean;
   readonly latitude: number;
   readonly longitude: number;
   readonly timezone: string;

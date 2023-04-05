@@ -1,14 +1,10 @@
-type VehicleBrandAndModel = {
-  brand: string;
-  modelWithYear: string;
-  id: string;
-};
+import { VehicleBrandAndModel } from '../../application/vehicles/dtos/neoauto-sync.dto';
 
 export function parsePrice(price: string): number {
   try {
     const usdPrice = price.split('$')[1].trim().replace(',', '');
 
-    return Number(usdPrice);
+    return +usdPrice;
   } catch (error) {
     return undefined;
   }
