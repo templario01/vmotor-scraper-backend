@@ -15,7 +15,7 @@ export class BrandsSyncService {
     this.logger = new Logger(BrandsSyncService.name);
   }
 
-  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_1ST_DAY_OF_MONTH_AT_NOON)
   async syncBrands() {
     const NEOAUTO_URL = this.config.neoauto().url;
     const browser = await puppeteer.launch();

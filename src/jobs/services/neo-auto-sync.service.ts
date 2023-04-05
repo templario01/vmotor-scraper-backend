@@ -51,14 +51,6 @@ export class NeoAutoSyncService {
     this.NEOAUTO_URL = this.config.neoauto().url;
   }
 
-  async syncNeoautoNewInventory(proxy?: string): Promise<void> {
-    await this.syncInventory(NeoautoVehicleConditionEnum.NEW, proxy);
-  }
-
-  async syncNeoautoUsedInventory(proxy?: string): Promise<void> {
-    await this.syncInventory(NeoautoVehicleConditionEnum.USED, proxy);
-  }
-
   async syncInventory(
     vehicleCondition: NeoautoVehicleConditionEnum,
     proxy?: string,
@@ -130,7 +122,7 @@ export class NeoAutoSyncService {
     }
   }
 
-  async syncVehicle(
+  private async syncVehicle(
     data: SyncNeoautoVehicle,
     condition: NeoautoVehicleConditionEnum,
   ): Promise<Vehicle> {
@@ -168,7 +160,7 @@ export class NeoAutoSyncService {
     }
   }
 
-  async getPages(condition: string): Promise<number> {
+  private async getPages(condition: string): Promise<number> {
     const browser: Browser = await puppeteer.launch({ args: PUPPETEER_ARGS });
     const puppeteerPage: Page = await browser.newPage();
 

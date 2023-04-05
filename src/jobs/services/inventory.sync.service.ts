@@ -10,6 +10,7 @@ import {
 import { Environment } from '../../config/dtos/config.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { getDurationTime } from '../../shared/utils/time.utils';
+import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/vehicle.enums';
 
 const proxyCountries = ['US', 'BR', 'PE'];
 
@@ -34,8 +35,8 @@ export class InventorySyncService {
     }
 
     await Promise.all([
-      this.neoautoSyncService.syncNeoautoNewInventory(proxyIP),
-      this.neoautoSyncService.syncNeoautoUsedInventory(proxyIP),
+      this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW, proxyIP),
+      this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED, proxyIP),
       this.mercadolibreSyncService.syncMercadolibreInventory(proxyIP),
     ]);
 
