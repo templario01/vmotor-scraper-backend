@@ -4,11 +4,15 @@ import * as cheerio from 'cheerio';
 import { Browser, Page } from 'puppeteer';
 import * as puppeteer from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
-import { Cron } from '@nestjs/schedule';
-import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/enums/vehicle.enums';
-import { VehicleSyncDto } from '../../application/vehicles/dtos/requests/neoauto.dto';
+import {
+  NeoautoVehicleConditionEnum,
+  VehicleCondition,
+} from '../../application/vehicles/dtos/vehicle.enums';
+
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
 import {
+  getEnumKeyByValue,
+  getModelAndYearFromUrl,
   getVehicleInfoByNeoauto,
   parsePrice,
 } from '../../shared/utils/neoauto.utils';
@@ -16,23 +20,27 @@ import { plainToInstance } from 'class-transformer';
 import { BrandsRepository } from '../../persistence/repositories/brands.repository';
 import { ModelsRepository } from '../../persistence/repositories/models.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
-import { CreateVehicleDto } from '../../application/vehicles/dtos/requests/create-vehicle.dto';
+import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import {
-  HTML_QUERY_DESCRIPTION,
-  HTML_QUERY_IMAGE,
-  HTML_QUERY_MOTOR,
-  HTML_QUERY_TRANSMISSION,
-  HTML_QUERY_YEAR,
-  HTML_VEHICLE_PRICE,
-  HTML_VEHICLE_VIEW,
+  HTML_DESCRIPTION_CONCESSIONARIE,
+  HTML_DESCRIPTION_USED,
+  HTML_IMAGE_CONCESSIONARIE,
+  HTML_IMAGE_USED,
+  HTML_PRICE_CONCESSIONAIRE,
+  HTML_PRICE_USED,
+  HTML_URL_CONCESSIONARIE,
+  HTML_URL_USED,
+  OR,
 } from '../../application/vehicles/constants/neoauto.constants';
-import { SyncNeoautoPageParams } from '../../application/vehicles/dtos/requests/neoauto-sync.dto';
+import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/neoauto-sync.dto';
+import { VehicleSyncDto } from '../../application/vehicles/dtos/neoauto.dto';
+import { PUPPETEER_ARGS, USER_AGENT } from '../../shared/dtos/puppeteer.contant';
+import { Vehicle } from '@prisma/client';
 
 @Injectable()
 export class NeoAutoSyncService {
   private readonly logger = new Logger(NeoAutoSyncService.name);
   private readonly NEOAUTO_URL: string;
-  private SyncedVehiclesIds: string[];
   constructor(
     private readonly config: EnvConfigService,
     private readonly websiteRepository: WebsiteRepository,
@@ -41,160 +49,181 @@ export class NeoAutoSyncService {
     private readonly vehicleRepository: VehicleRepository,
   ) {
     this.NEOAUTO_URL = this.config.neoauto().url;
-    this.SyncedVehiclesIds = [];
   }
 
-  @Cron('0 2 * * 1')
-  async syncNewCars(): Promise<void> {
-    const vehicleCondition = NeoautoVehicleConditionEnum.NEW;
-    const hostname = new URL(this.NEOAUTO_URL).hostname;
-    const [name] = hostname.split('.');
-    const currentWebsite = await this.websiteRepository.findByName(name);
-    const currentPages = await this.getPages(vehicleCondition);
-    const browser: Browser = await puppeteer.launch();
-    const page: Page = await browser.newPage();
+  async syncNeoautoNewInventory(proxy?: string): Promise<void> {
+    await this.syncInventory(NeoautoVehicleConditionEnum.NEW, proxy);
+  }
 
-    for (let index = 1; index <= currentPages; index++) {
-      await page.goto(
-        `${this.NEOAUTO_URL}/venta-de-autos-${vehicleCondition}?page=${index}`,
-        { timeout: 0 },
-      );
+  async syncNeoautoUsedInventory(proxy?: string): Promise<void> {
+    await this.syncInventory(NeoautoVehicleConditionEnum.USED, proxy);
+  }
 
-      const html: string = await page.content();
-      const $: CheerioAPI = cheerio.load(html);
+  async syncInventory(
+    vehicleCondition: NeoautoVehicleConditionEnum,
+    proxy?: string,
+  ): Promise<void> {
+    try {
+      const vehiclesSyncedIds = [];
+      const { condition, currentUrl, currentPages, proxyServer, currentWebsite } =
+        await this.getSyncConfig(vehicleCondition, proxy);
 
-      const vehiclesBlock: Cheerio<CheerioElement> = $(
-        '.c-results-concessionaire',
-      );
+      const browser: Browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
+      });
+      const page: Page = await browser.newPage();
 
-      for (const element of vehiclesBlock) {
-        const hasPrice: boolean = this.isPriceAvailableInHtmlBlock($, element);
-        if (hasPrice) {
-          await this.syncInfoForNewVehicle({
-            browser,
-            cheerioInstance$: $,
-            mainHtml: element,
-            websiteId: currentWebsite.id,
-          });
+      await page.setExtraHTTPHeaders({
+        'User-Agent': USER_AGENT,
+        Referer: currentUrl,
+      });
+
+      for (let index = 1; index <= currentPages; index++) {
+        await page.goto(`${currentUrl}?page=${index}`, { timeout: 0 });
+
+        const html: string = await page.content();
+        const $: CheerioAPI = cheerio.load(html);
+        const vehiclesBlock: Cheerio<CheerioElement> = $('div.s-results').find('article');
+
+        for (const vehicleHtmlBlock of vehiclesBlock) {
+          const vehiclePrice = this.getPriceFromHtmlBlock($, vehicleHtmlBlock);
+
+          if (vehiclePrice !== undefined) {
+            const vehicleHtmlImage = $(vehicleHtmlBlock).find(
+              HTML_IMAGE_CONCESSIONARIE + OR + HTML_IMAGE_USED,
+            );
+            const imageUrl = vehicleHtmlImage.attr('data-original');
+            const vehicleURL = $(vehicleHtmlBlock)
+              .find(HTML_URL_CONCESSIONARIE + OR + HTML_URL_USED)
+              .attr('href');
+            const vehicleDescription = $(vehicleHtmlBlock)
+              .find(HTML_DESCRIPTION_CONCESSIONARIE + OR + HTML_DESCRIPTION_USED)
+              .text();
+
+            const neoautoVehicle: SyncNeoautoVehicle = {
+              imageUrl,
+              vehiclePrice,
+              vehicleURL,
+              vehicleDescription,
+              websiteId: currentWebsite.id,
+            };
+            const carSynced = await this.syncVehicle(neoautoVehicle, vehicleCondition);
+
+            if (carSynced) {
+              vehiclesSyncedIds.push(carSynced.externalId);
+              this.logger.verbose(`[${condition} CAR] Vehicle synced: ${carSynced?.url}`);
+            }
+          }
         }
       }
+      const deletedCars = await this.vehicleRepository.updateStatusForAllInventory(
+        vehiclesSyncedIds,
+        condition,
+      );
+      this.logger.log(
+        `[${condition} CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
+      );
+
+      await browser.close();
+    } catch (error) {
+      this.logger.error('fail to sync all inventory', error);
     }
-
-    await this.vehicleRepository.updateStatusForAllInventory(
-      this.SyncedVehiclesIds,
-    );
-    this.SyncedVehiclesIds = [];
-
-    await browser.close();
   }
 
-  async syncInfoForNewVehicle(params: SyncNeoautoPageParams): Promise<void> {
-    const { browser, cheerioInstance$, mainHtml, websiteId } = params;
-    const frontImage = cheerioInstance$(mainHtml)
-      .find(HTML_QUERY_IMAGE)
-      .attr('src');
-    const vehicleURL = cheerioInstance$(mainHtml)
-      .find('a.c-results-concessionaire__link')
-      .attr('href');
+  async syncVehicle(
+    data: SyncNeoautoVehicle,
+    condition: NeoautoVehicleConditionEnum,
+  ): Promise<Vehicle> {
+    try {
+      const { imageUrl, vehicleURL, vehiclePrice, websiteId, vehicleDescription } = data;
+      const { brand, modelWithYear, id } = getVehicleInfoByNeoauto(vehicleURL);
+      const { model, year } = getModelAndYearFromUrl(modelWithYear);
 
-    const { brand, model, id } = getVehicleInfoByNeoauto(vehicleURL);
-    this.SyncedVehiclesIds.push(id);
+      const { id: brandId } = await this.brandRepository.findByName(brand);
+      const { id: modelId } = await this.modelRepository.findByNameAndBrandId(
+        model,
+        brandId,
+      );
 
-    const vehiclePage: Page = await browser.newPage();
-    await vehiclePage.goto(`${this.NEOAUTO_URL}/${vehicleURL}`, {
-      timeout: 0,
-    });
-    await vehiclePage.waitForSelector(HTML_VEHICLE_VIEW);
-    const vehicleHtml: string = await vehiclePage.content();
-    const $vehicle: CheerioAPI = cheerio.load(vehicleHtml);
+      const vehicleInfo = plainToInstance(CreateVehicleDto, {
+        vehicle: plainToInstance(VehicleSyncDto, {
+          mileage: 0,
+          condition: condition === NeoautoVehicleConditionEnum.NEW ? 'NEW' : 'USED',
+          externalId: id,
+          frontImage: imageUrl,
+          description: vehicleDescription,
+          url: `${this.NEOAUTO_URL}/${vehicleURL}`,
+          usdPrice: vehiclePrice,
+          year: +year,
+        }),
+        brandId,
+        modelId,
+        websiteId,
+      });
 
-    const vehicleDescription = $vehicle(HTML_QUERY_DESCRIPTION);
-    const vehicleYear = $vehicle(HTML_QUERY_YEAR);
-    const vehiclePrice = vehicleYear.parent().next().find('strong');
-    const speeds = $vehicle(HTML_QUERY_TRANSMISSION).next();
-    const transmission = $vehicle(HTML_QUERY_TRANSMISSION).next().next();
-    const doors = $vehicle(HTML_QUERY_TRANSMISSION).next().next().next();
-    const engineType = $vehicle(HTML_QUERY_MOTOR);
-    const engineFuelType = $vehicle(HTML_QUERY_MOTOR).nextAll().eq(3);
-    const enginePowerRpm = $vehicle(HTML_QUERY_MOTOR).nextAll().eq(4);
-    const enginePowerHp = $vehicle(HTML_QUERY_MOTOR).nextAll().eq(5);
-
-    const { id: brandId } = await this.brandRepository.findByName(brand);
-    const { id: modelId } = await this.modelRepository.findByNameAndBrandId(
-      model,
-      brandId,
-    );
-
-    const vehicleInfo = plainToInstance(CreateVehicleDto, {
-      vehicle: plainToInstance(VehicleSyncDto, {
-        mileage: 0,
-        externalId: id,
-        frontImage: frontImage.trim(),
-        url: `${this.NEOAUTO_URL}/${vehicleURL.trim()}`,
-        usdPrice: parsePrice(vehiclePrice.html()),
-        description: vehicleDescription.html(),
-        transmission: transmission.html(),
-        engineType: engineType.html(),
-        engineFuelType: engineFuelType.html(),
-        enginePowerRpm: enginePowerRpm.html(),
-        enginePowerHp: enginePowerHp.html(),
-        year: Number(vehicleYear.html()) || undefined,
-        speeds: Number(speeds.html()) || undefined,
-        doors: Number(doors.html()) || undefined,
-      }),
-      brandId,
-      modelId,
-      websiteId,
-    });
-
-    const newVehicle = await this.vehicleRepository.upsert(vehicleInfo);
-
-    if (newVehicle) {
-      this.logger.verbose(`New vehicle synced: ${newVehicle?.description}`);
+      return this.vehicleRepository.upsert(vehicleInfo);
+    } catch (error) {
+      this.logger.error(`fail to sync vehicle, ${data?.vehicleURL || ''}`, error);
+      return undefined;
     }
   }
 
   async getPages(condition: string): Promise<number> {
-    let pages = 1;
-    const NEOAUTO_URL: string = this.config.neoauto().url;
-    const browser: Browser = await puppeteer.launch();
-    const page: Page = await browser.newPage();
+    const browser: Browser = await puppeteer.launch({ args: PUPPETEER_ARGS });
+    const puppeteerPage: Page = await browser.newPage();
 
-    while (true) {
-      await page.goto(
-        `${NEOAUTO_URL}/venta-de-autos-${condition}?page=${pages}`,
-        { timeout: 0 },
-      );
+    await puppeteerPage.setExtraHTTPHeaders({
+      'User-Agent': USER_AGENT,
+      Referer: this.NEOAUTO_URL,
+    });
+    await puppeteerPage.goto(`${this.NEOAUTO_URL}/venta-de-autos-${condition}?page=1`, {
+      timeout: 0,
+    });
+    const html: string = await puppeteerPage.content();
+    const $: CheerioAPI = cheerio.load(html);
 
-      const html: string = await page.content();
-      const $: CheerioAPI = cheerio.load(html);
-      const cards: Cheerio<CheerioElement> = $(
-        '.c-results-concessionaire div.c-results-concessionaire-content',
-      );
-
-      if (cards.html() === null) break;
-
-      pages++;
-    }
+    const lastPaginationBtn = $('li.c-pagination-content__btn').last().find('a');
+    const paginationUrl = lastPaginationBtn.attr('href');
+    const [, maxPages] = paginationUrl.split('page=');
 
     await browser.close();
 
-    return pages - 1;
+    return +maxPages;
   }
 
-  private isPriceAvailableInHtmlBlock(
-    page: CheerioAPI,
-    htmlElement: CheerioElement,
-  ): boolean {
-    const price: string = page(htmlElement).find(HTML_VEHICLE_PRICE).html();
+  private async getSyncConfig(
+    vehicleCondition: NeoautoVehicleConditionEnum,
+    proxy?: string,
+  ) {
+    const condition = getEnumKeyByValue(
+      NeoautoVehicleConditionEnum,
+      vehicleCondition,
+    ) as VehicleCondition;
+    const hostname = new URL(this.NEOAUTO_URL).hostname;
+    const [name] = hostname.split('.');
+    const currentWebsite = await this.websiteRepository.findByName(name);
+    const currentPages = await this.getPages(vehicleCondition);
+    const currentUrl = `${this.NEOAUTO_URL}/venta-de-autos-${vehicleCondition}`;
+    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
 
-    if (price !== null) {
-      if (price.toLowerCase().includes('consultar')) {
-        return false;
-      }
-      return true;
+    return {
+      condition,
+      currentWebsite,
+      currentPages,
+      currentUrl,
+      proxyServer,
+    };
+  }
+
+  private getPriceFromHtmlBlock(page: CheerioAPI, htmlElement: CheerioElement): number {
+    const price: string = page(htmlElement)
+      .find(HTML_PRICE_CONCESSIONAIRE + OR + HTML_PRICE_USED)
+      .html();
+
+    if (price === null || price.toLowerCase().includes('consultar')) {
+      return undefined;
     }
 
-    return false;
+    return parsePrice(price);
   }
 }

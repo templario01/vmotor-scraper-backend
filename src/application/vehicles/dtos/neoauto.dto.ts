@@ -1,4 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
+import { VehicleCondition } from './vehicle.enums';
 
 @Exclude()
 export class VehicleSyncDto {
@@ -49,4 +50,7 @@ export class VehicleSyncDto {
 
   @Expose()
   readonly doors?: number;
+
+  @Expose()
+  readonly condition?: VehicleCondition;
 }

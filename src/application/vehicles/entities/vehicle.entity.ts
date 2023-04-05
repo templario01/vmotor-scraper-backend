@@ -1,7 +1,7 @@
 import { Field, GraphQLISODateTime, ID, ObjectType } from '@nestjs/graphql';
 
-@ObjectType('VehicleModel')
-export class VehicleModel {
+@ObjectType()
+export class VehicleEntity {
   @Field(() => ID)
   readonly uuid: string;
 
@@ -62,3 +62,5 @@ export class VehicleModel {
   @Field({ nullable: true })
   readonly status?: string;
 }
+
+export const vehicleEntityReturnType = () => VehicleEntity;
