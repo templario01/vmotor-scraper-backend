@@ -50,14 +50,14 @@ model Website {
 }
 
 model Vehicle {
-  id             Int       @id @default(autoincrement())
-  uuid           String    @unique @default(cuid())
-  externalId     String?   @unique
-  url            String    @unique
+  id             Int        @id @default(autoincrement())
+  uuid           String     @unique @default(cuid())
+  externalId     String?    @unique
+  url            String     @unique
   description    String?
   year           Int?
   transmission   String?
-  mileage        Decimal?  @default(0) @db.Decimal(12, 2)
+  mileage        Decimal?   @default(0) @db.Decimal(12, 2)
   engineType     String?
   enginePowerRpm String?
   enginePowerHp  String?
@@ -67,16 +67,16 @@ model Vehicle {
   images         String?
   doors          Int?
   condition      Condition?
-  usdPrice       Decimal?  @default(0) @db.Decimal(12, 2)
-  penPrice       Decimal?  @default(0) @db.Decimal(12, 2)
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @default(now()) @updatedAt
-  model          Model?    @relation(fields: [modelId], references: [id])
+  price          Decimal?   @default(0) @db.Decimal(12, 2)
+  currency       Currency?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @default(now()) @updatedAt
+  model          Model?     @relation(fields: [modelId], references: [id])
   modelId        Int?
-  website        Website?  @relation(fields: [websiteId], references: [id])
+  website        Website?   @relation(fields: [websiteId], references: [id])
   websiteId      Int?
-  status         Status    @default(ACTIVE)
-  brand          Brand?    @relation(fields: [brandId], references: [id])
+  status         Status     @default(ACTIVE)
+  brand          Brand?     @relation(fields: [brandId], references: [id])
   brandId        Int?
 
   @@map("vehicle")
@@ -90,4 +90,9 @@ enum Status {
 enum Condition {
   NEW
   USED
+}
+
+enum Currency {
+  PEN
+  USD
 }

@@ -6,6 +6,7 @@ import * as puppeteer from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import {
   NeoautoVehicleConditionEnum,
+  PriceCurrency,
   VehicleCondition,
 } from '../../application/vehicles/dtos/vehicle.enums';
 
@@ -16,7 +17,6 @@ import {
   getVehicleInfoByNeoauto,
   parsePrice,
 } from '../../shared/utils/neoauto.utils';
-import { plainToInstance } from 'class-transformer';
 import { BrandsRepository } from '../../persistence/repositories/brands.repository';
 import { ModelsRepository } from '../../persistence/repositories/models.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
@@ -33,7 +33,6 @@ import {
   OR,
 } from '../../application/vehicles/constants/neoauto.constants';
 import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/neoauto-sync.dto';
-import { VehicleSyncDto } from '../../application/vehicles/dtos/neoauto.dto';
 import { PUPPETEER_ARGS, USER_AGENT } from '../../shared/dtos/puppeteer.contant';
 import { Vehicle } from '@prisma/client';
 
@@ -56,7 +55,7 @@ export class NeoAutoSyncService {
     proxy?: string,
   ): Promise<void> {
     try {
-      const vehiclesSyncedIds = [];
+      const syncedVehiclesIds = [];
       const { condition, currentUrl, currentPages, proxyServer, currentWebsite } =
         await this.getSyncConfig(vehicleCondition, proxy);
 
@@ -102,16 +101,17 @@ export class NeoAutoSyncService {
             const carSynced = await this.syncVehicle(neoautoVehicle, vehicleCondition);
 
             if (carSynced) {
-              vehiclesSyncedIds.push(carSynced.externalId);
+              syncedVehiclesIds.push(carSynced.externalId);
               this.logger.verbose(`[${condition} CAR] Vehicle synced: ${carSynced?.url}`);
             }
           }
         }
       }
-      const deletedCars = await this.vehicleRepository.updateStatusForAllInventory(
-        vehiclesSyncedIds,
-        condition,
-      );
+      const deletedCars = await this.vehicleRepository.updateStatusForAllInventory({
+        syncedVehiclesIds,
+        websiteId: currentWebsite.id,
+        vehicleCondition: condition,
+      });
       this.logger.log(
         `[${condition} CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
       );
@@ -137,26 +137,29 @@ export class NeoAutoSyncService {
         brandId,
       );
 
-      const vehicleInfo = plainToInstance(CreateVehicleDto, {
-        vehicle: plainToInstance(VehicleSyncDto, {
+      const vehicleInfo: CreateVehicleDto = {
+        vehicle: {
           mileage: 0,
-          condition: condition === NeoautoVehicleConditionEnum.NEW ? 'NEW' : 'USED',
+          condition:
+            condition === NeoautoVehicleConditionEnum.NEW
+              ? VehicleCondition.NEW
+              : VehicleCondition.USED,
           externalId: id,
           frontImage: imageUrl,
           description: vehicleDescription,
           url: `${this.NEOAUTO_URL}/${vehicleURL}`,
-          usdPrice: vehiclePrice,
+          price: vehiclePrice,
+          currency: PriceCurrency.USD,
           year: +year,
-        }),
+        },
         brandId,
         modelId,
         websiteId,
-      });
+      };
 
       return this.vehicleRepository.upsert(vehicleInfo);
     } catch (error) {
       this.logger.error(`fail to sync vehicle, ${data?.vehicleURL || ''}`, error);
-      return undefined;
     }
   }
 

@@ -21,6 +21,11 @@ export enum VehicleStatusEnum {
   INACTIVE = 'INACTIVE',
 }
 
+export enum PriceCurrency {
+  USD = 'USD',
+  PEN = 'PEN',
+}
+
 registerEnumType(GetVehicleCondition, {
   name: 'GetVehicleCondition',
   description: 'Vehicle condition',

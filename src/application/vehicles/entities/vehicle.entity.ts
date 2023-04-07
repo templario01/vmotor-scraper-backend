@@ -54,13 +54,13 @@ export class VehicleEntity {
   readonly doors?: number;
 
   @Field({ nullable: true })
-  readonly usdPrice?: number;
-
-  @Field({ nullable: true })
-  readonly penPrice?: number;
+  readonly price?: number;
 
   @Field({ nullable: true })
   readonly status?: string;
+
+  @Field({ nullable: true })
+  readonly currency?: string;
 }
 
 export const vehicleEntityReturnType = () => VehicleEntity;

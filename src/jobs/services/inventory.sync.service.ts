@@ -37,7 +37,7 @@ export class InventorySyncService {
     await Promise.all([
       this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW, proxyIP),
       this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED, proxyIP),
-      this.mercadolibreSyncService.syncMercadolibreInventory(proxyIP),
+      this.mercadolibreSyncService.syncInventory(proxyIP),
     ]);
 
     const endTime = new Date();

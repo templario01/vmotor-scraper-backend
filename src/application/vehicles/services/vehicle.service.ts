@@ -20,14 +20,15 @@ export class VehicleService {
   ) {}
 
   async findVehicle(brand: string, model: string): Promise<VehicleEntity> {
-    const { mileage, usdPrice, penPrice, ...result } =
-      await this.vehicleRepository.findFirst(brand, model);
+    const { mileage, price, ...result } = await this.vehicleRepository.findFirst(
+      brand,
+      model,
+    );
 
     return {
       ...result,
       mileage: mileage?.toNumber(),
-      usdPrice: usdPrice?.toNumber(),
-      penPrice: penPrice?.toNumber(),
+      price: price?.toNumber(),
     };
   }
 
@@ -67,7 +68,7 @@ export class VehicleService {
 
   async syncMercadolibreInventory(): Promise<SyncInventoryJobEntity> {
     const startTime = new Date();
-    await this.mercadolibreSyncService.syncMercadolibreInventory();
+    await this.mercadolibreSyncService.syncInventory();
     const endTime = new Date();
 
     return {
