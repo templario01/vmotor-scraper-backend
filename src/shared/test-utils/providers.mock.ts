@@ -43,7 +43,7 @@ export const buildMercadolibreSyncServiceMock = () => {
     true,
   );
 
-  mercadolibreSyncService.syncMercadolibreInventory = jest.fn();
+  mercadolibreSyncService.syncInventory = jest.fn();
 
   return mercadolibreSyncService;
 };

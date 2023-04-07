@@ -79,12 +79,8 @@ describe('InventorySyncService', () => {
         NeoautoVehicleConditionEnum.NEW,
         proxyMock,
       );
-      expect(mercadolibreSyncServiceMock.syncMercadolibreInventory).toHaveBeenCalledTimes(
-        1,
-      );
-      expect(mercadolibreSyncServiceMock.syncMercadolibreInventory).toHaveBeenCalledWith(
-        proxyMock,
-      );
+      expect(mercadolibreSyncServiceMock.syncInventory).toHaveBeenCalledTimes(1);
+      expect(mercadolibreSyncServiceMock.syncInventory).toHaveBeenCalledWith(proxyMock);
       expect(httpRequestMock).toHaveBeenCalledWith(url, {
         headers: {
           'X-RapidAPI-Host': host,
@@ -111,12 +107,8 @@ describe('InventorySyncService', () => {
         NeoautoVehicleConditionEnum.NEW,
         undefined,
       );
-      expect(mercadolibreSyncServiceMock.syncMercadolibreInventory).toHaveBeenCalledTimes(
-        1,
-      );
-      expect(mercadolibreSyncServiceMock.syncMercadolibreInventory).toHaveBeenCalledWith(
-        undefined,
-      );
+      expect(mercadolibreSyncServiceMock.syncInventory).toHaveBeenCalledTimes(1);
+      expect(mercadolibreSyncServiceMock.syncInventory).toHaveBeenCalledWith(undefined);
       expect(httpRequestMock).not.toHaveBeenCalled();
     });
   });

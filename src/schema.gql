@@ -43,6 +43,7 @@ input SyncNeoautoInventoryInput {
 
 type VehicleEntity {
   createdAt: DateTime!
+  currency: String
   description: String!
   doors: Float
   engineFuelType: String
@@ -53,13 +54,12 @@ type VehicleEntity {
   frontImage: String
   images: String
   mileage: Float
-  penPrice: Float
+  price: Float
   speeds: Float
   status: String
   transmission: String
   updatedAt: DateTime!
   url: String!
-  usdPrice: Float
   uuid: ID!
   year: Float
 }
