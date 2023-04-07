@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Cheerio, Element as CheerioElement } from 'cheerio';
 import * as cheerio from 'cheerio';
+import * as puppeteer from 'puppeteer';
+import { Cheerio, Element as CheerioElement } from 'cheerio';
+
 import { Browser, Page } from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import {
@@ -16,12 +18,9 @@ import {
   PriceCurrency,
   VehicleCondition,
 } from '../../application/vehicles/dtos/vehicle.enums';
-import puppeteer from 'puppeteer-extra';
-import StealthPlugin from 'puppeteer-extra-plugin-stealth';
+
 import { SyncMercadolibreVehicle } from '../../application/vehicles/dtos/mercadolibre-sync.dto';
 import { Vehicle } from '@prisma/client';
-
-puppeteer.use(StealthPlugin());
 
 const PRICE_LIMIT_PEN = 4500;
 const PRICE_LIMIT_USD = 1500;
