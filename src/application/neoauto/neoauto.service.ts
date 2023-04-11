@@ -49,7 +49,7 @@ export class NeoautoService {
     return this.getVehiclesByHtml({ $html: $, searchWords, url });
   }
 
-  async getVehiclesByHtml(data: SearchNeoautoVehicleDto) {
+  async getVehiclesByHtml(data: SearchNeoautoVehicleDto): Promise<VehicleEntity[]> {
     const { $html, searchWords, url } = data;
     const vehicleList: Cheerio<CheerioElement> = $html('div.s-results')
       .find('article')
@@ -57,36 +57,35 @@ export class NeoautoService {
     const neoautoVehicles: VehicleEntity[] = [];
 
     for (const vehicleBlock of vehicleList) {
-      const vehiclePrice = this.neoautoSyncService.getPriceFromHtmlBlock(
-        $html,
-        vehicleBlock,
-      );
       const vehicleDescription = $html(vehicleBlock)
         .find(HTML_DESCRIPTION_CONCESSIONARIE + OR + HTML_DESCRIPTION_USED)
         .text()
         .toLowerCase();
-
+      const vehicleURL = $html(vehicleBlock)
+        .find(HTML_URL_CONCESSIONARIE + OR + HTML_URL_USED)
+        .attr('href');
       const vehicleHtmlImage = $html(vehicleBlock).find(
         HTML_IMAGE_CONCESSIONARIE + OR + HTML_IMAGE_USED,
       );
       const imageUrl = vehicleHtmlImage.attr('data-original');
-      const vehicleURL = $html(vehicleBlock)
-        .find(HTML_URL_CONCESSIONARIE + OR + HTML_URL_USED)
-        .attr('href');
-
       const { id } = getVehicleInfoByNeoauto(vehicleURL);
+      const vehiclePrice = this.neoautoSyncService.getPriceFromHtmlBlock(
+        $html,
+        vehicleBlock,
+      );
 
-      if (!includesAll(vehicleDescription, searchWords)) {
+      if (includesAll(vehicleDescription, searchWords)) {
+        neoautoVehicles.push({
+          description: vehicleDescription,
+          url: `${url}/${vehicleURL}`,
+          currency: PriceCurrency.USD,
+          price: vehiclePrice,
+          frontImage: imageUrl,
+          externalId: id,
+        });
+      } else {
         break;
       }
-      neoautoVehicles.push({
-        description: vehicleDescription,
-        url: `${url}/${vehicleURL}`,
-        currency: PriceCurrency.USD,
-        price: vehiclePrice,
-        frontImage: imageUrl,
-        externalId: id,
-      });
     }
 
     return neoautoVehicles;

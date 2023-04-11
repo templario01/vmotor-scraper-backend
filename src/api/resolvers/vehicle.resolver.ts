@@ -21,7 +21,7 @@ export class VehicleResolver {
   getVehiclesByWebsites(
     @Args('searchName') searchName?: string,
   ): Promise<VehicleEntity[]> {
-    return this.vehicleService.findVehicles(searchName);
+    return this.vehicleService.getVehiclesFromWebsites(searchName);
   }
 
   @Mutation(syncInventoryJobEntityReturnType)

@@ -3,7 +3,11 @@ import { VehicleRepository } from '../../../persistence/repositories/vehicle.rep
 import { SyncedVehicleEntity } from '../entities/synced-vehicle.entity';
 import { NeoAutoSyncService } from '../../../jobs/services/neo-auto-sync.service';
 import { SyncNeoautoInventoryInput } from '../inputs/sync-neoauto-inventory.input';
-import { GetVehicleCondition, NeoautoVehicleConditionEnum } from '../dtos/vehicle.enums';
+import {
+  GetVehicleCondition,
+  NeoautoVehicleConditionEnum,
+  PriceCurrency,
+} from '../dtos/vehicle.enums';
 import { SyncInventoryJobEntity } from '../entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../../shared/utils/time.utils';
 import { BrandsSyncService } from '../../../jobs/services/brands-sync.service';
@@ -41,7 +45,7 @@ export class VehicleService {
     };
   }
 
-  async findVehicles(inputSearch?: string): Promise<VehicleEntity[]> {
+  async getVehiclesFromWebsites(inputSearch?: string): Promise<VehicleEntity[]> {
     const cleanSearch = this.cleanSearchName(inputSearch);
     const browser: PuppeteerBrowser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -55,7 +59,9 @@ export class VehicleService {
       cleanSearch,
     );
 
-    return neoautoVehicles.sort((vehicleA, vehicleB) => vehicleA.price - vehicleB.price);
+    return neoautoVehicles
+      .filter(({ currency }) => currency === PriceCurrency.USD)
+      .sort((vehicleA, vehicleB) => vehicleA.price - vehicleB.price);
   }
 
   cleanSearchName(word: string): string {
