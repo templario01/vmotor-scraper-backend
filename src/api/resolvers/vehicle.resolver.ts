@@ -1,9 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { VehicleService } from '../../application/vehicles/services/vehicle.service';
-import {
-  VehicleEntity,
-  vehicleEntityReturnType,
-} from '../../application/vehicles/entities/vehicle.entity';
 import { SyncNeoautoInventoryInput } from '../../application/vehicles/inputs/sync-neoauto-inventory.input';
 import {
   SyncInventoryJobEntity,
@@ -13,12 +9,18 @@ import {
   SyncBrandsJobEntity,
   syncBrandsJobEntityReturnType,
 } from '../../application/vehicles/entities/sync-brands-job.entity';
+import {
+  VehicleEntity,
+  vehiclesEntityeturnType,
+} from '../../application/vehicles/entities/vehicle.entity';
 @Resolver()
 export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
 
-  @Query(vehicleEntityReturnType)
-  getVehicle(@Args('searchName') searchName?: string): Promise<VehicleEntity> {
+  @Query(vehiclesEntityeturnType)
+  getVehiclesByWebsites(
+    @Args('searchName') searchName?: string,
+  ): Promise<VehicleEntity[]> {
     return this.vehicleService.findVehicles(searchName);
   }
 

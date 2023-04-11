@@ -21,7 +21,7 @@ type Mutation {
 }
 
 type Query {
-  getVehicle(searchName: String!): VehicleEntity!
+  getVehiclesByWebsites(searchName: String!): [VehicleEntity!]!
 }
 
 type SyncBrandsJobEntity {
@@ -42,9 +42,8 @@ input SyncNeoautoInventoryInput {
 }
 
 type VehicleEntity {
-  createdAt: DateTime!
   currency: String
-  description: String!
+  description: String
   doors: Float
   engineFuelType: String
   enginePowerHp: String
@@ -58,8 +57,6 @@ type VehicleEntity {
   speeds: Float
   status: String
   transmission: String
-  updatedAt: DateTime!
-  url: String!
-  uuid: ID!
+  url: String
   year: Float
 }

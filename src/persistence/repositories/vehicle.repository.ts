@@ -30,12 +30,7 @@ export class VehicleRepository {
     });
   }
 
-  async upsert({
-    vehicle,
-    brandId,
-    modelId,
-    websiteId,
-  }: CreateVehicleDto): Promise<Vehicle> {
+  async upsert({ vehicle, websiteId }: CreateVehicleDto): Promise<Vehicle> {
     try {
       return this.prisma.vehicle.upsert({
         where: {
@@ -43,14 +38,12 @@ export class VehicleRepository {
         },
         create: {
           ...vehicle,
-          brandId,
           websiteId,
           status: 'ACTIVE',
           condition: vehicle.condition,
         },
         update: {
           ...vehicle,
-          modelId,
           websiteId,
           status: 'ACTIVE',
           condition: vehicle.condition,

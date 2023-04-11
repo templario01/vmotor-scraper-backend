@@ -4,6 +4,7 @@ import * as cheerio from 'cheerio';
 import { Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
+import { includesAll } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class MercadolibreService {
@@ -39,14 +40,10 @@ export class MercadolibreService {
       const vehicleDescription = `${vehicleName?.toLowerCase() ?? ''} ${
         vehicleYear?.trim().toLowerCase() ?? ''
       }`;
-      if (!this.includesAll(vehicleDescription, searchWords)) {
+      if (!includesAll(vehicleDescription, searchWords)) {
         break;
       }
       console.log('mercadolibre:', vehicleDescription);
     }
-  }
-
-  includesAll(text: string, words: string[]): boolean {
-    return words.every((word) => text.includes(word));
   }
 }

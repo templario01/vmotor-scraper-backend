@@ -1,15 +1,24 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, GraphQLISODateTime, ID, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
-export class VehicleEntity {
-  @Field({ nullable: true })
-  readonly url?: string;
+export class SyncedVehicleEntity {
+  @Field(() => ID)
+  readonly uuid: string;
+
+  @Field()
+  readonly url: string;
+
+  @Field(() => GraphQLISODateTime)
+  readonly createdAt: Date;
+
+  @Field(() => GraphQLISODateTime)
+  readonly updatedAt: Date;
+
+  @Field()
+  readonly description: string;
 
   @Field({ nullable: true })
   readonly externalId?: string;
-
-  @Field({ nullable: true })
-  readonly description?: string;
 
   @Field({ nullable: true })
   readonly year?: number;
@@ -54,5 +63,4 @@ export class VehicleEntity {
   readonly currency?: string;
 }
 
-export const vehicleEntityReturnType = () => VehicleEntity;
-export const vehiclesEntityeturnType = () => [VehicleEntity];
+export const syncedVehicleEntityReturnType = () => SyncedVehicleEntity;

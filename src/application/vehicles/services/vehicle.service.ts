@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { VehicleRepository } from '../../../persistence/repositories/vehicle.repository';
-import { VehicleEntity } from '../entities/vehicle.entity';
+import { SyncedVehicleEntity } from '../entities/synced-vehicle.entity';
 import { NeoAutoSyncService } from '../../../jobs/services/neo-auto-sync.service';
 import { SyncNeoautoInventoryInput } from '../inputs/sync-neoauto-inventory.input';
 import { GetVehicleCondition, NeoautoVehicleConditionEnum } from '../dtos/vehicle.enums';
@@ -14,6 +14,7 @@ import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { MercadolibreService } from '../../mercadolibre/mercadolibre.service';
 import { NeoautoService } from '../../neoauto/neoauto.service';
 import { AutocosmosService } from '../../autocosmos/autocosmos.service';
+import { VehicleEntity } from '../entities/vehicle.entity';
 
 @Injectable()
 export class VehicleService {
@@ -27,7 +28,7 @@ export class VehicleService {
     private readonly autocosmosService: AutocosmosService,
   ) {}
 
-  async findVehicle(brand: string, model: string): Promise<VehicleEntity> {
+  async findVehicle(brand: string, model: string): Promise<SyncedVehicleEntity> {
     const { mileage, price, ...result } = await this.vehicleRepository.findFirst(
       brand,
       model,
@@ -40,7 +41,7 @@ export class VehicleService {
     };
   }
 
-  async findVehicles(inputSearch?: string): Promise<VehicleEntity> {
+  async findVehicles(inputSearch?: string): Promise<VehicleEntity[]> {
     const cleanSearch = this.cleanSearchName(inputSearch);
     const browser: PuppeteerBrowser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -48,10 +49,13 @@ export class VehicleService {
     const page: PuppeteerPage = await browser.newPage();
 
     await this.mercadolibreService.getVehicles(page, cleanSearch);
-    await this.neoautoService.getVehicles(page, cleanSearch);
     await this.autocosmosService.getVehicles(page, cleanSearch);
+    const neoautoVehicles = await this.neoautoService.searchNeoautoVehicles(
+      page,
+      cleanSearch,
+    );
 
-    return null;
+    return neoautoVehicles.sort((vehicleA, vehicleB) => vehicleA.price - vehicleB.price);
   }
 
   cleanSearchName(word: string): string {

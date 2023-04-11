@@ -4,6 +4,7 @@ import * as cheerio from 'cheerio';
 import { Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
+import { includesAll } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class AutocosmosService {
@@ -31,14 +32,10 @@ export class AutocosmosService {
 
     for (const vehicleBlock of vehicleList) {
       const vehicleDescription = $(vehicleBlock).find('a').attr('title').toLowerCase();
-      if (!this.includesAll(vehicleDescription, searchWords)) {
+      if (!includesAll(vehicleDescription, searchWords)) {
         break;
       }
       console.log('autocosmos: ', vehicleDescription);
     }
-  }
-
-  includesAll(text: string, words: string[]): boolean {
-    return words.every((word) => text.includes(word));
   }
 }
