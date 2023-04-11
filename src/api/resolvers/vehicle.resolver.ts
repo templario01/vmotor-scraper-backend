@@ -18,11 +18,8 @@ export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
 
   @Query(vehicleEntityReturnType)
-  getVehicle(
-    @Args('brand') brand: string,
-    @Args('model') model?: string,
-  ): Promise<VehicleEntity> {
-    return this.vehicleService.findVehicle(brand, model);
+  getVehicle(@Args('searchName') searchName?: string): Promise<VehicleEntity> {
+    return this.vehicleService.findVehicles(searchName);
   }
 
   @Mutation(syncInventoryJobEntityReturnType)

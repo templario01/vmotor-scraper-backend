@@ -12,6 +12,12 @@ export class EnvConfigService {
     };
   }
 
+  public autocosmos() {
+    return {
+      url: this.configService.get<string>('AUTOCOSMOS_URL'),
+    };
+  }
+
   public mercadolibre() {
     return {
       url: this.configService.get<string>('MERCADOLIBRE_URL'),

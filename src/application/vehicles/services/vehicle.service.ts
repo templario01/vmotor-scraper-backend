@@ -9,6 +9,11 @@ import { getDurationTime } from '../../../shared/utils/time.utils';
 import { BrandsSyncService } from '../../../jobs/services/brands-sync.service';
 import { SyncBrandsJobEntity } from '../entities/sync-brands-job.entity';
 import { MercadolibreSyncService } from '../../../jobs/services/mercadolibre-sync.service';
+import * as puppeteer from 'puppeteer';
+import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
+import { MercadolibreService } from '../../mercadolibre/mercadolibre.service';
+import { NeoautoService } from '../../neoauto/neoauto.service';
+import { AutocosmosService } from '../../autocosmos/autocosmos.service';
 
 @Injectable()
 export class VehicleService {
@@ -17,6 +22,9 @@ export class VehicleService {
     private readonly neoautoSyncService: NeoAutoSyncService,
     private readonly mercadolibreSyncService: MercadolibreSyncService,
     private readonly brandsSyncService: BrandsSyncService,
+    private readonly mercadolibreService: MercadolibreService,
+    private readonly neoautoService: NeoautoService,
+    private readonly autocosmosService: AutocosmosService,
   ) {}
 
   async findVehicle(brand: string, model: string): Promise<VehicleEntity> {
@@ -30,6 +38,28 @@ export class VehicleService {
       mileage: mileage?.toNumber(),
       price: price?.toNumber(),
     };
+  }
+
+  async findVehicles(inputSearch?: string): Promise<VehicleEntity> {
+    const cleanSearch = this.cleanSearchName(inputSearch);
+    const browser: PuppeteerBrowser = await puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    });
+    const page: PuppeteerPage = await browser.newPage();
+
+    await this.mercadolibreService.getVehicles(page, cleanSearch);
+    await this.neoautoService.getVehicles(page, cleanSearch);
+    await this.autocosmosService.getVehicles(page, cleanSearch);
+
+    return null;
+  }
+
+  cleanSearchName(word: string): string {
+    const caracteresValidos = /[^a-zA-Z0-9]+/g;
+    word = word.replace(caracteresValidos, ' ');
+    word = word.trim().toLowerCase();
+
+    return word;
   }
 
   async syncNeoautoInventory(

@@ -21,7 +21,7 @@ type Mutation {
 }
 
 type Query {
-  getVehicle(brand: String!, model: String!): VehicleEntity!
+  getVehicle(searchName: String!): VehicleEntity!
 }
 
 type SyncBrandsJobEntity {
