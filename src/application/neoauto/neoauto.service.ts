@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EnvConfigService } from '../../config/env-config.service';
 import * as cheerio from 'cheerio';
-import { Page as PuppeteerPage } from 'puppeteer';
+import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
 import {
@@ -18,7 +18,7 @@ import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
 import { VehicleEntity } from '../vehicles/entities/vehicle.entity';
 import { PriceCurrency } from '../vehicles/dtos/vehicle.enums';
 import { getVehicleInfoByNeoauto } from '../../shared/utils/neoauto.utils';
-import { SearchNeoautoVehicleDto } from './neoauto.dto';
+import { SearchVehicleDto } from '../../shared/dtos/vehicle.dto';
 
 @Injectable()
 export class NeoautoService {
@@ -28,9 +28,10 @@ export class NeoautoService {
   ) {}
 
   async searchNeoautoVehicles(
-    page: PuppeteerPage,
+    browser: PuppeteerBrowser,
     cleanSearch: string,
   ): Promise<VehicleEntity[]> {
+    const page: PuppeteerPage = await browser.newPage();
     const { url } = this.envConfigService.neoauto();
     const searchPath = cleanSearch.replace(/\s+/g, '+');
     const searchWords = searchPath.split('+');
@@ -49,7 +50,7 @@ export class NeoautoService {
     return this.getVehiclesByHtml({ $html: $, searchWords, url });
   }
 
-  async getVehiclesByHtml(data: SearchNeoautoVehicleDto): Promise<VehicleEntity[]> {
+  async getVehiclesByHtml(data: SearchVehicleDto): Promise<VehicleEntity[]> {
     const { $html, searchWords, url } = data;
     const vehicleList: Cheerio<CheerioElement> = $html('div.s-results')
       .find('article')

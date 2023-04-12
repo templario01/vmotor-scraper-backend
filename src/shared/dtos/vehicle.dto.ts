@@ -1,7 +1,7 @@
 import { CheerioAPI } from 'cheerio';
 
-export interface SearchNeoautoVehicleDto {
+export interface SearchVehicleDto {
   readonly $html: CheerioAPI;
   readonly searchWords: string[];
-  readonly url: string;
+  readonly url?: string;
 }

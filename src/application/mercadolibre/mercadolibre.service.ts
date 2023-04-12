@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EnvConfigService } from '../../config/env-config.service';
 import * as cheerio from 'cheerio';
-import { Page as PuppeteerPage } from 'puppeteer';
+import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
 import { includesAll } from '../../shared/utils/vehicle.utils';
@@ -10,7 +10,8 @@ import { includesAll } from '../../shared/utils/vehicle.utils';
 export class MercadolibreService {
   constructor(private readonly envConfigService: EnvConfigService) {}
 
-  async getVehicles(page: PuppeteerPage, cleanSearch: string) {
+  async searchMercadolibreVehicles(browser: PuppeteerBrowser, cleanSearch: string) {
+    const page: PuppeteerPage = await browser.newPage();
     const { url } = this.envConfigService.mercadolibre();
     const searchPath = cleanSearch.replace(/\s+/g, '-');
     const searchWords = searchPath.split('-');
@@ -45,5 +46,7 @@ export class MercadolibreService {
       }
       console.log('mercadolibre:', vehicleDescription);
     }
+
+    return [];
   }
 }

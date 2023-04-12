@@ -18,7 +18,6 @@ import {
   PriceCurrency,
   VehicleCondition,
 } from '../../application/vehicles/dtos/vehicle.enums';
-
 import { SyncMercadolibreVehicle } from '../../application/vehicles/dtos/mercadolibre-sync.dto';
 import { Vehicle } from '@prisma/client';
 
@@ -110,7 +109,7 @@ export class MercadolibreSyncService {
     await browser.close();
   }
 
-  private async SyncVehicleByCurrency({
+  async SyncVehicleByCurrency({
     parentHtml,
     vehicleBlock,
     websiteId,

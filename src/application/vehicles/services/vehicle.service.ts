@@ -14,7 +14,7 @@ import { BrandsSyncService } from '../../../jobs/services/brands-sync.service';
 import { SyncBrandsJobEntity } from '../entities/sync-brands-job.entity';
 import { MercadolibreSyncService } from '../../../jobs/services/mercadolibre-sync.service';
 import * as puppeteer from 'puppeteer';
-import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
+import { Browser as PuppeteerBrowser } from 'puppeteer';
 import { MercadolibreService } from '../../mercadolibre/mercadolibre.service';
 import { NeoautoService } from '../../neoauto/neoauto.service';
 import { AutocosmosService } from '../../autocosmos/autocosmos.service';
@@ -50,16 +50,13 @@ export class VehicleService {
     const browser: PuppeteerBrowser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
-    const page: PuppeteerPage = await browser.newPage();
 
-    await this.mercadolibreService.getVehicles(page, cleanSearch);
-    await this.autocosmosService.getVehicles(page, cleanSearch);
-    const neoautoVehicles = await this.neoautoService.searchNeoautoVehicles(
-      page,
-      cleanSearch,
-    );
+    const [mercadolibreVehicles, neoautoVehicles] = await Promise.all([
+      this.mercadolibreService.searchMercadolibreVehicles(browser, cleanSearch),
+      this.neoautoService.searchNeoautoVehicles(browser, cleanSearch),
+    ]);
 
-    return neoautoVehicles
+    return [...mercadolibreVehicles, ...neoautoVehicles]
       .filter(({ currency }) => currency === PriceCurrency.USD)
       .sort((vehicleA, vehicleB) => vehicleA.price - vehicleB.price);
   }
