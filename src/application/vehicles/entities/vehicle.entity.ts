@@ -48,11 +48,14 @@ export class VehicleEntity {
   readonly price?: number;
 
   @Field({ nullable: true })
-  readonly status?: string;
+  readonly originalPrice?: number;
+
+  @Field(() => Boolean)
+  readonly isEstimatedPrice?: boolean;
 
   @Field({ nullable: true })
   readonly currency?: string;
 }
 
 export const vehicleEntityReturnType = () => VehicleEntity;
-export const vehiclesEntityeturnType = () => [VehicleEntity];
+export const vehiclesEntityReturnType = () => [VehicleEntity];

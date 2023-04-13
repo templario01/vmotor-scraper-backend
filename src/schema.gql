@@ -21,7 +21,7 @@ type Mutation {
 }
 
 type Query {
-  getVehiclesByWebsites(searchName: String!): [VehicleEntity!]!
+  getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
 
 type SyncBrandsJobEntity {
@@ -52,11 +52,17 @@ type VehicleEntity {
   externalId: String
   frontImage: String
   images: String
+  isEstimatedPrice: Boolean!
   mileage: Float
+  originalPrice: Float
   price: Float
   speeds: Float
-  status: String
   transmission: String
   url: String
   year: Float
+}
+
+type VehicleSearchEntity {
+  duration: String!
+  vehicles: [VehicleEntity!]!
 }

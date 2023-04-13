@@ -10,17 +10,17 @@ import {
   syncBrandsJobEntityReturnType,
 } from '../../application/vehicles/entities/sync-brands-job.entity';
 import {
-  VehicleEntity,
-  vehiclesEntityeturnType,
-} from '../../application/vehicles/entities/vehicle.entity';
+  VehicleSearchEntity,
+  vehicleSearchEntityReturnType,
+} from '../../application/vehicles/entities/vehicle-search.entity';
 @Resolver()
 export class VehicleResolver {
   constructor(private readonly vehicleService: VehicleService) {}
 
-  @Query(vehiclesEntityeturnType)
+  @Query(vehicleSearchEntityReturnType)
   getVehiclesByWebsites(
     @Args('searchName') searchName?: string,
-  ): Promise<VehicleEntity[]> {
+  ): Promise<VehicleSearchEntity> {
     return this.vehicleService.getVehiclesFromWebsites(searchName);
   }
 

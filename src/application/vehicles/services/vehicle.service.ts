@@ -3,11 +3,7 @@ import { VehicleRepository } from '../../../persistence/repositories/vehicle.rep
 import { SyncedVehicleEntity } from '../entities/synced-vehicle.entity';
 import { NeoAutoSyncService } from '../../../jobs/services/neo-auto-sync.service';
 import { SyncNeoautoInventoryInput } from '../inputs/sync-neoauto-inventory.input';
-import {
-  GetVehicleCondition,
-  NeoautoVehicleConditionEnum,
-  PriceCurrency,
-} from '../dtos/vehicle.enums';
+import { GetVehicleCondition, NeoautoVehicleConditionEnum } from '../dtos/vehicle.enums';
 import { SyncInventoryJobEntity } from '../entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../../shared/utils/time.utils';
 import { BrandsSyncService } from '../../../jobs/services/brands-sync.service';
@@ -18,7 +14,7 @@ import { Browser as PuppeteerBrowser } from 'puppeteer';
 import { MercadolibreService } from '../../mercadolibre/mercadolibre.service';
 import { NeoautoService } from '../../neoauto/neoauto.service';
 import { AutocosmosService } from '../../autocosmos/autocosmos.service';
-import { VehicleEntity } from '../entities/vehicle.entity';
+import { VehicleSearchEntity } from '../entities/vehicle-search.entity';
 
 @Injectable()
 export class VehicleService {
@@ -45,7 +41,9 @@ export class VehicleService {
     };
   }
 
-  async getVehiclesFromWebsites(inputSearch?: string): Promise<VehicleEntity[]> {
+  async getVehiclesFromWebsites(inputSearch?: string): Promise<VehicleSearchEntity> {
+    const startTime = new Date();
+
     const cleanSearch = this.cleanSearchName(inputSearch);
     const browser: PuppeteerBrowser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -56,9 +54,15 @@ export class VehicleService {
       this.neoautoService.searchNeoautoVehicles(browser, cleanSearch),
     ]);
 
-    return [...mercadolibreVehicles, ...neoautoVehicles]
-      .filter(({ currency }) => currency === PriceCurrency.USD)
-      .sort((vehicleA, vehicleB) => vehicleA.price - vehicleB.price);
+    const result = [...mercadolibreVehicles, ...neoautoVehicles].sort(
+      (vehicleA, vehicleB) => vehicleA.price - vehicleB.price,
+    );
+    const endTime = new Date();
+
+    return {
+      duration: getDurationTime(startTime, endTime),
+      vehicles: result,
+    };
   }
 
   cleanSearchName(word: string): string {

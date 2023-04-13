@@ -5,6 +5,13 @@ import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
 import { includesAll } from '../../shared/utils/vehicle.utils';
+import { SearchVehicleDto } from '../../shared/dtos/vehicle.dto';
+import { VehicleEntity } from '../vehicles/entities/vehicle.entity';
+import { convertToNumber, parsePrice } from '../../shared/utils/mercado-libre.utils';
+import { PriceCurrency } from '../vehicles/dtos/vehicle.enums';
+
+const PRICE_LIMIT_PEN = 4500;
+const PRICE_LIMIT_USD = 1500;
 
 @Injectable()
 export class MercadolibreService {
@@ -27,26 +34,77 @@ export class MercadolibreService {
     const html: string = await page.content();
     const $: CheerioAPI = cheerio.load(html);
 
-    const vehicleList: Cheerio<CheerioElement> = $('li.ui-search-layout__item');
+    return this.getVehiclesByHtml({ $html: $, searchWords });
+  }
+
+  async getVehiclesByHtml(data: SearchVehicleDto): Promise<VehicleEntity[]> {
+    const { $html, searchWords } = data;
+    const vehicleList: Cheerio<CheerioElement> = $html('li.ui-search-layout__item');
+    const mercadolibreVehicles: VehicleEntity[] = [];
 
     for (const vehicleBlock of vehicleList) {
-      const vehicleUrlBlock = $(vehicleBlock).find('div.ui-search-item__group a');
-      const vehicleName = vehicleUrlBlock.attr('title');
-      const vehicleYear = $(vehicleBlock)
+      const vehicleUrlBlock = $html(vehicleBlock).find('div.ui-search-item__group a');
+      const priceHtml = $html(vehicleBlock).find(
+        'div.ui-search-price div.ui-search-price__second-line span.price-tag span.price-tag-amount span.price-tag-fraction',
+      );
+      const tagPriceHtml = $html(vehicleBlock).find(
+        'div.ui-search-price div.ui-search-price__second-line span.price-tag span.price-tag-amount span.price-tag-symbol',
+      );
+      const tagPrice = tagPriceHtml.html().trim();
+      const price = parsePrice(priceHtml.html());
+
+      const vehicleUrl = vehicleUrlBlock.attr('href');
+      const [, firstPath] = vehicleUrl.trim().split('MPE-');
+      const [id] = firstPath.split('-');
+      const description = vehicleUrlBlock.attr('title')?.toLowerCase();
+      const vehicleImage = $html(vehicleBlock).find(
+        'div.slick-track div.slick-slide img',
+      );
+      const vehicleImageUrl = vehicleImage.attr('src');
+      const year = $html(vehicleBlock).find(
+        'div.ui-search-item__group ul.ui-search-card-attributes li.ui-search-card-attributes__attribute',
+      );
+      const mileage = $html(vehicleBlock)
         .find(
           'div.ui-search-item__group ul.ui-search-card-attributes li.ui-search-card-attributes__attribute',
         )
-        .html();
+        .next();
 
-      const vehicleDescription = `${vehicleName?.toLowerCase() ?? ''} ${
-        vehicleYear?.trim().toLowerCase() ?? ''
-      }`;
-      if (!includesAll(vehicleDescription, searchWords)) {
+      const completeDescription = `${description ?? ''} ${year?.html()?.trim() ?? ''}`;
+
+      if (!includesAll(completeDescription, searchWords)) {
         break;
       }
-      console.log('mercadolibre:', vehicleDescription);
+
+      if (tagPrice === 'S/' && price >= PRICE_LIMIT_PEN) {
+        mercadolibreVehicles.push({
+          currency: PriceCurrency.PEN,
+          externalId: id,
+          frontImage: vehicleImageUrl,
+          mileage: convertToNumber(mileage.html()),
+          isEstimatedPrice: true,
+          url: vehicleUrl,
+          year: +year.html(),
+          originalPrice: price,
+          price,
+          description,
+        });
+      } else if (tagPrice === 'U$S' && price >= PRICE_LIMIT_USD) {
+        mercadolibreVehicles.push({
+          currency: PriceCurrency.USD,
+          externalId: id,
+          frontImage: vehicleImageUrl,
+          mileage: convertToNumber(mileage.html()),
+          isEstimatedPrice: false,
+          url: vehicleUrl,
+          year: +year.html(),
+          originalPrice: price,
+          price,
+          description,
+        });
+      }
     }
 
-    return [];
+    return mercadolibreVehicles;
   }
 }

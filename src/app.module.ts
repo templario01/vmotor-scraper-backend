@@ -18,7 +18,7 @@ import { ApiModule } from './api/api.module';
         PORT: Joi.number().required(),
         EPHEMERAL_PROXIES_API_URL: Joi.string().required(),
         EPHEMERAL_PROXIES_HOST: Joi.string().required(),
-        EPHEMERAL_PROXIES_API_KEY: Joi.string().required(),
+        RAPIDAPI_KEY: Joi.string().required(),
       }),
       envFilePath: '.env',
     }),

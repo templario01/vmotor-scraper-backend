@@ -81,8 +81,10 @@ export class NeoautoService {
           url: `${url}/${vehicleURL}`,
           currency: PriceCurrency.USD,
           price: vehiclePrice,
+          originalPrice: vehiclePrice,
           frontImage: imageUrl,
           externalId: id,
+          isEstimatedPrice: false,
         });
       } else {
         break;

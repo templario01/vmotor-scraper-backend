@@ -52,10 +52,9 @@ export const buildEnvConfigServiceMock = () => {
   const envConfigService = jest.mocked<EnvConfigService>(EnvConfigService as any, true);
 
   envConfigService.app = jest.fn().mockReturnValue({ environment: 'test' });
-  envConfigService.ephemeralProxiesApiUrl = jest.fn().mockReturnValue({
+  envConfigService.ephemeralProxiesApi = jest.fn().mockReturnValue({
     url: 'https://fake-api-url.com',
     host: 'fake-api-host.com',
-    apiKey: 'fake-api-key',
   });
   envConfigService.mercadolibre = jest
     .fn()
