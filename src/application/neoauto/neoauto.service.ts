@@ -19,6 +19,7 @@ import { VehicleEntity } from '../vehicles/entities/vehicle.entity';
 import { PriceCurrency } from '../vehicles/dtos/vehicle.enums';
 import { getVehicleInfoByNeoauto } from '../../shared/utils/neoauto.utils';
 import { SearchVehicleDto } from '../../shared/dtos/vehicle.dto';
+import { formatAmount } from '../../shared/utils/format-amount.utils';
 
 @Injectable()
 export class NeoautoService {
@@ -76,15 +77,17 @@ export class NeoautoService {
       );
 
       if (includesAll(vehicleDescription, searchWords)) {
+        const originalPrice = formatAmount(vehiclePrice).toUnit();
+
         neoautoVehicles.push({
           description: vehicleDescription,
-          url: `${url}/${vehicleURL}`,
-          currency: PriceCurrency.USD,
-          price: vehiclePrice,
-          originalPrice: vehiclePrice,
           frontImage: imageUrl,
           externalId: id,
           isEstimatedPrice: false,
+          url: `${url}/${vehicleURL}`,
+          currency: PriceCurrency.USD,
+          price: originalPrice,
+          originalPrice,
         });
       } else {
         break;

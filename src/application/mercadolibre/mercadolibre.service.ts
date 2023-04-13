@@ -9,13 +9,26 @@ import { SearchVehicleDto } from '../../shared/dtos/vehicle.dto';
 import { VehicleEntity } from '../vehicles/entities/vehicle.entity';
 import { convertToNumber, parsePrice } from '../../shared/utils/mercado-libre.utils';
 import { PriceCurrency } from '../vehicles/dtos/vehicle.enums';
+import { CurrencyConverterApiService } from '../currency-converter-api-v1/currency-converter.service';
+import { AddVehicleByCurrency } from './dtos/mercadolibre.dto';
+import {
+  ML_HTML_IMG,
+  ML_HTML_MILEAGE,
+  ML_HTML_PRICE,
+  ML_HTML_TAGPRICE,
+  ML_HTML_YEAR,
+} from './constants/mercadolibre.constant';
+import { formatAmount } from '../../shared/utils/format-amount.utils';
 
 const PRICE_LIMIT_PEN = 4500;
 const PRICE_LIMIT_USD = 1500;
 
 @Injectable()
 export class MercadolibreService {
-  constructor(private readonly envConfigService: EnvConfigService) {}
+  constructor(
+    private readonly envConfigService: EnvConfigService,
+    private readonly currencyConverterService: CurrencyConverterApiService,
+  ) {}
 
   async searchMercadolibreVehicles(browser: PuppeteerBrowser, cleanSearch: string) {
     const page: PuppeteerPage = await browser.newPage();
@@ -41,68 +54,81 @@ export class MercadolibreService {
     const { $html, searchWords } = data;
     const vehicleList: Cheerio<CheerioElement> = $html('li.ui-search-layout__item');
     const mercadolibreVehicles: VehicleEntity[] = [];
+    const exchangeRate = await this.currencyConverterService.convertCurrency({
+      from: PriceCurrency.PEN,
+      to: PriceCurrency.USD,
+    });
 
     for (const vehicleBlock of vehicleList) {
       const vehicleUrlBlock = $html(vehicleBlock).find('div.ui-search-item__group a');
-      const priceHtml = $html(vehicleBlock).find(
-        'div.ui-search-price div.ui-search-price__second-line span.price-tag span.price-tag-amount span.price-tag-fraction',
-      );
-      const tagPriceHtml = $html(vehicleBlock).find(
-        'div.ui-search-price div.ui-search-price__second-line span.price-tag span.price-tag-amount span.price-tag-symbol',
-      );
+      const priceHtml = $html(vehicleBlock).find(ML_HTML_PRICE);
+      const tagPriceHtml = $html(vehicleBlock).find(ML_HTML_TAGPRICE);
       const tagPrice = tagPriceHtml.html().trim();
-      const price = parsePrice(priceHtml.html());
-
-      const vehicleUrl = vehicleUrlBlock.attr('href');
-      const [, firstPath] = vehicleUrl.trim().split('MPE-');
+      const url = vehicleUrlBlock.attr('href');
+      const [, firstPath] = url.trim().split('MPE-');
       const [id] = firstPath.split('-');
       const description = vehicleUrlBlock.attr('title')?.toLowerCase();
-      const vehicleImage = $html(vehicleBlock).find(
-        'div.slick-track div.slick-slide img',
-      );
+      const vehicleImage = $html(vehicleBlock).find(ML_HTML_IMG);
       const vehicleImageUrl = vehicleImage.attr('src');
-      const year = $html(vehicleBlock).find(
-        'div.ui-search-item__group ul.ui-search-card-attributes li.ui-search-card-attributes__attribute',
-      );
-      const mileage = $html(vehicleBlock)
-        .find(
-          'div.ui-search-item__group ul.ui-search-card-attributes li.ui-search-card-attributes__attribute',
-        )
-        .next();
-
+      const year = $html(vehicleBlock).find(ML_HTML_YEAR);
+      const mileage = $html(vehicleBlock).find(ML_HTML_MILEAGE).next();
       const completeDescription = `${description ?? ''} ${year?.html()?.trim() ?? ''}`;
 
       if (!includesAll(completeDescription, searchWords)) {
         break;
       }
 
-      if (tagPrice === 'S/' && price >= PRICE_LIMIT_PEN) {
-        mercadolibreVehicles.push({
-          currency: PriceCurrency.PEN,
-          externalId: id,
-          frontImage: vehicleImageUrl,
-          mileage: convertToNumber(mileage.html()),
-          isEstimatedPrice: true,
-          url: vehicleUrl,
-          year: +year.html(),
-          originalPrice: price,
-          price,
-          description,
-        });
-      } else if (tagPrice === 'U$S' && price >= PRICE_LIMIT_USD) {
-        mercadolibreVehicles.push({
-          currency: PriceCurrency.USD,
-          externalId: id,
-          frontImage: vehicleImageUrl,
-          mileage: convertToNumber(mileage.html()),
-          isEstimatedPrice: false,
-          url: vehicleUrl,
-          year: +year.html(),
-          originalPrice: price,
-          price,
-          description,
-        });
-      }
+      const vehicle = {
+        mileage: convertToNumber(mileage.html().trim()),
+        year: +year.html().trim(),
+        price: parsePrice(priceHtml.html()),
+        tagPrice,
+        description,
+        id,
+        vehicleImageUrl,
+        url,
+      };
+      this.addVehicleByCurrency({
+        exchangeRate: exchangeRate?.new_amount,
+        mercadolibreSearchResponse: vehicle,
+        mercadolibreVehicles,
+      });
+    }
+
+    return mercadolibreVehicles;
+  }
+
+  private addVehicleByCurrency(data: AddVehicleByCurrency): VehicleEntity[] {
+    const {
+      mercadolibreSearchResponse: { tagPrice, id, vehicleImageUrl, price, ...props },
+      mercadolibreVehicles,
+      exchangeRate,
+    } = data;
+
+    if (tagPrice === 'S/' && price >= PRICE_LIMIT_PEN) {
+      const estimatedPrice = exchangeRate ? formatAmount(price * exchangeRate) : null;
+
+      mercadolibreVehicles.push({
+        currency: PriceCurrency.PEN,
+        externalId: id,
+        frontImage: vehicleImageUrl,
+        isEstimatedPrice: true,
+        originalPrice: formatAmount(price).toUnit(),
+        price: estimatedPrice.toUnit(),
+        ...props,
+      });
+    } else if (tagPrice === 'U$S' && price >= PRICE_LIMIT_USD) {
+      const originalPrice = formatAmount(price).toUnit();
+
+      mercadolibreVehicles.push({
+        currency: PriceCurrency.USD,
+        externalId: id,
+        frontImage: vehicleImageUrl,
+        isEstimatedPrice: false,
+        price: originalPrice,
+        originalPrice,
+        ...props,
+      });
     }
 
     return mercadolibreVehicles;

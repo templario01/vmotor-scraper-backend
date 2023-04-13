@@ -1,7 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EnvConfigService } from '../../config/env-config.service';
 import { HttpService } from '@nestjs/axios';
-import { CurrencyConverterResponse } from './dtos/currency-converter.response';
+import {
+  CurrencyConverterRequest,
+  CurrencyConverterResponse,
+} from './dtos/currency-converter.dto';
+import { catchError, lastValueFrom } from 'rxjs';
 
 const CURRENCY_UNIT_VALUE = 1;
 
@@ -10,6 +14,7 @@ export class CurrencyConverterApiService {
   private url: string;
   private host: string;
   private rapidapiKey: string;
+  private readonly logger = new Logger(CurrencyConverterApiService.name);
   constructor(
     private readonly httpService: HttpService,
     private readonly envConfigService: EnvConfigService,
@@ -21,20 +26,36 @@ export class CurrencyConverterApiService {
     this.url = url;
   }
 
-  async convertCurrency({ from, to }: { from: string; to: string }) {
-    const URL = `${this.url}/convertcurrency`;
-    const { data } = await this.httpService.axiosRef.get<CurrencyConverterResponse>(URL, {
-      headers: {
-        'X-RapidAPI-Key': this.rapidapiKey,
-        'X-RapidAPI-Host': this.host,
-      },
-      params: {
-        have: from,
-        want: to,
-        unit: CURRENCY_UNIT_VALUE.toString(),
-      },
-    });
+  async convertCurrency({
+    from,
+    to,
+  }: CurrencyConverterRequest): Promise<CurrencyConverterResponse> {
+    try {
+      const URL = `${this.url}/convertcurrency`;
+      const { data } = await lastValueFrom(
+        this.httpService
+          .get<CurrencyConverterResponse>(URL, {
+            headers: {
+              'X-RapidAPI-Key': this.rapidapiKey,
+              'X-RapidAPI-Host': this.host,
+            },
+            params: {
+              have: from,
+              want: to,
+              amount: CURRENCY_UNIT_VALUE.toString(),
+            },
+          })
+          .pipe(
+            catchError((error) => {
+              throw new Error(error);
+            }),
+          ),
+      );
 
-    return data;
+      return data;
+    } catch (error) {
+      this.logger.error('request failed', error);
+      return null;
+    }
   }
 }

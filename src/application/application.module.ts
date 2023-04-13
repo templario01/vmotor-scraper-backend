@@ -6,16 +6,19 @@ import { EnvConfigModule } from '../config/env-config.module';
 import { MercadolibreService } from './mercadolibre/mercadolibre.service';
 import { NeoautoService } from './neoauto/neoauto.service';
 import { AutocosmosService } from './autocosmos/autocosmos.service';
+import { CurrencyConverterApiService } from './currency-converter-api-v1/currency-converter.service';
+import { HttpModule } from '@nestjs/axios';
 
 const providers = [
   VehicleService,
   MercadolibreService,
   NeoautoService,
   AutocosmosService,
+  CurrencyConverterApiService,
 ];
 
 @Module({
-  imports: [PersistenceModule, JobsModule, EnvConfigModule],
+  imports: [PersistenceModule, JobsModule, EnvConfigModule, HttpModule],
   providers: [...providers],
   exports: [...providers],
 })

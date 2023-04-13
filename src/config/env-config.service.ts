@@ -32,21 +32,21 @@ export class EnvConfigService {
 
   public ephemeralProxiesApi() {
     return {
-      url: this.configService.get<string>('EPHEMERAL_PROXIES_API_URL'),
+      url: this.configService.get<string>('EPHEMERAL_PROXIES_API'),
       host: this.configService.get<string>('EPHEMERAL_PROXIES_HOST'),
     };
   }
 
   public currencyConverterApi() {
     return {
-      url: this.configService.get<string>('EPHEMERAL_PROXIES_API_URL'),
-      host: this.configService.get<string>('EPHEMERAL_PROXIES_HOST'),
+      url: this.configService.get<string>('CURRENCY_CONVERTER_API'),
+      host: this.configService.get<string>('CURRENCY_CONVERTER_HOST'),
     };
   }
 
   public rapidApi() {
     return {
-      apiKey: this.configService.get<string>('EPHEMERAL_PROXIES_API_KEY'),
+      apiKey: this.configService.get<string>('RAPIDAPI_KEY'),
     };
   }
 }

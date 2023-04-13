@@ -1,4 +1,4 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, Float, ObjectType } from '@nestjs/graphql';
 
 @ObjectType()
 export class VehicleEntity {
@@ -44,10 +44,10 @@ export class VehicleEntity {
   @Field({ nullable: true })
   readonly doors?: number;
 
-  @Field({ nullable: true })
+  @Field(() => Float, { nullable: true })
   readonly price?: number;
 
-  @Field({ nullable: true })
+  @Field(() => Float, { nullable: true })
   readonly originalPrice?: number;
 
   @Field(() => Boolean)

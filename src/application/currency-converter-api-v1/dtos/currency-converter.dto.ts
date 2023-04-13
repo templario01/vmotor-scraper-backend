@@ -4,3 +4,8 @@ export interface CurrencyConverterResponse {
   readonly old_currency: string;
   readonly old_amount: number;
 }
+
+export interface CurrencyConverterRequest {
+  from: string;
+  to: string;
+}
