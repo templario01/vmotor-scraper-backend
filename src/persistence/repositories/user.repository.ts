@@ -38,4 +38,11 @@ export class UserRepository {
       },
     });
   }
+
+  async validateAccount(uuid: string): Promise<User> {
+    return this.prisma.user.update({
+      where: { uuid },
+      data: { hasConfirmedEmail: true },
+    });
+  }
 }

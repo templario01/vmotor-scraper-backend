@@ -27,6 +27,7 @@ export class EnvConfigService {
   public app() {
     return {
       environment: this.configService.get<Environment>('NODE_ENV'),
+      appHost: this.configService.get<Environment>('APP_HOST'),
     };
   }
 
@@ -41,6 +42,22 @@ export class EnvConfigService {
     return {
       url: this.configService.get<string>('CURRENCY_CONVERTER_API'),
       host: this.configService.get<string>('CURRENCY_CONVERTER_HOST'),
+    };
+  }
+
+  public mailerConfig() {
+    return {
+      mailSender: this.configService.get<string>('MAIL_SENDER'),
+      mailPassword: this.configService.get<string>('MAIL_PASSWORD'),
+      mailPort: this.configService.get<string>('MAIL_PORT'),
+      mailHost: this.configService.get<string>('MAIL_HOST'),
+    };
+  }
+
+  public jwtConfig() {
+    return {
+      secret: this.configService.get<string>('JWT_SECRET'),
+      expirationTime: this.configService.get<string>('JWT_EXPIRATION_TIME'),
     };
   }
 

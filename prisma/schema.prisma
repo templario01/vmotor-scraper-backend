@@ -36,9 +36,10 @@ model Model {
 
 model User {
   id                Int       @id @default(autoincrement())
-  uuid              String    @default(cuid())
+  uuid              String    @unique @default(cuid())
   email             String    @unique
   hasConfirmedEmail Boolean
+  lastEmailSent     DateTime?
   password          String
   refreshToken      String?   @map(name: "refresh_token")
   lastSession       DateTime  @default(now())

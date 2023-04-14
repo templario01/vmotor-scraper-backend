@@ -1,21 +1,27 @@
 import { MailerService as MailService } from '@nestjs-modules/mailer';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
+import { SendEmailDto } from './dtos/send-email.dto';
 
 @Injectable()
 export class MailerService {
-  constructor(private mailerService: MailService) {}
+  private readonly logger = new Logger(MailerService.name);
+  constructor(private mailService: MailService) {}
 
-  async sendEmailConfirmation(email: string) {
-    const url = `example.com/auth/confirm?token=${'121243'}`;
+  async sendEmailConfirmation({ email, userUUID, host }: SendEmailDto) {
+    const confirmationUrl = `${host}/user/validate/${userUUID}`;
 
-    await this.mailerService.sendMail({
-      to: email,
-      subject: 'Welcome to Nice App! Confirm your Email',
-      template: './confirmation',
-      context: {
-        name: 'victor',
-        url,
-      },
-    });
+    this.mailService
+      .sendMail({
+        to: email,
+        subject: 'Welcome to V-Motor App! Confirm your Email',
+        template: './confirmation',
+        context: {
+          name: 'victor',
+          url: confirmationUrl,
+        },
+      })
+      .catch((error) => {
+        this.logger.error('fail to send email', error);
+      });
   }
 }

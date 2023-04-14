@@ -10,6 +10,8 @@ import { CurrencyConverterApiService } from './currency-converter-api-v1/currenc
 import { HttpModule } from '@nestjs/axios';
 import { AuthService } from './auth/auth.service';
 import { MailerModule } from './mailer/mailer.module';
+import { JwtModule } from '@nestjs/jwt';
+import { EnvConfigService } from '../config/env-config.service';
 
 const providers = [
   VehicleService,
@@ -21,7 +23,26 @@ const providers = [
 ];
 
 @Module({
-  imports: [PersistenceModule, JobsModule, EnvConfigModule, HttpModule, MailerModule],
+  imports: [
+    JwtModule.registerAsync({
+      imports: [EnvConfigModule],
+      inject: [EnvConfigService],
+      useFactory: async (envConfigService: EnvConfigService) => {
+        const { expirationTime, secret } = envConfigService.jwtConfig();
+
+        return {
+          global: true,
+          signOptions: { expiresIn: expirationTime },
+          secret,
+        };
+      },
+    }),
+    PersistenceModule,
+    JobsModule,
+    EnvConfigModule,
+    HttpModule,
+    MailerModule,
+  ],
   providers: [...providers],
   exports: [...providers],
 })
