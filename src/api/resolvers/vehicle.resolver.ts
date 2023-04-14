@@ -1,5 +1,5 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { VehicleService } from '../../application/vehicles/services/vehicle.service';
+import { VehicleService } from '../../application/vehicles/vehicle.service';
 import { SyncNeoautoInventoryInput } from '../../application/vehicles/inputs/sync-neoauto-inventory.input';
 import {
   SyncInventoryJobEntity,

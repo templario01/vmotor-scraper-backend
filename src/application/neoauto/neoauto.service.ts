@@ -18,8 +18,8 @@ import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
 import { VehicleEntity } from '../vehicles/entities/vehicle.entity';
 import { PriceCurrency } from '../vehicles/dtos/vehicle.enums';
 import { getVehicleInfoByNeoauto } from '../../shared/utils/neoauto.utils';
-import { SearchVehicleDto } from '../../shared/dtos/vehicle.dto';
 import { formatAmount } from '../../shared/utils/format-amount.utils';
+import { SearchVehicleDto } from '../vehicles/dtos/vehicle.dto';
 
 @Injectable()
 export class NeoautoService {

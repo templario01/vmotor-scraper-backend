@@ -4,12 +4,14 @@ import { BrandsRepository } from './repositories/brands.repository';
 import { ModelsRepository } from './repositories/models.repository';
 import { WebsiteRepository } from './repositories/website.repository';
 import { VehicleRepository } from './repositories/vehicle.repository';
+import { UserRepository } from './repositories/user.repository';
 
 const repositories = [
   BrandsRepository,
   ModelsRepository,
   WebsiteRepository,
   VehicleRepository,
+  UserRepository,
 ];
 @Module({
   imports: [],

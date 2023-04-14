@@ -1,20 +1,21 @@
 import { Injectable } from '@nestjs/common';
-import { VehicleRepository } from '../../../persistence/repositories/vehicle.repository';
-import { SyncedVehicleEntity } from '../entities/synced-vehicle.entity';
-import { NeoAutoSyncService } from '../../../jobs/services/neo-auto-sync.service';
-import { SyncNeoautoInventoryInput } from '../inputs/sync-neoauto-inventory.input';
-import { GetVehicleCondition, NeoautoVehicleConditionEnum } from '../dtos/vehicle.enums';
-import { SyncInventoryJobEntity } from '../entities/sync-inventory-job.entity';
-import { getDurationTime } from '../../../shared/utils/time.utils';
-import { BrandsSyncService } from '../../../jobs/services/brands-sync.service';
-import { SyncBrandsJobEntity } from '../entities/sync-brands-job.entity';
-import { MercadolibreSyncService } from '../../../jobs/services/mercadolibre-sync.service';
+import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
+import { SyncedVehicleEntity } from './entities/synced-vehicle.entity';
+import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
+import { SyncNeoautoInventoryInput } from './inputs/sync-neoauto-inventory.input';
+import { GetVehicleCondition, NeoautoVehicleConditionEnum } from './dtos/vehicle.enums';
+import { SyncInventoryJobEntity } from './entities/sync-inventory-job.entity';
+import { getDurationTime } from '../../shared/utils/time.utils';
+import { BrandsSyncService } from '../../jobs/services/brands-sync.service';
+import { SyncBrandsJobEntity } from './entities/sync-brands-job.entity';
+import { MercadolibreSyncService } from '../../jobs/services/mercadolibre-sync.service';
 import * as puppeteer from 'puppeteer';
 import { Browser as PuppeteerBrowser } from 'puppeteer';
-import { MercadolibreService } from '../../mercadolibre/mercadolibre.service';
-import { NeoautoService } from '../../neoauto/neoauto.service';
-import { AutocosmosService } from '../../autocosmos/autocosmos.service';
-import { VehicleSearchEntity } from '../entities/vehicle-search.entity';
+import { MercadolibreService } from '../mercadolibre/mercadolibre.service';
+import { NeoautoService } from '../neoauto/neoauto.service';
+import { AutocosmosService } from '../autocosmos/autocosmos.service';
+import { VehicleSearchEntity } from './entities/vehicle-search.entity';
+import { cleanSearchName } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class VehicleService {
@@ -44,7 +45,7 @@ export class VehicleService {
   async getVehiclesFromWebsites(inputSearch?: string): Promise<VehicleSearchEntity> {
     const startTime = new Date();
 
-    const cleanSearch = this.cleanSearchName(inputSearch);
+    const cleanSearch = cleanSearchName(inputSearch);
     const browser: PuppeteerBrowser = await puppeteer.launch({
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
     });
@@ -63,14 +64,6 @@ export class VehicleService {
       duration: getDurationTime(startTime, endTime),
       vehicles: result,
     };
-  }
-
-  cleanSearchName(word: string): string {
-    const caracteresValidos = /[^a-zA-Z0-9]+/g;
-    word = word.replace(caracteresValidos, ' ');
-    word = word.trim().toLowerCase();
-
-    return word;
   }
 
   async syncNeoautoInventory(

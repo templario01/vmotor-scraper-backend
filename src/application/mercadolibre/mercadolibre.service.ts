@@ -5,7 +5,6 @@ import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
 import { includesAll } from '../../shared/utils/vehicle.utils';
-import { SearchVehicleDto } from '../../shared/dtos/vehicle.dto';
 import { VehicleEntity } from '../vehicles/entities/vehicle.entity';
 import { convertToNumber, parsePrice } from '../../shared/utils/mercado-libre.utils';
 import { PriceCurrency } from '../vehicles/dtos/vehicle.enums';
@@ -19,6 +18,7 @@ import {
   ML_HTML_YEAR,
 } from './constants/mercadolibre.constant';
 import { formatAmount } from '../../shared/utils/format-amount.utils';
+import { SearchVehicleDto } from '../vehicles/dtos/vehicle.dto';
 
 const PRICE_LIMIT_PEN = 4500;
 const PRICE_LIMIT_USD = 1500;

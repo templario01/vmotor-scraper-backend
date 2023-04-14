@@ -35,13 +35,14 @@ model Model {
 }
 
 model User {
-  id           Int       @id @default(autoincrement())
-  uuid         String    @default(cuid())
-  email        String    @unique
-  password     String
-  refreshToken String?   @map(name: "refresh_token")
-  lastSession  DateTime  @default(now())
-  vehicles     Vehicle[] @relation("UserToVehicle", name: "favorite")
+  id                Int       @id @default(autoincrement())
+  uuid              String    @default(cuid())
+  email             String    @unique
+  hasConfirmedEmail Boolean
+  password          String
+  refreshToken      String?   @map(name: "refresh_token")
+  lastSession       DateTime  @default(now())
+  vehicles          Vehicle[] @relation("UserToVehicle", name: "favorite")
 
   @@map("user")
 }
