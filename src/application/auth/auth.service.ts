@@ -1,14 +1,17 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { EnvConfigService } from '../../config/env-config.service';
 import { UserRepository } from '../../persistence/repositories/user.repository';
-import { CreateAccountInput } from './inputs/create-account.input';
+import { SignInInput } from './inputs/sign-in.input';
 import { MailerService } from '../mailer/mailer.service';
 import { CreateAccountEntity } from './entities/create-account.entity';
 import { JwtService } from '@nestjs/jwt';
 import { AccessTokenEntity } from './entities/access-token.entity';
+import { compare } from 'bcrypt';
+import { SignUpInput } from './inputs/sign-up.input';
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
   constructor(
     private readonly envConfigService: EnvConfigService,
     private readonly userRepository: UserRepository,
@@ -16,10 +19,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async createAccount({
-    email,
-    password,
-  }: CreateAccountInput): Promise<CreateAccountEntity> {
+  async signUp({ email, password }: SignUpInput): Promise<CreateAccountEntity> {
     const findUser = await this.userRepository.findUserByEmail(email);
     if (findUser?.hasConfirmedEmail) {
       throw new HttpException('email already taken', HttpStatus.BAD_REQUEST);
@@ -33,6 +33,24 @@ export class AuthService {
     });
 
     return this.notifyEmail(registeredEmail, uuid);
+  }
+
+  async signIn(
+    { email, password }: SignInInput,
+    userAgent: string,
+  ): Promise<AccessTokenEntity> {
+    const user = await this.userRepository.findUserByEmail(email);
+    const isValidPassword = compare(password, user.password);
+    if (!isValidPassword) {
+      throw new HttpException('invalid password', HttpStatus.UNAUTHORIZED);
+    }
+    const payload = { username: user.email, sub: user.uuid };
+    await this.registerLastSession(user.id, userAgent);
+
+    return {
+      accessToken: await this.jwtService.signAsync(payload),
+      expiresIn: this.envConfigService.jwtConfig().expirationTime,
+    };
   }
 
   async resendEmailConfirmation(email: string) {
@@ -57,6 +75,10 @@ export class AuthService {
   }
 
   async confirmAccount(userUUID: string): Promise<AccessTokenEntity> {
+    const { hasConfirmedEmail } = await this.userRepository.findUserByUUID(userUUID);
+    if (hasConfirmedEmail === true) {
+      return null;
+    }
     const user = await this.userRepository.validateAccount(userUUID);
     const payload = { username: user.email, sub: user.uuid };
     const accessToken = await this.jwtService.signAsync(payload);
@@ -66,5 +88,13 @@ export class AuthService {
       accessToken,
       expiresIn,
     };
+  }
+
+  private async registerLastSession(userId: number, userAgent: string): Promise<void> {
+    const user = await this.userRepository.registerSession(userId);
+
+    this.logger.verbose(
+      `New session registered: ${JSON.stringify({ ...user, userAgent })}`,
+    );
   }
 }

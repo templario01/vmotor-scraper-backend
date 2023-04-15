@@ -38,7 +38,7 @@ model User {
   id                Int       @id @default(autoincrement())
   uuid              String    @unique @default(cuid())
   email             String    @unique
-  hasConfirmedEmail Boolean
+  hasConfirmedEmail Boolean   @default(false)
   lastEmailSent     DateTime?
   password          String
   refreshToken      String?   @map(name: "refresh_token")

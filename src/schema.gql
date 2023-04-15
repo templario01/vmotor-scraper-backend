@@ -2,13 +2,13 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type CreateAccountEntity {
-  message: String!
+type AccessTokenEntity {
+  accessToken: String!
+  expiresIn: String!
 }
 
-input CreateAccountInput {
-  email: String!
-  password: String!
+type CreateAccountEntity {
+  message: String!
 }
 
 """
@@ -24,7 +24,9 @@ enum GetVehicleCondition {
 }
 
 type Mutation {
-  createAccount(createAccountInput: CreateAccountInput!): CreateAccountEntity!
+  resendEmail(email: String!): CreateAccountEntity!
+  signIn(signInInput: SignInInput!): AccessTokenEntity!
+  signUp(signUpInput: SignUpInput!): CreateAccountEntity!
   syncInventoryBrands: SyncBrandsJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
   syncNeoautoInvetory(syncNeoautoInvetoryInput: SyncNeoautoInventoryInput!): SyncInventoryJobEntity!
@@ -32,6 +34,16 @@ type Mutation {
 
 type Query {
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
+}
+
+input SignInInput {
+  email: String!
+  password: String!
+}
+
+input SignUpInput {
+  email: String!
+  password: String!
 }
 
 type SyncBrandsJobEntity {

@@ -1,5 +1,5 @@
 import { Args, Mutation, Resolver } from '@nestjs/graphql';
-import { CreateAccountInput } from '../../application/auth/inputs/create-account.input';
+
 import { AuthService } from '../../application/auth/auth.service';
 import {
   CreateAccountEntity,
@@ -8,14 +8,10 @@ import {
 
 @Resolver()
 export class UserResolver {
-  constructor(private readonly authService: AuthService) {
-    null;
-  }
+  constructor(private readonly authService: AuthService) {}
 
   @Mutation(createAccountReturnType)
-  createAccount(
-    @Args('createAccountInput') input: CreateAccountInput,
-  ): Promise<CreateAccountEntity> {
-    return this.authService.createAccount(input);
+  resendEmail(@Args('email') email: string): Promise<CreateAccountEntity> {
+    return this.authService.resendEmailConfirmation(email);
   }
 }

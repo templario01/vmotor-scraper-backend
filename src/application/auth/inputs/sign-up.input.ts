@@ -2,7 +2,7 @@ import { Field, InputType } from '@nestjs/graphql';
 import { IsEmail, IsNotEmpty } from 'class-validator';
 
 @InputType()
-export class CreateAccountInput {
+export class SignUpInput {
   @Field()
   @IsEmail()
   readonly email: string;

@@ -19,6 +19,30 @@ export class UserRepository {
     });
   }
 
+  async registerSession(id: number) {
+    return this.prisma.user.update({
+      where: {
+        id,
+      },
+      data: {
+        lastSession: new Date(),
+      },
+      select: {
+        uuid: true,
+        email: true,
+        lastSession: true,
+      },
+    });
+  }
+
+  async findUserByUUID(uuid: string): Promise<User> {
+    return this.prisma.user.findFirst({
+      where: {
+        uuid,
+      },
+    });
+  }
+
   async findUserByToken(token: string): Promise<any> {
     return this.prisma.user.findFirst({
       where: {

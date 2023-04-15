@@ -8,7 +8,7 @@ export class MailerService {
   constructor(private mailService: MailService) {}
 
   async sendEmailConfirmation({ email, userUUID, host }: SendEmailDto) {
-    const confirmationUrl = `${host}/user/validate/${userUUID}`;
+    const confirmationUrl = `${host}/user/${userUUID}/verify`;
 
     this.mailService
       .sendMail({
