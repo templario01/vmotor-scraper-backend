@@ -1,12 +1,20 @@
 import { Module } from '@nestjs/common';
 import { VehicleResolver } from './resolvers/vehicle.resolver';
 import { ApplicationModule } from '../application/application.module';
+import { UserResolver } from './resolvers/user.resolver';
+import { UserController } from './controllers/user.controller';
+import { HealthController } from './controllers/health';
+import { EnvConfigModule } from '../config/env-config.module';
+import { PersistenceModule } from '../persistence/persistence.module';
+import { JwtModule } from '@nestjs/jwt';
+import { AuthResolver } from './resolvers/auth.resolver';
 
-const resolvers = [VehicleResolver];
-const controllers = [];
+const resolvers = [VehicleResolver, UserResolver, AuthResolver];
+const controllers = [UserController, HealthController];
+const authGuardModules = [EnvConfigModule, PersistenceModule, JwtModule];
 
 @Module({
-  imports: [ApplicationModule],
+  imports: [ApplicationModule, ...authGuardModules],
   controllers: [...controllers],
   providers: [...resolvers],
 })

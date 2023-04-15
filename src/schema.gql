@@ -2,6 +2,15 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type AccessTokenEntity {
+  accessToken: String!
+  expiresIn: String!
+}
+
+type CreateAccountEntity {
+  message: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -15,13 +24,26 @@ enum GetVehicleCondition {
 }
 
 type Mutation {
+  resendEmail(email: String!): CreateAccountEntity!
+  signIn(signInInput: SignInInput!): AccessTokenEntity!
+  signUp(signUpInput: SignUpInput!): CreateAccountEntity!
   syncInventoryBrands: SyncBrandsJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
   syncNeoautoInvetory(syncNeoautoInvetoryInput: SyncNeoautoInventoryInput!): SyncInventoryJobEntity!
 }
 
 type Query {
-  getVehicle(searchName: String!): VehicleEntity!
+  getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
+}
+
+input SignInInput {
+  email: String!
+  password: String!
+}
+
+input SignUpInput {
+  email: String!
+  password: String!
 }
 
 type SyncBrandsJobEntity {
@@ -42,9 +64,8 @@ input SyncNeoautoInventoryInput {
 }
 
 type VehicleEntity {
-  createdAt: DateTime!
   currency: String
-  description: String!
+  description: String
   doors: Float
   engineFuelType: String
   enginePowerHp: String
@@ -53,13 +74,17 @@ type VehicleEntity {
   externalId: String
   frontImage: String
   images: String
+  isEstimatedPrice: Boolean!
   mileage: Float
+  originalPrice: Float
   price: Float
   speeds: Float
-  status: String
   transmission: String
-  updatedAt: DateTime!
-  url: String!
-  uuid: ID!
+  url: String
   year: Float
+}
+
+type VehicleSearchEntity {
+  duration: String!
+  vehicles: [VehicleEntity!]!
 }

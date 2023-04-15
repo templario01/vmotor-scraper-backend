@@ -128,14 +128,8 @@ export class NeoAutoSyncService {
   ): Promise<Vehicle> {
     try {
       const { imageUrl, vehicleURL, vehiclePrice, websiteId, vehicleDescription } = data;
-      const { brand, modelWithYear, id } = getVehicleInfoByNeoauto(vehicleURL);
-      const { model, year } = getModelAndYearFromUrl(modelWithYear);
-
-      const { id: brandId } = await this.brandRepository.findByName(brand);
-      const { id: modelId } = await this.modelRepository.findByNameAndBrandId(
-        model,
-        brandId,
-      );
+      const { modelWithYear, id } = getVehicleInfoByNeoauto(vehicleURL);
+      const { year } = getModelAndYearFromUrl(modelWithYear);
 
       const vehicleInfo: CreateVehicleDto = {
         vehicle: {
@@ -152,8 +146,6 @@ export class NeoAutoSyncService {
           currency: PriceCurrency.USD,
           year: +year,
         },
-        brandId,
-        modelId,
         websiteId,
       };
 
@@ -210,7 +202,7 @@ export class NeoAutoSyncService {
     };
   }
 
-  private getPriceFromHtmlBlock(page: CheerioAPI, htmlElement: CheerioElement): number {
+  getPriceFromHtmlBlock(page: CheerioAPI, htmlElement: CheerioElement): number {
     const price: string = page(htmlElement)
       .find(HTML_PRICE_CONCESSIONAIRE + OR + HTML_PRICE_USED)
       .html();

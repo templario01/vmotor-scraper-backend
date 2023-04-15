@@ -1,21 +1,48 @@
 import { Module } from '@nestjs/common';
-import { VehicleService } from './vehicles/services/vehicle.service';
+import { VehicleService } from './vehicles/vehicle.service';
 import { PersistenceModule } from '../persistence/persistence.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { EnvConfigModule } from '../config/env-config.module';
 import { MercadolibreService } from './mercadolibre/mercadolibre.service';
 import { NeoautoService } from './neoauto/neoauto.service';
 import { AutocosmosService } from './autocosmos/autocosmos.service';
+import { CurrencyConverterApiService } from './currency-converter-api-v1/currency-converter.service';
+import { HttpModule } from '@nestjs/axios';
+import { AuthService } from './auth/auth.service';
+import { MailerModule } from './mailer/mailer.module';
+import { JwtModule } from '@nestjs/jwt';
+import { EnvConfigService } from '../config/env-config.service';
 
 const providers = [
   VehicleService,
   MercadolibreService,
   NeoautoService,
   AutocosmosService,
+  CurrencyConverterApiService,
+  AuthService,
 ];
 
 @Module({
-  imports: [PersistenceModule, JobsModule, EnvConfigModule],
+  imports: [
+    JwtModule.registerAsync({
+      imports: [EnvConfigModule],
+      inject: [EnvConfigService],
+      useFactory: async (envConfigService: EnvConfigService) => {
+        const { expirationTime, secret } = envConfigService.jwtConfig();
+
+        return {
+          global: true,
+          signOptions: { expiresIn: expirationTime },
+          secret,
+        };
+      },
+    }),
+    PersistenceModule,
+    JobsModule,
+    EnvConfigModule,
+    HttpModule,
+    MailerModule,
+  ],
   providers: [...providers],
   exports: [...providers],
 })

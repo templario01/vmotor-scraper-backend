@@ -47,7 +47,8 @@ export class InventorySyncService {
   }
 
   async getProxy(): Promise<Proxy> {
-    const { url: API_URL, apiKey, host } = this.envConfigService.ephemeralProxiesApiUrl();
+    const { url: API_URL, host } = this.envConfigService.ephemeralProxiesApi();
+    const { apiKey } = this.envConfigService.rapidApi();
     const {
       data: { proxy },
     } = await this.httpService.axiosRef.get<EphemeralProxyResponse>(API_URL, {

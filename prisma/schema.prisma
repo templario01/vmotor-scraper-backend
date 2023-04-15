@@ -11,29 +11,41 @@ datasource db {
 }
 
 model Brand {
-  id        Int       @id @default(autoincrement())
-  uuid      String    @unique @default(cuid())
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
   models    Model[]
-  vehicles  Vehicle[]
 
   @@map("brand")
 }
 
 model Model {
-  id        Int       @id @default(autoincrement())
-  uuid      String    @default(cuid())
+  id        Int      @id @default(autoincrement())
+  uuid      String   @default(cuid())
   name      String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
-  brand     Brand?    @relation(fields: [brandId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  brand     Brand?   @relation(fields: [brandId], references: [id])
   brandId   Int?
-  vehicle   Vehicle[]
 
   @@unique([brandId, name])
   @@map("model")
+}
+
+model User {
+  id                Int       @id @default(autoincrement())
+  uuid              String    @unique @default(cuid())
+  email             String    @unique
+  hasConfirmedEmail Boolean   @default(false)
+  lastEmailSent     DateTime?
+  password          String
+  refreshToken      String?   @map(name: "refresh_token")
+  lastSession       DateTime  @default(now())
+  vehicles          Vehicle[] @relation("UserToVehicle", name: "favorite")
+
+  @@map("user")
 }
 
 model Website {
@@ -47,6 +59,16 @@ model Website {
   vehicle   Vehicle[]
 
   @@map("website")
+}
+
+model WebsiteSyncLog {
+  id                Int         @id @default(autoincrement())
+  createdAt         DateTime    @default(now())
+  duration          String
+  errorMessage      String?
+  vehiclesCondition Condition[]
+
+  @@map("website_sync_log")
 }
 
 model Vehicle {
@@ -71,13 +93,10 @@ model Vehicle {
   currency       Currency?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @default(now()) @updatedAt
-  model          Model?     @relation(fields: [modelId], references: [id])
-  modelId        Int?
   website        Website?   @relation(fields: [websiteId], references: [id])
   websiteId      Int?
   status         Status     @default(ACTIVE)
-  brand          Brand?     @relation(fields: [brandId], references: [id])
-  brandId        Int?
+  users          User[]     @relation("UserToVehicle", name: "favorite")
 
   @@map("vehicle")
 }

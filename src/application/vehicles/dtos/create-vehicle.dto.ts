@@ -62,10 +62,4 @@ export class CreateVehicleDto {
 
   @Expose()
   readonly websiteId: number;
-
-  @Expose()
-  readonly brandId?: number;
-
-  @Expose()
-  readonly modelId?: number;
 }
