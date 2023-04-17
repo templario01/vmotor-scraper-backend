@@ -47,7 +47,16 @@ export class VehicleService {
 
     const cleanSearch = cleanSearchName(inputSearch);
     const browser: PuppeteerBrowser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--single-process',
+        '--no-zygote',
+      ],
+      executablePath:
+        process.env.NODE_ENV === 'production'
+          ? process.env.PUPPETER_EXECUTABLE_PATH
+          : puppeteer.executablePath(),
     });
 
     const [mercadolibreVehicles, neoautoVehicles] = await Promise.all([
