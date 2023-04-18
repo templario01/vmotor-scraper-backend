@@ -1,11 +1,14 @@
-FROM node:16.15-slim
+FROM node:18-slim
 
-RUN apt-get update && apt-get install -y openssl libssl-dev 
-
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
-ENV PUPPETEER_EXECUTABLE_PATH /usr/bin/google-chrome-stable
+RUN apt-get update && apt-get install -y openssl libssl-dev gnupg 
+RUN apt-get update \
+ && apt-get install -y chromium \
+    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
+    --no-install-recommends
 
 ARG BASE_DIR
+
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 WORKDIR /app
 
@@ -23,14 +26,3 @@ RUN npx prisma generate
 RUN npm run build
 
 CMD npm run prisma:up && npm start
-
-#RUN apk add --no-cache libc6-compat
-#RUN apk add --no-cache openssl1.1-compat-dev
-
-#RUN apk update && \
- #   apk add --no-cache \
-  #  udev \
-  #  ttf-freefont \
-   # chromium \
-  #  chromium-chromedriver
-#RUN apk add --update --no-cache openssl1.1-compat

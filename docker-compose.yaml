@@ -26,7 +26,7 @@ services:
       args:
         - BASE_DIR=.
     env_file:
-      - .env
+      - ./docker/.env
     ports:
       - "3300:3000"
     networks:
