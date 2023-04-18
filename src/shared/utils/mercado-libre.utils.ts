@@ -9,13 +9,21 @@ export function getMultiplesOfFortyEight(numero: number): number[] {
 }
 
 export function parsePrice(strPrice: string): number {
-  const price = strPrice.replace('.', '').trim();
+  try {
+    const price = strPrice.replace('.', '').trim();
 
-  return parseFloat(price);
+    return parseFloat(price);
+  } catch (error) {
+    return undefined;
+  }
 }
 
 export function convertToNumber(textNumber: string) {
-  const numberString = textNumber.replace(/[^0-9]/g, '');
+  try {
+    const numberString = textNumber.replace(/[^0-9]/g, '');
 
-  return +numberString;
+    return +numberString;
+  } catch (error) {
+    return undefined;
+  }
 }

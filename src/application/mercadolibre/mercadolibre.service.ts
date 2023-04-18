@@ -63,10 +63,10 @@ export class MercadolibreService {
       const vehicleUrlBlock = $html(vehicleBlock).find('div.ui-search-item__group a');
       const priceHtml = $html(vehicleBlock).find(ML_HTML_PRICE);
       const tagPriceHtml = $html(vehicleBlock).find(ML_HTML_TAGPRICE);
-      const tagPrice = tagPriceHtml.html().trim();
+      const tagPrice = tagPriceHtml.html()?.trim() || '';
       const url = vehicleUrlBlock.attr('href');
-      const [, firstPath] = url.trim().split('MPE-');
-      const [id] = firstPath.split('-');
+      const [, firstPath] = url?.trim()?.split('MPE-') || [undefined, undefined];
+      const [id] = firstPath?.split('-') || undefined;
       const description = vehicleUrlBlock.attr('title')?.toLowerCase();
       const vehicleImage = $html(vehicleBlock).find(ML_HTML_IMG);
       const vehicleImageUrl = vehicleImage.attr('src');
@@ -79,9 +79,9 @@ export class MercadolibreService {
       }
 
       const vehicle = {
-        mileage: convertToNumber(mileage.html().trim()),
-        year: +year.html().trim(),
-        price: parsePrice(priceHtml.html()),
+        mileage: convertToNumber(mileage?.html()?.trim()) || null,
+        year: +year?.html()?.trim(),
+        price: parsePrice(priceHtml?.html()) || null,
         tagPrice,
         description,
         id,

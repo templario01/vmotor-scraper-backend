@@ -1,0 +1,41 @@
+version: "3.9"
+
+services:
+  postgres-vmotor:
+    image: "postgres:14-alpine"
+    container_name: postgres-vmotor
+    restart: always
+    ports:
+      - "5500:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: vmotor_db
+    networks:
+      - net-vmotor
+
+  vmotor-ms:
+    container_name: vmotor-ms
+    image: vmotor-ms
+    restart: always
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - BASE_DIR=.
+    env_file:
+      - ./docker/.env
+    ports:
+      - "3300:3000"
+    networks:
+      - net-vmotor
+    depends_on:
+      - postgres-vmotor
+
+volumes:
+  pgdata:
+
+networks:
+  net-vmotor:

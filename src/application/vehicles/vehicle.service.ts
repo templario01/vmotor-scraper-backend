@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { SyncedVehicleEntity } from './entities/synced-vehicle.entity';
 import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
@@ -10,7 +10,7 @@ import { BrandsSyncService } from '../../jobs/services/brands-sync.service';
 import { SyncBrandsJobEntity } from './entities/sync-brands-job.entity';
 import { MercadolibreSyncService } from '../../jobs/services/mercadolibre-sync.service';
 import * as puppeteer from 'puppeteer';
-import { Browser as PuppeteerBrowser } from 'puppeteer';
+import { Browser as PuppeteerBrowser, PuppeteerLaunchOptions } from 'puppeteer';
 import { MercadolibreService } from '../mercadolibre/mercadolibre.service';
 import { NeoautoService } from '../neoauto/neoauto.service';
 import { AutocosmosService } from '../autocosmos/autocosmos.service';
@@ -19,6 +19,7 @@ import { cleanSearchName } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class VehicleService {
+  private readonly logger = new Logger(VehicleService.name);
   constructor(
     private readonly vehicleRepository: VehicleRepository,
     private readonly neoautoSyncService: NeoAutoSyncService,
@@ -46,9 +47,13 @@ export class VehicleService {
     const startTime = new Date();
 
     const cleanSearch = cleanSearchName(inputSearch);
-    const browser: PuppeteerBrowser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    });
+    const config: PuppeteerLaunchOptions = {
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--single-process'],
+      ...(process.env.NODE_ENV === 'staging' && {
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+      }),
+    };
+    const browser: PuppeteerBrowser = await puppeteer.launch(config);
 
     const [mercadolibreVehicles, neoautoVehicles] = await Promise.all([
       this.mercadolibreService.searchMercadolibreVehicles(browser, cleanSearch),
