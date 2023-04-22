@@ -4,12 +4,13 @@ import { Vehicle } from '@prisma/client';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import { VehicleStatusEnum } from '../../application/vehicles/dtos/vehicle.enums';
 import { UpdateInventoryStatus } from '../../application/vehicles/dtos/vehicle.dto';
+import { VehicleWithRelation } from '../../application/vehicles/types/vehicle.type';
 
 @Injectable()
 export class VehicleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findFirst(brand: string, model: string) {
+  async findFirst(brand: string, model: string): Promise<VehicleWithRelation> {
     return this.prisma.vehicle.findFirst({
       where: {
         AND: [
@@ -27,6 +28,7 @@ export class VehicleRepository {
           },
         ],
       },
+      include: { website: true },
     });
   }
 

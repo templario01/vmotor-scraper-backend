@@ -35,17 +35,28 @@ model Model {
 }
 
 model User {
-  id                Int       @id @default(autoincrement())
-  uuid              String    @unique @default(cuid())
-  email             String    @unique
-  hasConfirmedEmail Boolean   @default(false)
+  id                Int                   @id @default(autoincrement())
+  uuid              String                @unique @default(cuid())
+  email             String                @unique
+  hasConfirmedEmail Boolean               @default(false)
   lastEmailSent     DateTime?
   password          String
-  refreshToken      String?   @map(name: "refresh_token")
-  lastSession       DateTime  @default(now())
-  vehicles          Vehicle[] @relation("UserToVehicle", name: "favorite")
+  refreshToken      String?               @map(name: "refresh_token")
+  lastSession       DateTime              @default(now())
+  vehicles          UserFavoriteVehicle[]
 
   @@map("user")
+}
+
+model UserFavoriteVehicle {
+  user       User     @relation(fields: [userId], references: [id])
+  userId     Int
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicleId  Int
+  assignedAt DateTime @default(now())
+
+  @@id([userId, vehicleId])
+  @@map("user_favorite_vehicle")
 }
 
 model Website {
@@ -72,14 +83,14 @@ model WebsiteSyncLog {
 }
 
 model Vehicle {
-  id             Int        @id @default(autoincrement())
-  uuid           String     @unique @default(cuid())
-  externalId     String?    @unique
-  url            String     @unique
+  id             Int                   @id @default(autoincrement())
+  uuid           String                @unique @default(cuid())
+  externalId     String?               @unique
+  url            String
   description    String?
   year           Int?
   transmission   String?
-  mileage        Decimal?   @default(0) @db.Decimal(12, 2)
+  mileage        Decimal?              @default(0) @db.Decimal(12, 2)
   engineType     String?
   enginePowerRpm String?
   enginePowerHp  String?
@@ -89,14 +100,14 @@ model Vehicle {
   images         String?
   doors          Int?
   condition      Condition?
-  price          Decimal?   @default(0) @db.Decimal(12, 2)
+  price          Decimal?              @default(0) @db.Decimal(12, 2)
   currency       Currency?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @default(now()) @updatedAt
-  website        Website?   @relation(fields: [websiteId], references: [id])
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @default(now()) @updatedAt
+  website        Website?              @relation(fields: [websiteId], references: [id])
   websiteId      Int?
-  status         Status     @default(ACTIVE)
-  users          User[]     @relation("UserToVehicle", name: "favorite")
+  status         Status                @default(ACTIVE)
+  users          UserFavoriteVehicle[]
 
   @@map("vehicle")
 }

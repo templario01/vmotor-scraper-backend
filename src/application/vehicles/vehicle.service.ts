@@ -3,7 +3,12 @@ import { VehicleRepository } from '../../persistence/repositories/vehicle.reposi
 import { SyncedVehicleEntity } from './entities/synced-vehicle.entity';
 import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
 import { SyncNeoautoInventoryInput } from './inputs/sync-neoauto-inventory.input';
-import { GetVehicleCondition, NeoautoVehicleConditionEnum } from './dtos/vehicle.enums';
+import {
+  GetVehicleCondition,
+  NeoautoVehicleConditionEnum,
+  PriceCurrency,
+  VehicleCondition,
+} from './dtos/vehicle.enums';
 import { SyncInventoryJobEntity } from './entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../shared/utils/time.utils';
 import { BrandsSyncService } from '../../jobs/services/brands-sync.service';
@@ -16,6 +21,7 @@ import { NeoautoService } from '../neoauto/neoauto.service';
 import { AutocosmosService } from '../autocosmos/autocosmos.service';
 import { VehicleSearchEntity } from './entities/vehicle-search.entity';
 import { cleanSearchName } from '../../shared/utils/vehicle.utils';
+import { Status } from '../../shared/dtos/status.enum';
 
 @Injectable()
 export class VehicleService {
@@ -31,15 +37,23 @@ export class VehicleService {
   ) {}
 
   async findVehicle(brand: string, model: string): Promise<SyncedVehicleEntity> {
-    const { mileage, price, ...result } = await this.vehicleRepository.findFirst(
-      brand,
-      model,
-    );
+    const { status, website, condition, mileage, price, currency, ...result } =
+      await this.vehicleRepository.findFirst(brand, model);
 
     return {
       ...result,
+      status: Status[status],
+      condition: VehicleCondition[condition],
+      currency: PriceCurrency[currency],
       mileage: mileage?.toNumber(),
       price: price?.toNumber(),
+      website: {
+        createdAt: website.createdAt,
+        name: website.name,
+        updatedAt: website.updatedAt,
+        url: website.url,
+        uuid: website.uuid,
+      },
     };
   }
 
@@ -48,9 +62,10 @@ export class VehicleService {
 
     const cleanSearch = cleanSearchName(inputSearch);
     const config: PuppeteerLaunchOptions = {
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--single-process'],
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
       ...(process.env.NODE_ENV === 'staging' && {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
+        headless: true,
       }),
     };
     const browser: PuppeteerBrowser = await puppeteer.launch(config);
@@ -63,6 +78,8 @@ export class VehicleService {
     const result = [...mercadolibreVehicles, ...neoautoVehicles].sort(
       (vehicleA, vehicleB) => vehicleA.price - vehicleB.price,
     );
+
+    await browser.close();
     const endTime = new Date();
 
     return {

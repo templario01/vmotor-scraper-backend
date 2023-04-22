@@ -7,6 +7,27 @@ type AccessTokenEntity {
   expiresIn: String!
 }
 
+input AddFavoriteVehicleInput {
+  condition: VehicleCondition!
+  currency: PriceCurrency!
+  description: String
+  doors: Float
+  engineFuelType: String
+  enginePowerHp: String
+  enginePowerRpm: String
+  engineType: String
+  externalId: String!
+  frontImage: String
+  images: String
+  mileage: Float
+  price: Float
+  speeds: Float
+  transmission: String
+  url: String!
+  website: UuidInput!
+  year: Float!
+}
+
 type CreateAccountEntity {
   message: String!
 }
@@ -16,6 +37,10 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+input DeleteFavoriteVehicleInput {
+  vehicle: UuidInput!
+}
+
 """Vehicle condition"""
 enum GetVehicleCondition {
   ALL
@@ -24,12 +49,20 @@ enum GetVehicleCondition {
 }
 
 type Mutation {
+  addFavoriteVehicleToUser(addFavoriteVehicleInput: AddFavoriteVehicleInput!): SyncedVehicleEntity!
+  deleteFavoriteVehicleToUser(deleteFavoriteVehicleInput: DeleteFavoriteVehicleInput!): [SyncedVehicleEntity!]!
   resendEmail(email: String!): CreateAccountEntity!
   signIn(signInInput: SignInInput!): AccessTokenEntity!
   signUp(signUpInput: SignUpInput!): CreateAccountEntity!
   syncInventoryBrands: SyncBrandsJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
   syncNeoautoInvetory(syncNeoautoInvetoryInput: SyncNeoautoInventoryInput!): SyncInventoryJobEntity!
+}
+
+"""USD or PEN"""
+enum PriceCurrency {
+  PEN
+  USD
 }
 
 type Query {
@@ -44,6 +77,12 @@ input SignInInput {
 input SignUpInput {
   email: String!
   password: String!
+}
+
+"""ACTIVE or INACTIVE"""
+enum Status {
+  ACTIVE
+  INACTIVE
 }
 
 type SyncBrandsJobEntity {
@@ -61,6 +100,41 @@ type SyncInventoryJobEntity {
 input SyncNeoautoInventoryInput {
   """Vehicle condition for sync"""
   condition: GetVehicleCondition!
+}
+
+type SyncedVehicleEntity {
+  condition: String!
+  createdAt: DateTime!
+  currency: PriceCurrency!
+  description: String!
+  doors: Float
+  engineFuelType: String
+  enginePowerHp: String
+  enginePowerRpm: String
+  engineType: String
+  externalId: String!
+  frontImage: String
+  images: String
+  mileage: Float
+  price: Float
+  speeds: Float
+  status: Status!
+  transmission: String
+  updatedAt: DateTime!
+  url: String!
+  uuid: ID!
+  website: WebsiteEntity
+  year: Float!
+}
+
+input UuidInput {
+  uuid: String!
+}
+
+"""NEW or USED"""
+enum VehicleCondition {
+  NEW
+  USED
 }
 
 type VehicleEntity {
@@ -87,4 +161,12 @@ type VehicleEntity {
 type VehicleSearchEntity {
   duration: String!
   vehicles: [VehicleEntity!]!
+}
+
+type WebsiteEntity {
+  createdAt: DateTime!
+  name: String!
+  updatedAt: DateTime!
+  url: String!
+  uuid: String!
 }

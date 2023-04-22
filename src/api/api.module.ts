@@ -8,8 +8,9 @@ import { EnvConfigModule } from '../config/env-config.module';
 import { PersistenceModule } from '../persistence/persistence.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthResolver } from './resolvers/auth.resolver';
+import { UserVehicleResolver } from './resolvers/user-vehicle.resolver';
 
-const resolvers = [VehicleResolver, UserResolver, AuthResolver];
+const resolvers = [VehicleResolver, UserResolver, AuthResolver, UserVehicleResolver];
 const controllers = [UserController, HealthController];
 const authGuardModules = [EnvConfigModule, PersistenceModule, JwtModule];
 

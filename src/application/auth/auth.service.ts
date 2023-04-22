@@ -44,7 +44,7 @@ export class AuthService {
     if (!isValidPassword) {
       throw new HttpException('invalid password', HttpStatus.UNAUTHORIZED);
     }
-    const payload = { username: user.email, sub: user.uuid };
+    const payload = { username: user.email, sub: user.id };
     await this.registerLastSession(user.id, userAgent);
 
     return {
@@ -65,9 +65,9 @@ export class AuthService {
     return this.notifyEmail(email, findUser.uuid);
   }
 
-  private async notifyEmail(email: string, userUUID: string) {
+  private async notifyEmail(email: string, userId: string) {
     const { appHost } = this.envConfigService.app();
-    await this.mailerService.sendEmailConfirmation({ email, host: appHost, userUUID });
+    await this.mailerService.sendEmailConfirmation({ email, host: appHost, userId });
 
     return {
       message: `Please confirm your email ${email}. If you don't see the confirmation email in your inbox, please check your spam folder.`,

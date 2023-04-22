@@ -88,11 +88,14 @@ export class MercadolibreService {
         vehicleImageUrl,
         url,
       };
-      this.addVehicleByCurrency({
-        exchangeRate: exchangeRate?.new_amount,
-        mercadolibreSearchResponse: vehicle,
-        mercadolibreVehicles,
-      });
+
+      if (vehicle?.id && vehicle?.price) {
+        this.addVehicleByCurrency({
+          exchangeRate: exchangeRate?.new_amount,
+          mercadolibreSearchResponse: vehicle,
+          mercadolibreVehicles,
+        });
+      }
     }
 
     return mercadolibreVehicles;

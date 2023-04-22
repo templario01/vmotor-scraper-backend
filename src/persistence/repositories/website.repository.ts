@@ -10,6 +10,10 @@ export class WebsiteRepository {
     return this.prisma.website.findMany();
   }
 
+  async findById(id: number): Promise<Website> {
+    return this.prisma.website.findUnique({ where: { id } });
+  }
+
   async findByName(name: string): Promise<Website> {
     return this.prisma.website.findUnique({
       where: {

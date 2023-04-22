@@ -16,9 +16,68 @@ services:
     networks:
       - net-vmotor
 
-  vmotor-ms:
-    container_name: vmotor-ms
-    image: vmotor-ms
+  grafana:
+    image: grafana/grafana:8.0.6
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafanadata:/var/lib/grafana
+
+
+  prometheus:
+    image: prom/prometheus:v2.28.1
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheusdata:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=1y'
+      - '--web.enable-lifecycle'
+    networks:
+      - net-vmotor
+
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:latest
+    container_name: node_exporter
+    restart: unless-stopped
+    ports:
+    - "9100:9100"
+    command:
+     - '--path.rootfs=/host'
+    pid: host
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
+    networks:
+      - net-vmotor
+        
+  cadvisor:
+    image: zcube/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
+    networks:
+      - net-vmotor
+
+  vmotor-server:
+    image: vmotor-server
     restart: always
     build:
       context: .
@@ -27,15 +86,27 @@ services:
         - BASE_DIR=.
     env_file:
       - ./docker/.env
-    ports:
-      - "3300:3000"
     networks:
       - net-vmotor
     depends_on:
       - postgres-vmotor
+  
+  nginx:
+    image: nginx:latest
+    volumes:
+      - "./conf.d:/etc/nginx/conf.d"
+    depends_on:
+      - vmotor-server
+    ports:
+      - "3300:3300"
+    networks:
+      - net-vmotor
 
 volumes:
   pgdata:
+  grafanadata:
+  prometheusdata:
 
 networks:
   net-vmotor:
+    driver: bridge

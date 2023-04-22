@@ -1,5 +1,5 @@
 export interface SendEmailDto {
   email: string;
-  userUUID: string;
+  userId: string;
   host: string;
 }
