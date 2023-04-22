@@ -66,6 +66,7 @@ enum PriceCurrency {
 }
 
 type Query {
+  getFavoriteVehicles: [SyncedVehicleEntity!]!
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
 

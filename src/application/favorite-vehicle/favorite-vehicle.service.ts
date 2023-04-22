@@ -6,10 +6,17 @@ import { SyncedVehicleEntity } from '../vehicles/entities/synced-vehicle.entity'
 import { Status } from '../../shared/dtos/status.enum';
 import { PriceCurrency, VehicleCondition } from '../vehicles/dtos/vehicle.enums';
 import { DeleteFavoriteVehicleInput } from './inputs/delete-favorite-vehicle.input';
+import { Vehicle } from '@prisma/client';
 
 @Injectable()
 export class FavoriteVehicleService {
   constructor(private readonly favoriteVehicleRepository: FavoriteVehicleRepository) {}
+
+  async getAllFavoriteVehicles(userId: number): Promise<SyncedVehicleEntity[]> {
+    const vehicles = await this.favoriteVehicleRepository.findVehiclesByUser(userId);
+
+    return vehicles.map((vehicle) => this.mapToEntity(vehicle));
+  }
 
   async addFavoriteVehicleToUser(
     input: AddFavoriteVehicleInput,
@@ -21,17 +28,11 @@ export class FavoriteVehicleService {
       websiteUUID: websiteInput.uuid,
       userId,
     };
-    const { status, condition, mileage, price, currency, ...result } =
-      await this.favoriteVehicleRepository.addFavoriteVehicleToUser(request);
+    const vehicle = await this.favoriteVehicleRepository.addFavoriteVehicleToUser(
+      request,
+    );
 
-    return {
-      ...result,
-      status: Status[status],
-      condition: VehicleCondition[condition],
-      currency: PriceCurrency[currency],
-      mileage: Number(mileage) || null,
-      price: Number(price),
-    };
+    return this.mapToEntity(vehicle);
   }
 
   async deleteFavoriteVehicleToUser(
@@ -43,13 +44,18 @@ export class FavoriteVehicleService {
       userId,
     });
 
-    return vehicles.map(({ status, condition, mileage, price, currency, ...result }) => ({
+    return vehicles.map((vehicle) => this.mapToEntity(vehicle));
+  }
+
+  private mapToEntity(vehicle: Vehicle): SyncedVehicleEntity {
+    const { status, condition, mileage, price, currency, ...result } = vehicle;
+    return {
       ...result,
       status: Status[status],
       condition: VehicleCondition[condition],
       currency: PriceCurrency[currency],
       mileage: Number(mileage) || null,
       price: Number(price),
-    }));
+    };
   }
 }

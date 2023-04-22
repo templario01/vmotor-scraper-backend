@@ -9,7 +9,10 @@ export class MailerService {
   constructor(private mailService: MailService) {}
 
   async sendEmailConfirmation({ email, userId, host }: SendEmailDto) {
-    const confirmationUrl = `${host}/user/${encrypt(userId)}/verify`;
+    console.log(email, userId, host);
+    const encryptedId = encrypt(userId.toString());
+    console.log(encryptedId);
+    const confirmationUrl = `${host}/user/${encryptedId}/verify`;
 
     this.mailService
       .sendMail({
@@ -17,7 +20,6 @@ export class MailerService {
         subject: 'Welcome to V-Motor App! Confirm your Email',
         template: './confirmation',
         context: {
-          name: 'victor',
           url: confirmationUrl,
         },
       })

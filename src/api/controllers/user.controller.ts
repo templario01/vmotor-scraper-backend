@@ -10,11 +10,13 @@ export class UserController {
   @Get(':hexid/verify')
   async verifyEmail(@Param('hexid') hexid: string, @Res() res: Response) {
     const redirectUrl = process.env.CLIENT_URL;
-    const user = await this.authService.confirmAccount(decrypt(hexid));
+    const decryptedId = parseInt(decrypt(hexid));
+    console.log(decryptedId);
+    const user = await this.authService.confirmAccount(decryptedId);
     if (user === null) {
       res.redirect(`${redirectUrl}/user-already-validated`);
     }
-    res.setHeader('Authorization', `Bearer ${user.accessToken}`);
+    res.set('Authorization', `Bearer ${user.accessToken}`);
     res.redirect(`${redirectUrl}/validate-user`);
   }
 }

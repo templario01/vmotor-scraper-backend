@@ -43,6 +43,14 @@ export class UserRepository {
     });
   }
 
+  async findUserById(id: number): Promise<User> {
+    return this.prisma.user.findFirst({
+      where: {
+        id,
+      },
+    });
+  }
+
   async findUserByToken(token: string): Promise<any> {
     return this.prisma.user.findFirst({
       where: {
@@ -63,9 +71,9 @@ export class UserRepository {
     });
   }
 
-  async validateAccount(uuid: string): Promise<User> {
+  async validateAccount(id: number): Promise<User> {
     return this.prisma.user.update({
-      where: { uuid },
+      where: { id },
       data: { hasConfirmedEmail: true },
     });
   }

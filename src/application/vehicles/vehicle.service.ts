@@ -59,7 +59,6 @@ export class VehicleService {
 
   async getVehiclesFromWebsites(inputSearch?: string): Promise<VehicleSearchEntity> {
     const startTime = new Date();
-
     const cleanSearch = cleanSearchName(inputSearch);
     const config: PuppeteerLaunchOptions = {
       args: ['--no-sandbox', '--disable-setuid-sandbox'],
@@ -69,7 +68,6 @@ export class VehicleService {
       }),
     };
     const browser: PuppeteerBrowser = await puppeteer.launch(config);
-
     const [mercadolibreVehicles, neoautoVehicles] = await Promise.all([
       this.mercadolibreService.searchMercadolibreVehicles(browser, cleanSearch),
       this.neoautoService.searchNeoautoVehicles(browser, cleanSearch),
@@ -78,7 +76,6 @@ export class VehicleService {
     const result = [...mercadolibreVehicles, ...neoautoVehicles].sort(
       (vehicleA, vehicleB) => vehicleA.price - vehicleB.price,
     );
-
     await browser.close();
     const endTime = new Date();
 

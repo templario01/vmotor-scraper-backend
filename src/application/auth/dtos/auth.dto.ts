@@ -1,13 +1,15 @@
 import { Request } from 'express';
 
 export interface CreateAccountDto {
-  email: string;
-  password: string;
+  readonly email: string;
+  readonly password: string;
 }
 
-export class SessionData {
-  sub: string;
-  email?: string;
+export interface SessionData {
+  readonly sub: number;
+  readonly iat: number;
+  readonly exp: number;
+  readonly username: string;
 }
 
 export interface UserRequest extends Request {

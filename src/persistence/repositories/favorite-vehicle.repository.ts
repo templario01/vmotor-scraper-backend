@@ -16,6 +16,18 @@ export class FavoriteVehicleRepository {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  async findVehiclesByUser(userId: number): Promise<Vehicle[]> {
+    return this.prisma.vehicle.findMany({
+      where: {
+        users: {
+          some: {
+            user: { id: userId },
+          },
+        },
+      },
+    });
+  }
+
   async addFavoriteVehicleToUser(data: AddFavoriteVehicleDto): Promise<Vehicle> {
     try {
       const { vehicleInfo, userId, websiteUUID } = data;

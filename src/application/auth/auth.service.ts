@@ -27,12 +27,12 @@ export class AuthService {
     if (findUser && !findUser.hasConfirmedEmail) {
       throw new HttpException('please confirm your email', HttpStatus.BAD_REQUEST);
     }
-    const { email: registeredEmail, uuid } = await this.userRepository.createAccount({
+    const { email: registeredEmail, id } = await this.userRepository.createAccount({
       email,
       password,
     });
 
-    return this.notifyEmail(registeredEmail, uuid);
+    return this.notifyEmail(registeredEmail, id);
   }
 
   async signIn(
@@ -62,10 +62,10 @@ export class AuthService {
       throw new HttpException('email already validated', HttpStatus.BAD_REQUEST);
     }
 
-    return this.notifyEmail(email, findUser.uuid);
+    return this.notifyEmail(email, findUser.id);
   }
 
-  private async notifyEmail(email: string, userId: string) {
+  private async notifyEmail(email: string, userId: number) {
     const { appHost } = this.envConfigService.app();
     await this.mailerService.sendEmailConfirmation({ email, host: appHost, userId });
 
@@ -74,12 +74,12 @@ export class AuthService {
     };
   }
 
-  async confirmAccount(userUUID: string): Promise<AccessTokenEntity> {
-    const { hasConfirmedEmail } = await this.userRepository.findUserByUUID(userUUID);
+  async confirmAccount(userId: number): Promise<AccessTokenEntity> {
+    const { hasConfirmedEmail } = await this.userRepository.findUserById(userId);
     if (hasConfirmedEmail === true) {
       return null;
     }
-    const user = await this.userRepository.validateAccount(userUUID);
+    const user = await this.userRepository.validateAccount(userId);
     const payload = { username: user.email, sub: user.uuid };
     const accessToken = await this.jwtService.signAsync(payload);
     const expiresIn = this.envConfigService.jwtConfig().expirationTime;
