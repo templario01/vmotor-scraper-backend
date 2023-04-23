@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EnvConfigService } from '../../config/env-config.service';
 import * as cheerio from 'cheerio';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
@@ -18,12 +18,15 @@ import {
 } from './constants/mercadolibre.constant';
 import { formatAmount } from '../../shared/utils/format-amount.utils';
 import { SearchVehicleDto } from '../vehicles/dtos/vehicle.dto';
+import retry from 'retry-as-promised';
 
 const PRICE_LIMIT_PEN = 4500;
 const PRICE_LIMIT_USD = 1500;
 
 @Injectable()
 export class MercadolibreService {
+  private readonly ML_URL: string;
+  private readonly logger = new Logger(MercadolibreService.name);
   constructor(
     private readonly envConfigService: EnvConfigService,
     private readonly currencyConverterService: CurrencyConverterApiService,
@@ -35,13 +38,29 @@ export class MercadolibreService {
     const searchPath = cleanSearch.replace(/\s+/g, '-');
     const searchWords = searchPath.split('-');
     const mercadolibreUrl = `${url}/vehiculos/${searchPath}_OrderId_PRICE_NoIndex_True`;
-
-    await page.goto(mercadolibreUrl, { referer: `${url}/vehiculos` });
-
-    const html: string = await page.content();
+    const html = await this.doRequest(page, mercadolibreUrl);
+    if (html === undefined) return [];
     const $: CheerioAPI = cheerio.load(html);
 
     return this.getVehiclesByHtml({ $html: $, searchWords });
+  }
+
+  async doRequest(page: PuppeteerPage, requestUrl: string) {
+    try {
+      const result = await retry(
+        async () => {
+          await page.goto(requestUrl, {
+            referer: `${this.ML_URL}/vehiculos`,
+            timeout: 0,
+          });
+          return page.content();
+        },
+        { max: 8, backoffBase: 1000, backoffExponent: 1.5 },
+      );
+      return result;
+    } catch (error) {
+      this.logger.error(`fail to request ${requestUrl} after 3 retries`, error);
+    }
   }
 
   async getVehiclesByHtml(data: SearchVehicleDto): Promise<VehicleEntity[]> {

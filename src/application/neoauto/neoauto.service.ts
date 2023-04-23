@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EnvConfigService } from '../../config/env-config.service';
 import * as cheerio from 'cheerio';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
@@ -19,10 +19,12 @@ import { PriceCurrency } from '../vehicles/dtos/vehicle.enums';
 import { getVehicleInfoByNeoauto } from '../../shared/utils/neoauto.utils';
 import { formatAmount } from '../../shared/utils/format-amount.utils';
 import { SearchVehicleDto } from '../vehicles/dtos/vehicle.dto';
+import retry from 'retry-as-promised';
 
 @Injectable()
 export class NeoautoService {
   private readonly NEOAUTO_URL: string;
+  private readonly logger = new Logger(NeoautoService.name);
   constructor(
     private readonly envConfigService: EnvConfigService,
     private readonly neoautoSyncService: NeoAutoSyncService,
@@ -38,13 +40,29 @@ export class NeoautoService {
     const searchPath = cleanSearch.replace(/\s+/g, '+');
     const searchWords = searchPath.split('+');
     const neoautoUrl = `${this.NEOAUTO_URL}/venta-de-autos?busqueda=${searchPath}&ord_price=0`;
-
-    await page.goto(neoautoUrl, { referer: `${this.NEOAUTO_URL}/venta-de-autos` });
-
-    const html: string = await page.content();
+    const html = await this.doRequest(page, neoautoUrl);
+    if (html === undefined) return [];
     const $: CheerioAPI = cheerio.load(html);
 
     return this.getVehiclesByHtml({ $html: $, searchWords, url: this.NEOAUTO_URL });
+  }
+
+  async doRequest(page: PuppeteerPage, requestUrl: string) {
+    try {
+      const result = await retry(
+        async () => {
+          await page.goto(requestUrl, {
+            referer: `${this.NEOAUTO_URL}/venta-de-autos`,
+            timeout: 0,
+          });
+          return page.content();
+        },
+        { max: 8, backoffBase: 1000, backoffExponent: 1.5 },
+      );
+      return result;
+    } catch (error) {
+      this.logger.error(`fail to request ${requestUrl} after 3 retries`, error);
+    }
   }
 
   async getVehiclesByHtml(data: SearchVehicleDto): Promise<VehicleEntity[]> {
@@ -71,10 +89,13 @@ export class NeoautoService {
         $html,
         vehicleBlock,
       );
+      if (!includesAll(vehicleDescription, searchWords)) {
+        break;
+      }
 
-      if (includesAll(vehicleDescription, searchWords)) {
-        const originalPrice = formatAmount(vehiclePrice).toUnit();
+      const originalPrice = formatAmount(vehiclePrice)?.toUnit();
 
+      if (originalPrice && id) {
         neoautoVehicles.push({
           description: vehicleDescription,
           frontImage: imageUrl,
@@ -85,8 +106,6 @@ export class NeoautoService {
           price: originalPrice,
           originalPrice,
         });
-      } else {
-        break;
       }
     }
 

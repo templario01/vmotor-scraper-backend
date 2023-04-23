@@ -62,6 +62,8 @@ export class VehicleService {
     const cleanSearch = cleanSearchName(inputSearch);
     const config: PuppeteerLaunchOptions = {
       args: [
+        "--proxy-server='direct://'",
+        '--proxy-bypass-list=*',
         '--disable-gpu',
         '--disable-dev-shm-usage',
         '--disable-setuid-sandbox',
@@ -69,10 +71,11 @@ export class VehicleService {
         '--no-sandbox',
         '--no-zygote',
       ],
+
       ...(process.env.NODE_ENV === 'staging' && {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
-        headless: true,
       }),
+      headless: true,
     };
     const browser: PuppeteerBrowser = await puppeteer.launch(config);
     const [mercadolibreVehicles, neoautoVehicles] = await Promise.all([
