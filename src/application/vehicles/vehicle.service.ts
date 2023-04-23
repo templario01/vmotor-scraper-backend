@@ -61,7 +61,14 @@ export class VehicleService {
     const startTime = new Date();
     const cleanSearch = cleanSearchName(inputSearch);
     const config: PuppeteerLaunchOptions = {
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      args: [
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-first-run',
+        '--no-sandbox',
+        '--no-zygote',
+      ],
       ...(process.env.NODE_ENV === 'staging' && {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
         headless: true,

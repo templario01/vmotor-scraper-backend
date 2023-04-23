@@ -15,6 +15,7 @@ export class UserRepository {
           equals: email,
           mode: 'insensitive',
         },
+        hasConfirmedEmail: true,
       },
     });
   }

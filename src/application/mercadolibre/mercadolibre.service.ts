@@ -3,7 +3,6 @@ import { EnvConfigService } from '../../config/env-config.service';
 import * as cheerio from 'cheerio';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
-import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
 import { includesAll } from '../../shared/utils/vehicle.utils';
 import { VehicleEntity } from '../vehicles/entities/vehicle.entity';
 import { convertToNumber, parsePrice } from '../../shared/utils/mercado-libre.utils';
@@ -37,12 +36,7 @@ export class MercadolibreService {
     const searchWords = searchPath.split('-');
     const mercadolibreUrl = `${url}/vehiculos/${searchPath}_OrderId_PRICE_NoIndex_True`;
 
-    await page.setExtraHTTPHeaders({
-      'User-Agent': USER_AGENT,
-      Referer: `${url}/vehiculos`,
-    });
-
-    await page.goto(mercadolibreUrl, { timeout: 0 });
+    await page.goto(mercadolibreUrl, { referer: `${url}/vehiculos` });
 
     const html: string = await page.content();
     const $: CheerioAPI = cheerio.load(html);

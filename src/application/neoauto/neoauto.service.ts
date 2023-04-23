@@ -3,7 +3,6 @@ import { EnvConfigService } from '../../config/env-config.service';
 import * as cheerio from 'cheerio';
 import { Browser as PuppeteerBrowser, Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
-import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
 import {
   HTML_DESCRIPTION_CONCESSIONARIE,
   HTML_DESCRIPTION_USED,
@@ -23,32 +22,29 @@ import { SearchVehicleDto } from '../vehicles/dtos/vehicle.dto';
 
 @Injectable()
 export class NeoautoService {
+  private readonly NEOAUTO_URL: string;
   constructor(
     private readonly envConfigService: EnvConfigService,
     private readonly neoautoSyncService: NeoAutoSyncService,
-  ) {}
+  ) {
+    this.NEOAUTO_URL = this.envConfigService.neoauto().url;
+  }
 
   async searchNeoautoVehicles(
     browser: PuppeteerBrowser,
     cleanSearch: string,
   ): Promise<VehicleEntity[]> {
     const page: PuppeteerPage = await browser.newPage();
-    const { url } = this.envConfigService.neoauto();
     const searchPath = cleanSearch.replace(/\s+/g, '+');
     const searchWords = searchPath.split('+');
-    const neoautoUrl = `${url}/venta-de-autos?busqueda=${searchPath}&ord_price=0`;
+    const neoautoUrl = `${this.NEOAUTO_URL}/venta-de-autos?busqueda=${searchPath}&ord_price=0`;
 
-    await page.setExtraHTTPHeaders({
-      'User-Agent': USER_AGENT,
-      Referer: `${url}/venta-de-autos`,
-    });
-
-    await page.goto(neoautoUrl, { timeout: 0 });
+    await page.goto(neoautoUrl, { referer: `${this.NEOAUTO_URL}/venta-de-autos` });
 
     const html: string = await page.content();
     const $: CheerioAPI = cheerio.load(html);
 
-    return this.getVehiclesByHtml({ $html: $, searchWords, url });
+    return this.getVehiclesByHtml({ $html: $, searchWords, url: this.NEOAUTO_URL });
   }
 
   async getVehiclesByHtml(data: SearchVehicleDto): Promise<VehicleEntity[]> {

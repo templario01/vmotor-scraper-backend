@@ -48,9 +48,11 @@
     "dinero.js": "^1.9.1",
     "graphql": "^16.6.0",
     "joi": "^17.7.1",
+    "p-retry": "^5.1.2",
     "prom-client": "^14.2.0",
     "puppeteer": "^19.7.1",
     "reflect-metadata": "^0.1.13",
+    "retry": "^0.13.1",
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0"
   },
