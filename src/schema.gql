@@ -54,9 +54,10 @@ type Mutation {
   resendEmail(email: String!): CreateAccountEntity!
   signIn(signInInput: SignInInput!): AccessTokenEntity!
   signUp(signUpInput: SignUpInput!): CreateAccountEntity!
+  syncAutocosmosInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
   syncInventoryBrands: SyncBrandsJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
-  syncNeoautoInvetory(syncNeoautoInvetoryInput: SyncNeoautoInventoryInput!): SyncInventoryJobEntity!
+  syncNeoautoInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
 }
 
 """USD or PEN"""
@@ -92,15 +93,15 @@ type SyncBrandsJobEntity {
   startTime: DateTime!
 }
 
+input SyncInventoryInput {
+  """Vehicle condition for sync"""
+  condition: GetVehicleCondition!
+}
+
 type SyncInventoryJobEntity {
   duration: String!
   endTime: DateTime!
   startTime: DateTime!
-}
-
-input SyncNeoautoInventoryInput {
-  """Vehicle condition for sync"""
-  condition: GetVehicleCondition!
 }
 
 type SyncedVehicleEntity {

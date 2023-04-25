@@ -33,7 +33,7 @@ import {
   OR,
 } from '../../application/vehicles/constants/neoauto.constants';
 import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/neoauto-sync.dto';
-import { PUPPETEER_ARGS, USER_AGENT } from '../../shared/dtos/puppeteer.contant';
+import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
 import { Vehicle } from '@prisma/client';
 
 @Injectable()
@@ -58,7 +58,6 @@ export class NeoAutoSyncService {
       const syncedVehiclesIds = [];
       const { condition, currentUrl, currentPages, proxyServer, currentWebsite } =
         await this.getSyncConfig(vehicleCondition, proxy);
-
       const browser: Browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
       });
@@ -156,7 +155,7 @@ export class NeoAutoSyncService {
   }
 
   private async getPages(condition: string): Promise<number> {
-    const browser: Browser = await puppeteer.launch({ args: PUPPETEER_ARGS });
+    const browser: Browser = await puppeteer.launch();
     const puppeteerPage: Page = await browser.newPage();
 
     await puppeteerPage.setExtraHTTPHeaders({

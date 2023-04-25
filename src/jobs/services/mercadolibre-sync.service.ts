@@ -10,7 +10,7 @@ import {
   getMultiplesOfFortyEight,
   parsePrice,
 } from '../../shared/utils/mercado-libre.utils';
-import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
+import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';

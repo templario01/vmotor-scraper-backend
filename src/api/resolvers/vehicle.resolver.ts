@@ -1,6 +1,6 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
 import { VehicleService } from '../../application/vehicles/vehicle.service';
-import { SyncNeoautoInventoryInput } from '../../application/vehicles/inputs/sync-neoauto-inventory.input';
+import { SyncInventoryInput } from '../../application/vehicles/inputs/sync-neoauto-inventory.input';
 import {
   SyncInventoryJobEntity,
   syncInventoryJobEntityReturnType,
@@ -26,8 +26,8 @@ export class VehicleResolver {
 
   @Mutation(syncInventoryJobEntityReturnType)
   syncNeoautoInvetory(
-    @Args('syncNeoautoInvetoryInput')
-    input: SyncNeoautoInventoryInput,
+    @Args('syncInvetoryInput')
+    input: SyncInventoryInput,
   ): Promise<SyncInventoryJobEntity> {
     return this.vehicleService.syncNeoautoInventory(input);
   }
@@ -35,6 +35,14 @@ export class VehicleResolver {
   @Mutation(syncInventoryJobEntityReturnType)
   syncMercadolibreInvetory(): Promise<SyncInventoryJobEntity> {
     return this.vehicleService.syncMercadolibreInventory();
+  }
+
+  @Mutation(syncInventoryJobEntityReturnType)
+  syncAutocosmosInvetory(
+    @Args('syncInvetoryInput')
+    input: SyncInventoryInput,
+  ): Promise<SyncInventoryJobEntity> {
+    return this.vehicleService.syncAutocosmosInventory(input);
   }
 
   @Mutation(syncBrandsJobEntityReturnType)

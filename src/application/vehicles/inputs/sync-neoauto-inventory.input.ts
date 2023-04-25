@@ -4,7 +4,7 @@ import { GetVehicleCondition } from '../dtos/vehicle.enums';
 export const SyncNeoautoInventoryTypeFunc = () => GetVehicleCondition;
 
 @InputType()
-export class SyncNeoautoInventoryInput {
+export class SyncInventoryInput {
   @Field(SyncNeoautoInventoryTypeFunc, { description: 'Vehicle condition for sync' })
   readonly condition: GetVehicleCondition;
 }

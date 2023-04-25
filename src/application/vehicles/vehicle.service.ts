@@ -1,8 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { SyncedVehicleEntity } from './entities/synced-vehicle.entity';
 import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
-import { SyncNeoautoInventoryInput } from './inputs/sync-neoauto-inventory.input';
+import { SyncInventoryInput } from './inputs/sync-neoauto-inventory.input';
 import {
   GetVehicleCondition,
   NeoautoVehicleConditionEnum,
@@ -18,14 +18,14 @@ import * as puppeteer from 'puppeteer';
 import { Browser as PuppeteerBrowser, PuppeteerLaunchOptions } from 'puppeteer';
 import { MercadolibreService } from '../mercadolibre/mercadolibre.service';
 import { NeoautoService } from '../neoauto/neoauto.service';
-import { AutocosmosService } from '../autocosmos/autocosmos.service';
 import { VehicleSearchEntity } from './entities/vehicle-search.entity';
 import { cleanSearchName } from '../../shared/utils/vehicle.utils';
 import { Status } from '../../shared/dtos/status.enum';
+import { AutocosmosSyncService } from '../../jobs/services/autocosmos-sync.service';
+import { AutocosmosVehicleConditionEnum } from '../autocosmos/enums/atocosmos.enum';
 
 @Injectable()
 export class VehicleService {
-  private readonly logger = new Logger(VehicleService.name);
   constructor(
     private readonly vehicleRepository: VehicleRepository,
     private readonly neoautoSyncService: NeoAutoSyncService,
@@ -33,7 +33,7 @@ export class VehicleService {
     private readonly brandsSyncService: BrandsSyncService,
     private readonly mercadolibreService: MercadolibreService,
     private readonly neoautoService: NeoautoService,
-    private readonly autocosmosService: AutocosmosService,
+    private readonly autocosmosSyncService: AutocosmosSyncService,
   ) {}
 
   async findVehicle(brand: string, model: string): Promise<SyncedVehicleEntity> {
@@ -95,9 +95,7 @@ export class VehicleService {
     };
   }
 
-  async syncNeoautoInventory(
-    input: SyncNeoautoInventoryInput,
-  ): Promise<SyncInventoryJobEntity> {
+  async syncNeoautoInventory(input: SyncInventoryInput): Promise<SyncInventoryJobEntity> {
     const syncPromises: Promise<void>[] = [];
     const startTime = new Date();
     switch (input.condition) {
@@ -132,6 +130,40 @@ export class VehicleService {
   async syncMercadolibreInventory(): Promise<SyncInventoryJobEntity> {
     const startTime = new Date();
     await this.mercadolibreSyncService.syncInventory();
+    const endTime = new Date();
+
+    return {
+      startTime,
+      endTime,
+      duration: getDurationTime(startTime, endTime),
+    };
+  }
+
+  async syncAutocosmosInventory(
+    input: SyncInventoryInput,
+  ): Promise<SyncInventoryJobEntity> {
+    const syncPromises: Promise<void>[] = [];
+    const startTime = new Date();
+    switch (input.condition) {
+      case GetVehicleCondition.NEW:
+        syncPromises.push(
+          this.autocosmosSyncService.syncInventory(AutocosmosVehicleConditionEnum.NEW),
+        );
+        break;
+      case GetVehicleCondition.USED:
+        syncPromises.push(
+          this.autocosmosSyncService.syncInventory(AutocosmosVehicleConditionEnum.USED),
+        );
+        break;
+      case GetVehicleCondition.ALL:
+        syncPromises.push(
+          this.autocosmosSyncService.syncInventory(AutocosmosVehicleConditionEnum.NEW),
+          this.autocosmosSyncService.syncInventory(AutocosmosVehicleConditionEnum.USED),
+        );
+        break;
+    }
+
+    await Promise.all(syncPromises);
     const endTime = new Date();
 
     return {
