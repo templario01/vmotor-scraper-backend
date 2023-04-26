@@ -11,6 +11,8 @@ import { Environment } from '../../config/dtos/config.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { getDurationTime } from '../../shared/utils/time.utils';
 import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/vehicle.enums';
+import { AutocosmosSyncService } from './autocosmos-sync.service';
+import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
 
 const proxyCountries = ['US', 'BR', 'PE'];
 
@@ -21,6 +23,7 @@ export class InventorySyncService {
     private readonly envConfigService: EnvConfigService,
     private readonly neoautoSyncService: NeoAutoSyncService,
     private readonly mercadolibreSyncService: MercadolibreSyncService,
+    private readonly autocosmosSyncService: AutocosmosSyncService,
     private readonly httpService: HttpService,
   ) {}
 
@@ -37,6 +40,14 @@ export class InventorySyncService {
     await Promise.all([
       this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW, proxyIP),
       this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED, proxyIP),
+      this.autocosmosSyncService.syncInventory(
+        AutocosmosVehicleConditionEnum.NEW,
+        proxyIP,
+      ),
+      this.autocosmosSyncService.syncInventory(
+        AutocosmosVehicleConditionEnum.USED,
+        proxyIP,
+      ),
       this.mercadolibreSyncService.syncInventory(proxyIP),
     ]);
 

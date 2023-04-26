@@ -11,6 +11,10 @@ import {
   WebsiteEntity,
   websiteEntityReturnType,
 } from '../../websites/entities/website.entity';
+import {
+  IPaginatedResponse,
+  PaginatedResponse,
+} from '../../../shared/utils/pagination/cursor-pagination';
 
 type Vehicle = Partial<Omit<PrismaVehicle, 'mileage' | 'price'>>;
 
@@ -91,3 +95,7 @@ export class SyncedVehicleEntity implements Vehicle {
 
 export const syncedVehicleEntityReturnType = () => SyncedVehicleEntity;
 export const arraySyncedVehicleEntityReturnType = () => [SyncedVehicleEntity];
+
+@ObjectType()
+export class PaginatedVehicleEntity extends PaginatedResponse(SyncedVehicleEntity) {}
+export type IPaginatedVehicleEntity = IPaginatedResponse<SyncedVehicleEntity>;

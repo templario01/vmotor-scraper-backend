@@ -60,6 +60,14 @@ type Mutation {
   syncNeoautoInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
 }
 
+type PaginatedVehicleEntity {
+  edges: [SyncedVehicleEntityEdge!]
+  endCursor: String
+  hasNextPage: Boolean!
+  nodes: [SyncedVehicleEntity!]
+  totalCount: Int!
+}
+
 """USD or PEN"""
 enum PriceCurrency {
   PEN
@@ -67,6 +75,7 @@ enum PriceCurrency {
 }
 
 type Query {
+  getBestVehiclesByWebsites(after: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
   getFavoriteVehicles: [SyncedVehicleEntity!]!
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
@@ -127,6 +136,11 @@ type SyncedVehicleEntity {
   uuid: ID!
   website: WebsiteEntity
   year: Float!
+}
+
+type SyncedVehicleEntityEdge {
+  cursor: String!
+  node: SyncedVehicleEntity!
 }
 
 input UuidInput {

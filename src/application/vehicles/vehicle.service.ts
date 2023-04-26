@@ -1,14 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
-import { SyncedVehicleEntity } from './entities/synced-vehicle.entity';
+import { IPaginatedVehicleEntity } from './entities/synced-vehicle.entity';
 import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
-import { SyncInventoryInput } from './inputs/sync-neoauto-inventory.input';
-import {
-  GetVehicleCondition,
-  NeoautoVehicleConditionEnum,
-  PriceCurrency,
-  VehicleCondition,
-} from './dtos/vehicle.enums';
+import { SyncInventoryInput } from './inputs/sync-inventory.input';
+import { GetVehicleCondition, NeoautoVehicleConditionEnum } from './dtos/vehicle.enums';
 import { SyncInventoryJobEntity } from './entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../shared/utils/time.utils';
 import { BrandsSyncService } from '../../jobs/services/brands-sync.service';
@@ -20,9 +15,9 @@ import { MercadolibreService } from '../mercadolibre/mercadolibre.service';
 import { NeoautoService } from '../neoauto/neoauto.service';
 import { VehicleSearchEntity } from './entities/vehicle-search.entity';
 import { cleanSearchName } from '../../shared/utils/vehicle.utils';
-import { Status } from '../../shared/dtos/status.enum';
 import { AutocosmosSyncService } from '../../jobs/services/autocosmos-sync.service';
 import { AutocosmosVehicleConditionEnum } from '../autocosmos/enums/atocosmos.enum';
+import { GetVehiclesArgs } from './inputs/get-vehicles.input';
 
 @Injectable()
 export class VehicleService {
@@ -36,25 +31,19 @@ export class VehicleService {
     private readonly autocosmosSyncService: AutocosmosSyncService,
   ) {}
 
-  async findVehicle(brand: string, model: string): Promise<SyncedVehicleEntity> {
-    const { status, website, condition, mileage, price, currency, ...result } =
-      await this.vehicleRepository.findFirst(brand, model);
+  async getBestVehicles(params: GetVehiclesArgs): Promise<IPaginatedVehicleEntity> {
+    const { searchName, ...paginationProps } = params;
+    const search = cleanSearchName(searchName);
+    const yearPattern = new RegExp(/\b\d{4}\b/g);
+    const extractYear = search.match(yearPattern);
+    const cleanSearch = search.replace(yearPattern, '');
+    const words = cleanSearch.split(' ').filter((word) => word !== '');
 
-    return {
-      ...result,
-      status: Status[status],
-      condition: VehicleCondition[condition],
-      currency: PriceCurrency[currency],
-      mileage: mileage?.toNumber(),
-      price: price?.toNumber(),
-      website: {
-        createdAt: website.createdAt,
-        name: website.name,
-        updatedAt: website.updatedAt,
-        url: website.url,
-        uuid: website.uuid,
-      },
-    };
+    return this.vehicleRepository.findBestVehicles({
+      words,
+      year: extractYear ? parseInt(extractYear[0]) : undefined,
+      ...paginationProps,
+    });
   }
 
   async getVehiclesFromWebsites(inputSearch?: string): Promise<VehicleSearchEntity> {
