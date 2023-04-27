@@ -15,7 +15,7 @@ import {
   randWord,
   randZipCode,
 } from '@ngneat/falso';
-import { EphemeralProxyResponse } from '../dtos/ephemeral-proxy.response';
+import { EphemeralProxyResponse } from '../../application/proxy-api-v2/dtos/ephemeral-proxy.response';
 
 export const buildeEphemeralProxyResponse = (): EphemeralProxyResponse => ({
   proxy: {

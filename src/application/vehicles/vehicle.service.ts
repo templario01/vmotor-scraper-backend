@@ -18,6 +18,9 @@ import { cleanSearchName } from '../../shared/utils/vehicle.utils';
 import { AutocosmosSyncService } from '../../jobs/services/autocosmos-sync.service';
 import { AutocosmosVehicleConditionEnum } from '../autocosmos/enums/atocosmos.enum';
 import { GetVehiclesArgs } from './inputs/get-vehicles.input';
+import { ProxyApiV2Service } from '../proxy-api-v2/proxy-api-v2.service';
+import { EnvConfigService } from '../../config/env-config.service';
+import { Environment } from '../../config/dtos/config.dto';
 
 @Injectable()
 export class VehicleService {
@@ -29,6 +32,8 @@ export class VehicleService {
     private readonly mercadolibreService: MercadolibreService,
     private readonly neoautoService: NeoautoService,
     private readonly autocosmosSyncService: AutocosmosSyncService,
+    private readonly envConfigService: EnvConfigService,
+    private readonly proxyApiV2Service: ProxyApiV2Service,
   ) {}
 
   async getBestVehicles(params: GetVehiclesArgs): Promise<IPaginatedVehicleEntity> {
@@ -84,24 +89,40 @@ export class VehicleService {
     };
   }
 
+  private async getProxy() {
+    let proxyIP: string;
+    const { environment } = this.envConfigService.app();
+    if (environment === Environment.PROD) {
+      const proxy = await this.proxyApiV2Service.getProxy();
+
+      if (proxy?.host && proxy?.port) {
+        const { host, port } = proxy;
+        proxyIP = `${host}:${port}`;
+      }
+    }
+    console.log(proxyIP);
+    return proxyIP;
+  }
+
   async syncNeoautoInventory(input: SyncInventoryInput): Promise<SyncInventoryJobEntity> {
     const syncPromises: Promise<void>[] = [];
     const startTime = new Date();
+    const proxy = await this.getProxy();
     switch (input.condition) {
       case GetVehicleCondition.NEW:
         syncPromises.push(
-          this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW),
+          this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW, proxy),
         );
         break;
       case GetVehicleCondition.USED:
         syncPromises.push(
-          this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED),
+          this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED, proxy),
         );
         break;
       case GetVehicleCondition.ALL:
         syncPromises.push(
-          this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW),
-          this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED),
+          this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW, proxy),
+          this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED, proxy),
         );
         break;
     }
@@ -118,7 +139,8 @@ export class VehicleService {
 
   async syncMercadolibreInventory(): Promise<SyncInventoryJobEntity> {
     const startTime = new Date();
-    await this.mercadolibreSyncService.syncInventory();
+    const proxy = await this.getProxy();
+    await this.mercadolibreSyncService.syncInventory(proxy);
     const endTime = new Date();
 
     return {
@@ -133,21 +155,34 @@ export class VehicleService {
   ): Promise<SyncInventoryJobEntity> {
     const syncPromises: Promise<void>[] = [];
     const startTime = new Date();
+    const proxy = await this.getProxy();
     switch (input.condition) {
       case GetVehicleCondition.NEW:
         syncPromises.push(
-          this.autocosmosSyncService.syncInventory(AutocosmosVehicleConditionEnum.NEW),
+          this.autocosmosSyncService.syncInventory(
+            AutocosmosVehicleConditionEnum.NEW,
+            proxy,
+          ),
         );
         break;
       case GetVehicleCondition.USED:
         syncPromises.push(
-          this.autocosmosSyncService.syncInventory(AutocosmosVehicleConditionEnum.USED),
+          this.autocosmosSyncService.syncInventory(
+            AutocosmosVehicleConditionEnum.USED,
+            proxy,
+          ),
         );
         break;
       case GetVehicleCondition.ALL:
         syncPromises.push(
-          this.autocosmosSyncService.syncInventory(AutocosmosVehicleConditionEnum.NEW),
-          this.autocosmosSyncService.syncInventory(AutocosmosVehicleConditionEnum.USED),
+          this.autocosmosSyncService.syncInventory(
+            AutocosmosVehicleConditionEnum.NEW,
+            proxy,
+          ),
+          this.autocosmosSyncService.syncInventory(
+            AutocosmosVehicleConditionEnum.USED,
+            proxy,
+          ),
         );
         break;
     }
