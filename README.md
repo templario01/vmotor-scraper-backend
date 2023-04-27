@@ -4,7 +4,7 @@
 
 
 ## Application Architecture
-![My Image](images/architecture-v3.png)
+![My Image](images/architecture-v4.png)
 
 ## Installation
 
