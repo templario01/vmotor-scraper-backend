@@ -5,8 +5,9 @@ import * as Joi from 'joi';
 import { join } from 'path';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
-import { ApolloDriver } from '@nestjs/apollo';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ApiModule } from './api/api.module';
+import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { ApiModule } from './api/api.module';
       }),
       envFilePath: '.env',
     }),
-    GraphQLModule.forRoot({
+    GraphQLModule.forRoot<ApolloDriverConfig>({
+      persistedQueries: false,
       driver: ApolloDriver,
       sortSchema: true,
       introspection: true,
@@ -45,6 +47,12 @@ import { ApiModule } from './api/api.module';
     JobsModule,
     PersistenceModule,
     ApiModule,
+    PrometheusModule.register({
+      path: '/metrics',
+      defaultMetrics: {
+        enabled: true,
+      },
+    }),
   ],
   controllers: [],
   providers: [],

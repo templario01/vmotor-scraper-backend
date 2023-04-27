@@ -3,6 +3,7 @@ import { PrismaService } from '../services/prisma.service';
 import { encryptPassword } from '../../shared/utils/user.utils';
 import { CreateAccountDto } from '../../application/auth/dtos/auth.dto';
 import { User } from '@prisma/client';
+import { generateEmailCode } from '../../shared/utils/auth.utils';
 
 @Injectable()
 export class UserRepository {
@@ -15,6 +16,18 @@ export class UserRepository {
           equals: email,
           mode: 'insensitive',
         },
+      },
+    });
+  }
+
+  async findVerifiedUserByEmail(email: string): Promise<User> {
+    return this.prisma.user.findFirst({
+      where: {
+        email: {
+          equals: email,
+          mode: 'insensitive',
+        },
+        hasConfirmedEmail: true,
       },
     });
   }
@@ -43,6 +56,14 @@ export class UserRepository {
     });
   }
 
+  async findUserById(id: number): Promise<User> {
+    return this.prisma.user.findFirst({
+      where: {
+        id,
+      },
+    });
+  }
+
   async findUserByToken(token: string): Promise<any> {
     return this.prisma.user.findFirst({
       where: {
@@ -63,9 +84,44 @@ export class UserRepository {
     });
   }
 
-  async validateAccount(uuid: string): Promise<User> {
+  async createValidationCode(userId: number) {
+    const { code, currentTime, MINUTES, MILISECONDS } = {
+      code: generateEmailCode(),
+      currentTime: new Date(),
+      MINUTES: 5,
+      MILISECONDS: 60000,
+    };
+    const expirationTime = new Date(currentTime.getTime() + MINUTES * MILISECONDS);
+
+    return this.prisma.emailValidationCode.upsert({
+      where: { userId },
+      update: {
+        code,
+        expirationTime,
+      },
+      create: {
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+        code,
+        expirationTime,
+      },
+    });
+  }
+
+  async findLastValidationCode(userId: number) {
+    return this.prisma.emailValidationCode.findFirst({
+      where: {
+        userId,
+      },
+    });
+  }
+
+  async validateAccount(id: number): Promise<User> {
     return this.prisma.user.update({
-      where: { uuid },
+      where: { id },
       data: { hasConfirmedEmail: true },
     });
   }

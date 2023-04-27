@@ -2,17 +2,13 @@ import { Injectable, Logger } from '@nestjs/common';
 import { NeoAutoSyncService } from './neo-auto-sync.service';
 import { MercadolibreSyncService } from './mercadolibre-sync.service';
 import { EnvConfigService } from '../../config/env-config.service';
-import { HttpService } from '@nestjs/axios';
-import {
-  EphemeralProxyResponse,
-  Proxy,
-} from '../../shared/dtos/ephemeral-proxy.response';
 import { Environment } from '../../config/dtos/config.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { getDurationTime } from '../../shared/utils/time.utils';
 import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/vehicle.enums';
-
-const proxyCountries = ['US', 'BR', 'PE'];
+import { AutocosmosSyncService } from './autocosmos-sync.service';
+import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
+import { ProxyApiV2Service } from '../../application/proxy-api-v2/proxy-api-v2.service';
 
 @Injectable()
 export class InventorySyncService {
@@ -21,7 +17,8 @@ export class InventorySyncService {
     private readonly envConfigService: EnvConfigService,
     private readonly neoautoSyncService: NeoAutoSyncService,
     private readonly mercadolibreSyncService: MercadolibreSyncService,
-    private readonly httpService: HttpService,
+    private readonly autocosmosSyncService: AutocosmosSyncService,
+    private readonly proxyApiv2Service: ProxyApiV2Service,
   ) {}
 
   @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
@@ -30,13 +27,21 @@ export class InventorySyncService {
     let proxyIP: string;
     const { environment } = this.envConfigService.app();
     if (environment === Environment.PROD) {
-      const { host, port } = await this.getProxy();
+      const { host, port } = await this.proxyApiv2Service.getProxy();
       proxyIP = `${host}:${port}`;
     }
 
     await Promise.all([
       this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW, proxyIP),
       this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED, proxyIP),
+      this.autocosmosSyncService.syncInventory(
+        AutocosmosVehicleConditionEnum.NEW,
+        proxyIP,
+      ),
+      this.autocosmosSyncService.syncInventory(
+        AutocosmosVehicleConditionEnum.USED,
+        proxyIP,
+      ),
       this.mercadolibreSyncService.syncInventory(proxyIP),
     ]);
 
@@ -44,23 +49,5 @@ export class InventorySyncService {
     const duration = getDurationTime(startTime, endTime);
 
     this.logger.log(`All inventory synced successfully, duration: ${duration}`);
-  }
-
-  async getProxy(): Promise<Proxy> {
-    const { url: API_URL, host } = this.envConfigService.ephemeralProxiesApi();
-    const { apiKey } = this.envConfigService.rapidApi();
-    const {
-      data: { proxy },
-    } = await this.httpService.axiosRef.get<EphemeralProxyResponse>(API_URL, {
-      headers: {
-        'X-RapidAPI-Key': apiKey,
-        'X-RapidAPI-Host': host,
-      },
-      params: {
-        countries: proxyCountries.join(','),
-      },
-    });
-
-    return proxy;
   }
 }

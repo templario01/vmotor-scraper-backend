@@ -5,6 +5,7 @@ import { ModelsRepository } from './repositories/models.repository';
 import { WebsiteRepository } from './repositories/website.repository';
 import { VehicleRepository } from './repositories/vehicle.repository';
 import { UserRepository } from './repositories/user.repository';
+import { FavoriteVehicleRepository } from './repositories/favorite-vehicle.repository';
 
 const repositories = [
   BrandsRepository,
@@ -12,6 +13,7 @@ const repositories = [
   WebsiteRepository,
   VehicleRepository,
   UserRepository,
+  FavoriteVehicleRepository,
 ];
 @Module({
   imports: [],

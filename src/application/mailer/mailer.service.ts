@@ -1,23 +1,19 @@
 import { MailerService as MailService } from '@nestjs-modules/mailer';
 import { Injectable, Logger } from '@nestjs/common';
-import { SendEmailDto } from './dtos/send-email.dto';
 
 @Injectable()
 export class MailerService {
   private readonly logger = new Logger(MailerService.name);
   constructor(private mailService: MailService) {}
 
-  async sendEmailConfirmation({ email, userUUID, host }: SendEmailDto) {
-    const confirmationUrl = `${host}/user/${userUUID}/verify`;
-
+  async sendEmailConfirmation(email: string, verificationCode: string) {
     this.mailService
       .sendMail({
         to: email,
-        subject: 'Welcome to V-Motor App! Confirm your Email',
+        subject: 'VMotor Account Verification',
         template: './confirmation',
         context: {
-          name: 'victor',
-          url: confirmationUrl,
+          verificationCode,
         },
       })
       .catch((error) => {

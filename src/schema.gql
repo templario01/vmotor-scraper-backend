@@ -4,10 +4,14 @@
 
 type AccessTokenEntity {
   accessToken: String!
-  expiresIn: String!
+}
+
+input AddFavoriteVehicleInput {
+  vehicle: UuidInput!
 }
 
 type CreateAccountEntity {
+  expirationTime: DateTime!
   message: String!
 }
 
@@ -15,6 +19,10 @@ type CreateAccountEntity {
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+input DeleteFavoriteVehicleInput {
+  vehicle: UuidInput!
+}
 
 """Vehicle condition"""
 enum GetVehicleCondition {
@@ -24,15 +32,35 @@ enum GetVehicleCondition {
 }
 
 type Mutation {
+  addFavoriteVehicleToUser(addFavoriteVehicleInput: AddFavoriteVehicleInput!): SyncedVehicleEntity!
+  deleteFavoriteVehicleToUser(deleteFavoriteVehicleInput: DeleteFavoriteVehicleInput!): [SyncedVehicleEntity!]!
   resendEmail(email: String!): CreateAccountEntity!
   signIn(signInInput: SignInInput!): AccessTokenEntity!
   signUp(signUpInput: SignUpInput!): CreateAccountEntity!
+  syncAutocosmosInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
   syncInventoryBrands: SyncBrandsJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
-  syncNeoautoInvetory(syncNeoautoInvetoryInput: SyncNeoautoInventoryInput!): SyncInventoryJobEntity!
+  syncNeoautoInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
+  verifyUser(verifyUserInput: VerifyUserInput!): AccessTokenEntity!
+}
+
+type PaginatedVehicleEntity {
+  edges: [SyncedVehicleEntityEdge!]
+  endCursor: String
+  hasNextPage: Boolean!
+  nodes: [SyncedVehicleEntity!]
+  totalCount: Int!
+}
+
+"""USD or PEN"""
+enum PriceCurrency {
+  PEN
+  USD
 }
 
 type Query {
+  getBestVehiclesByWebsites(after: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
+  getFavoriteVehicles: [SyncedVehicleEntity!]!
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
 
@@ -46,10 +74,21 @@ input SignUpInput {
   password: String!
 }
 
+"""ACTIVE or INACTIVE"""
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
 type SyncBrandsJobEntity {
   duration: String!
   endTime: DateTime!
   startTime: DateTime!
+}
+
+input SyncInventoryInput {
+  """Vehicle condition for sync"""
+  condition: GetVehicleCondition!
 }
 
 type SyncInventoryJobEntity {
@@ -58,9 +97,38 @@ type SyncInventoryJobEntity {
   startTime: DateTime!
 }
 
-input SyncNeoautoInventoryInput {
-  """Vehicle condition for sync"""
-  condition: GetVehicleCondition!
+type SyncedVehicleEntity {
+  condition: String!
+  createdAt: DateTime!
+  currency: PriceCurrency!
+  description: String!
+  doors: Float
+  engineFuelType: String
+  enginePowerHp: String
+  enginePowerRpm: String
+  engineType: String
+  externalId: String!
+  frontImage: String
+  images: String
+  mileage: Float
+  price: Float
+  speeds: Float
+  status: Status!
+  transmission: String
+  updatedAt: DateTime!
+  url: String!
+  uuid: ID!
+  website: WebsiteEntity
+  year: Float!
+}
+
+type SyncedVehicleEntityEdge {
+  cursor: String!
+  node: SyncedVehicleEntity!
+}
+
+input UuidInput {
+  uuid: String!
 }
 
 type VehicleEntity {
@@ -87,4 +155,17 @@ type VehicleEntity {
 type VehicleSearchEntity {
   duration: String!
   vehicles: [VehicleEntity!]!
+}
+
+input VerifyUserInput {
+  code: String!
+  email: String!
+}
+
+type WebsiteEntity {
+  createdAt: DateTime!
+  name: String!
+  updatedAt: DateTime!
+  url: String!
+  uuid: String!
 }

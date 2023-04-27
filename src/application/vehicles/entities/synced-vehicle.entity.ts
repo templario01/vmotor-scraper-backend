@@ -1,27 +1,60 @@
-import { Field, GraphQLISODateTime, ID, ObjectType } from '@nestjs/graphql';
+import { Field, HideField, ID, ObjectType } from '@nestjs/graphql';
+import { Vehicle as PrismaVehicle } from '@prisma/client';
+import { Status, statusReturnType } from '../../../shared/dtos/status.enum';
+import {
+  PriceCurrency,
+  VehicleCondition,
+  priceCurrencyResultType,
+} from '../dtos/vehicle.enums';
+import { graphqlDateReturnType } from '../../../shared/dtos/decimal-scalar';
+import {
+  WebsiteEntity,
+  websiteEntityReturnType,
+} from '../../websites/entities/website.entity';
+import {
+  IPaginatedResponse,
+  PaginatedResponse,
+} from '../../../shared/utils/pagination/cursor-pagination';
+
+type Vehicle = Partial<Omit<PrismaVehicle, 'mileage' | 'price'>>;
 
 @ObjectType()
-export class SyncedVehicleEntity {
+export class SyncedVehicleEntity implements Vehicle {
+  @HideField()
+  readonly id: number;
+
+  @HideField()
+  readonly websiteId: number;
+
+  @Field(websiteEntityReturnType, { nullable: true })
+  readonly website?: WebsiteEntity;
+
+  @Field(statusReturnType)
+  readonly status?: Status;
+
+  @Field()
+  readonly condition: VehicleCondition;
+
   @Field(() => ID)
   readonly uuid: string;
 
   @Field()
   readonly url: string;
 
-  @Field(() => GraphQLISODateTime)
+  @Field(graphqlDateReturnType)
   readonly createdAt: Date;
 
-  @Field(() => GraphQLISODateTime)
+  @Field(graphqlDateReturnType)
   readonly updatedAt: Date;
 
   @Field()
   readonly description: string;
 
-  @Field({ nullable: true })
-  readonly externalId?: string;
+  @Field()
+  readonly externalId: string;
 
-  @Field({ nullable: true })
-  readonly year?: number;
+  @Field()
+  readonly year: number;
 
   @Field({ nullable: true })
   readonly transmission?: string;
@@ -56,11 +89,13 @@ export class SyncedVehicleEntity {
   @Field({ nullable: true })
   readonly price?: number;
 
-  @Field({ nullable: true })
-  readonly status?: string;
-
-  @Field({ nullable: true })
-  readonly currency?: string;
+  @Field(priceCurrencyResultType)
+  readonly currency?: PriceCurrency;
 }
 
 export const syncedVehicleEntityReturnType = () => SyncedVehicleEntity;
+export const arraySyncedVehicleEntityReturnType = () => [SyncedVehicleEntity];
+
+@ObjectType()
+export class PaginatedVehicleEntity extends PaginatedResponse(SyncedVehicleEntity) {}
+export type IPaginatedVehicleEntity = IPaginatedResponse<SyncedVehicleEntity>;

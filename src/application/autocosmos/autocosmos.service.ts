@@ -3,7 +3,7 @@ import { EnvConfigService } from '../../config/env-config.service';
 import * as cheerio from 'cheerio';
 import { Page as PuppeteerPage } from 'puppeteer';
 import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
-import { USER_AGENT } from '../../shared/dtos/puppeteer.contant';
+import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
 import { includesAll } from '../../shared/utils/vehicle.utils';
 
 @Injectable()

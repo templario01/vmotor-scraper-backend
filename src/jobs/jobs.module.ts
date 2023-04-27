@@ -6,8 +6,16 @@ import { PersistenceModule } from '../persistence/persistence.module';
 import { EnvConfigModule } from '../config/env-config.module';
 import { NeoAutoSyncService } from './services/neo-auto-sync.service';
 import { MercadolibreSyncService } from './services/mercadolibre-sync.service';
+import { AutocosmosSyncService } from './services/autocosmos-sync.service';
+import { ProxyApiV2Service } from '../application/proxy-api-v2/proxy-api-v2.service';
 
-const providers = [BrandsSyncService, NeoAutoSyncService, MercadolibreSyncService];
+const providers = [
+  BrandsSyncService,
+  NeoAutoSyncService,
+  MercadolibreSyncService,
+  AutocosmosSyncService,
+  ProxyApiV2Service,
+];
 
 @Module({
   imports: [EnvConfigModule, PersistenceModule, HttpModule, ScheduleModule.forRoot()],

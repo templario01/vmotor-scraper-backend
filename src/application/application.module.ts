@@ -12,6 +12,8 @@ import { AuthService } from './auth/auth.service';
 import { MailerModule } from './mailer/mailer.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EnvConfigService } from '../config/env-config.service';
+import { FavoriteVehicleService } from './favorite-vehicle/favorite-vehicle.service';
+import { WebsiteService } from './websites/website.service';
 
 const providers = [
   VehicleService,
@@ -20,6 +22,8 @@ const providers = [
   AutocosmosService,
   CurrencyConverterApiService,
   AuthService,
+  FavoriteVehicleService,
+  WebsiteService,
 ];
 
 @Module({

@@ -1,4 +1,4 @@
-import { Scalar, CustomScalar } from '@nestjs/graphql';
+import { Scalar, CustomScalar, GraphQLISODateTime } from '@nestjs/graphql';
 import { Decimal } from '@prisma/client/runtime';
 import { Kind, ValueNode } from 'graphql';
 
@@ -21,3 +21,5 @@ export class DecimalScalar implements CustomScalar<number, Decimal> {
     return null;
   }
 }
+
+export const graphqlDateReturnType = () => GraphQLISODateTime;
