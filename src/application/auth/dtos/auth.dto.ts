@@ -15,3 +15,9 @@ export interface SessionData {
 export interface UserRequest extends Request {
   user?: SessionData;
 }
+
+export interface NotifyEmailDto {
+  readonly email: string;
+  readonly code: string;
+  readonly expirationTime: Date;
+}

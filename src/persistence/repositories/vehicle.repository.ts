@@ -36,7 +36,6 @@ export class VehicleRepository {
     };
 
     const totalCount = await this.prisma.vehicle.count({ where });
-    console.log(totalCount);
 
     const vehicles = await this.prisma.vehicle.findMany({
       where,

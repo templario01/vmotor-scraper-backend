@@ -19,20 +19,18 @@ export class FavoriteVehicleService {
   }
 
   async addFavoriteVehicleToUser(
-    input: AddFavoriteVehicleInput,
+    { vehicle }: AddFavoriteVehicleInput,
     userId: number,
   ): Promise<SyncedVehicleEntity> {
-    const { website: websiteInput, ...data } = input;
     const request: AddFavoriteVehicleDto = {
-      vehicleInfo: data,
-      websiteUUID: websiteInput.uuid,
+      vehicleUUID: vehicle.uuid,
       userId,
     };
-    const vehicle = await this.favoriteVehicleRepository.addFavoriteVehicleToUser(
+    const favoriteVehicle = await this.favoriteVehicleRepository.addFavoriteVehicleToUser(
       request,
     );
 
-    return this.mapToEntity(vehicle);
+    return this.mapToEntity(favoriteVehicle);
   }
 
   async deleteFavoriteVehicleToUser(

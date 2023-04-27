@@ -4,31 +4,14 @@
 
 type AccessTokenEntity {
   accessToken: String!
-  expiresIn: String!
 }
 
 input AddFavoriteVehicleInput {
-  condition: VehicleCondition!
-  currency: PriceCurrency!
-  description: String
-  doors: Float
-  engineFuelType: String
-  enginePowerHp: String
-  enginePowerRpm: String
-  engineType: String
-  externalId: String!
-  frontImage: String
-  images: String
-  mileage: Float
-  price: Float
-  speeds: Float
-  transmission: String
-  url: String!
-  website: UuidInput!
-  year: Float!
+  vehicle: UuidInput!
 }
 
 type CreateAccountEntity {
+  expirationTime: DateTime!
   message: String!
 }
 
@@ -58,6 +41,7 @@ type Mutation {
   syncInventoryBrands: SyncBrandsJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
   syncNeoautoInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
+  verifyUser(verifyUserInput: VerifyUserInput!): AccessTokenEntity!
 }
 
 type PaginatedVehicleEntity {
@@ -147,12 +131,6 @@ input UuidInput {
   uuid: String!
 }
 
-"""NEW or USED"""
-enum VehicleCondition {
-  NEW
-  USED
-}
-
 type VehicleEntity {
   currency: String
   description: String
@@ -177,6 +155,11 @@ type VehicleEntity {
 type VehicleSearchEntity {
   duration: String!
   vehicles: [VehicleEntity!]!
+}
+
+input VerifyUserInput {
+  code: String!
+  email: String!
 }
 
 type WebsiteEntity {

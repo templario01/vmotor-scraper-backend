@@ -1,4 +1,11 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { EnvConfigService } from '../../config/env-config.service';
 import { UserRepository } from '../../persistence/repositories/user.repository';
 import { SignInInput } from './inputs/sign-in.input';
@@ -8,6 +15,8 @@ import { JwtService } from '@nestjs/jwt';
 import { AccessTokenEntity } from './entities/access-token.entity';
 import { compare } from 'bcrypt';
 import { SignUpInput } from './inputs/sign-up.input';
+import { NotifyEmailDto } from './dtos/auth.dto';
+import { VerifyUserInput } from '../user/inputs/verify-user.input';
 
 @Injectable()
 export class AuthService {
@@ -25,14 +34,23 @@ export class AuthService {
       throw new HttpException('email already taken', HttpStatus.BAD_REQUEST);
     }
     if (findUser && !findUser.hasConfirmedEmail) {
-      throw new HttpException('please confirm your email', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'please check your email, the verification code was already sent',
+        HttpStatus.BAD_REQUEST,
+      );
     }
+
+    return this.createAccount(email, password);
+  }
+
+  private async createAccount(email: string, password: string) {
     const { email: registeredEmail, id } = await this.userRepository.createAccount({
       email,
       password,
     });
+    const { code, expirationTime } = await this.userRepository.createValidationCode(id);
 
-    return this.notifyEmail(registeredEmail, id);
+    return this.notifyEmail({ email: registeredEmail, code, expirationTime });
   }
 
   async signIn(
@@ -49,7 +67,6 @@ export class AuthService {
 
     return {
       accessToken: await this.jwtService.signAsync(payload),
-      expiresIn: this.envConfigService.jwtConfig().expirationTime,
     };
   }
 
@@ -62,31 +79,54 @@ export class AuthService {
       throw new HttpException('email already validated', HttpStatus.BAD_REQUEST);
     }
 
-    return this.notifyEmail(email, findUser.id);
+    const { code, expirationTime } = await this.userRepository.createValidationCode(
+      findUser.id,
+    );
+    return this.notifyEmail({ email, code, expirationTime });
   }
 
-  private async notifyEmail(email: string, userId: number) {
-    const { appHost } = this.envConfigService.app();
-    await this.mailerService.sendEmailConfirmation({ email, host: appHost, userId });
+  private async notifyEmail(data: NotifyEmailDto): Promise<CreateAccountEntity> {
+    const { code, email, expirationTime } = data;
+    await this.mailerService.sendEmailConfirmation(email, code);
 
     return {
-      message: `Please confirm your email ${email}. If you don't see the confirmation email in your inbox, please check your spam folder.`,
+      message:
+        `Please write your validation code send to ${email}. If you don't see the email,` +
+        ` please check your spam folder. The validation code expires in 5 minutes`,
+      expirationTime,
     };
   }
 
-  async confirmAccount(userId: number): Promise<AccessTokenEntity> {
-    const { hasConfirmedEmail } = await this.userRepository.findUserById(userId);
-    if (hasConfirmedEmail === true) {
-      return null;
+  async confirmAccount(input: VerifyUserInput): Promise<AccessTokenEntity> {
+    const { code, email } = input;
+    const user = await this.userRepository.findUserByEmail(email);
+    if (!user) {
+      throw new ForbiddenException('Please register your email first');
     }
-    const user = await this.userRepository.validateAccount(userId);
-    const payload = { username: user.email, sub: user.uuid };
+    if (user.hasConfirmedEmail === true) {
+      throw new BadRequestException('Email already confirmed');
+    }
+    const currentTime = new Date().getTime();
+    const lastCode = await this.userRepository.findLastValidationCode(user.id);
+
+    if (!lastCode) {
+      throw new ForbiddenException('please resend a new validation code');
+    }
+    if (currentTime > lastCode.expirationTime.getTime()) {
+      throw new ForbiddenException(
+        'Your validation code has already expired, please send a new one',
+      );
+    }
+    if (code !== lastCode.code) {
+      throw new ForbiddenException('Invalid validation code');
+    }
+
+    const account = await this.userRepository.validateAccount(user.id);
+    const payload = { username: account.email, sub: account.uuid };
     const accessToken = await this.jwtService.signAsync(payload);
-    const expiresIn = this.envConfigService.jwtConfig().expirationTime;
 
     return {
       accessToken,
-      expiresIn,
     };
   }
 

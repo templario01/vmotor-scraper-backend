@@ -3,12 +3,24 @@ import { PrismaService } from '../services/prisma.service';
 import { encryptPassword } from '../../shared/utils/user.utils';
 import { CreateAccountDto } from '../../application/auth/dtos/auth.dto';
 import { User } from '@prisma/client';
+import { generateEmailCode } from '../../shared/utils/auth.utils';
 
 @Injectable()
 export class UserRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findUserByEmail(email: string): Promise<User> {
+    return this.prisma.user.findFirst({
+      where: {
+        email: {
+          equals: email,
+          mode: 'insensitive',
+        },
+      },
+    });
+  }
+
+  async findVerifiedUserByEmail(email: string): Promise<User> {
     return this.prisma.user.findFirst({
       where: {
         email: {
@@ -68,6 +80,41 @@ export class UserRepository {
         email,
         hasConfirmedEmail: false,
         password: passwordEncrypted,
+      },
+    });
+  }
+
+  async createValidationCode(userId: number) {
+    const { code, currentTime, MINUTES, MILISECONDS } = {
+      code: generateEmailCode(),
+      currentTime: new Date(),
+      MINUTES: 5,
+      MILISECONDS: 60000,
+    };
+    const expirationTime = new Date(currentTime.getTime() + MINUTES * MILISECONDS);
+
+    return this.prisma.emailValidationCode.upsert({
+      where: { userId },
+      update: {
+        code,
+        expirationTime,
+      },
+      create: {
+        user: {
+          connect: {
+            id: userId,
+          },
+        },
+        code,
+        expirationTime,
+      },
+    });
+  }
+
+  async findLastValidationCode(userId: number) {
+    return this.prisma.emailValidationCode.findFirst({
+      where: {
+        userId,
       },
     });
   }
