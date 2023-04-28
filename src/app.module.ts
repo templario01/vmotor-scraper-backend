@@ -27,6 +27,8 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
         MAIL_PASSWORD: Joi.string().required(),
         MAIL_PORT: Joi.number().required(),
         MAIL_HOST: Joi.string().required(),
+        PUB_PROXY_API: Joi.string().required(),
+        DEFAULT_EXCHANGE_RATE: Joi.number().required(),
       }),
       envFilePath: '.env',
     }),

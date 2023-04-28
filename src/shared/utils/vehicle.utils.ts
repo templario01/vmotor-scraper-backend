@@ -9,3 +9,13 @@ export function cleanSearchName(word: string): string {
 
   return word;
 }
+
+export function getMileage(mileage: string): number {
+  const match = mileage.match(/(\d{1,3}(?:,\d{3})*|\d+)/);
+  if (match) {
+    const numberString = match[1].replace(/,/g, '');
+    return parseInt(numberString, 10);
+  } else {
+    return null;
+  }
+}

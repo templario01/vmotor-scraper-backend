@@ -14,7 +14,7 @@ import { EnvConfigService } from '../../config/env-config.service';
 import { buildeEphemeralProxyResponse } from '../../shared/mocks/ephemeral-proxy-api.mock';
 import { Environment } from '../../config/dtos/config.dto';
 import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/vehicle.enums';
-import { EphemeralProxyResponse } from '../../application/proxy-api-v2/dtos/ephemeral-proxy.response';
+import { EphemeralProxyResponse } from '../../application/proxy/dtos/ephemeral-proxy.response';
 
 describe('InventorySyncService', () => {
   let service: InventorySyncService;

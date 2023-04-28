@@ -34,6 +34,16 @@ model Model {
   @@map("model")
 }
 
+model ProxyConfig {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(cuid())
+  expiresAt DateTime
+  host      String
+  port      Int
+
+  @@map("proxy_config")
+}
+
 model User {
   id                Int                   @id @default(autoincrement())
   uuid              String                @unique @default(cuid())
@@ -85,16 +95,6 @@ model Website {
   @@map("website")
 }
 
-model WebsiteSyncLog {
-  id                Int         @id @default(autoincrement())
-  createdAt         DateTime    @default(now())
-  duration          String
-  errorMessage      String?
-  vehiclesCondition Condition[]
-
-  @@map("website_sync_log")
-}
-
 model Vehicle {
   id             Int                   @id @default(autoincrement())
   uuid           String                @unique @default(cuid())
@@ -112,7 +112,9 @@ model Vehicle {
   frontImage     String?
   images         String?
   doors          Int?
+  location       String?
   condition      Condition?
+  originalPrice  Decimal?              @default(0) @db.Decimal(12, 2)
   price          Decimal?              @default(0) @db.Decimal(12, 2)
   currency       Currency?
   createdAt      DateTime              @default(now())
@@ -138,4 +140,8 @@ enum Condition {
 enum Currency {
   PEN
   USD
+}
+
+enum ServerName {
+  VMOTOR
 }

@@ -35,7 +35,6 @@ export class AutocosmosService {
       if (!includesAll(vehicleDescription, searchWords)) {
         break;
       }
-      console.log('autocosmos: ', vehicleDescription);
     }
   }
 }

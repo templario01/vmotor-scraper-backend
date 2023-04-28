@@ -16,6 +16,7 @@ import {
   VehicleCondition,
 } from '../../application/vehicles/dtos/vehicle.enums';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
+import { getMileage } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class AutocosmosSyncService {
@@ -74,6 +75,26 @@ export class AutocosmosSyncService {
                 'a div.listing-card__content div.listing-card__info span.listing-card__year',
               )
               .html();
+            const mileageHtml = $(vehicleHtmlBlock)
+              .find(
+                'a div.listing-card__content div.listing-card__info span.listing-card__km',
+              )
+              .html();
+            const locationCity = $(vehicleHtmlBlock)
+              .find(
+                'a div.listing-card__content div.listing-card__offer div.listing-card__location span span.listing-card__city',
+              )
+              .html();
+            const locationRegion = $(vehicleHtmlBlock)
+              .find(
+                'a div.listing-card__content div.listing-card__offer div.listing-card__location span span.listing-card__province',
+              )
+              .html();
+
+            const location =
+              locationCity && locationRegion
+                ? `${locationCity}, ${locationRegion}`
+                : undefined;
             const year = +vehicleYear || null;
             const externalId = getExternalId(path);
             const url = `${this.AUTOCOSMOS}${path}`;
@@ -84,9 +105,15 @@ export class AutocosmosSyncService {
                 externalId,
                 url,
                 description: vehicleDescription,
+                location,
                 frontImage: figure,
                 price: +vehiclePrice,
+                originalPrice: +vehiclePrice,
                 currency: PriceCurrency.USD,
+                mileage:
+                  vehicleCondition === AutocosmosVehicleConditionEnum.USED
+                    ? getMileage(mileageHtml)
+                    : 0,
                 year:
                   vehicleCondition === AutocosmosVehicleConditionEnum.NEW
                     ? new Date().getFullYear()

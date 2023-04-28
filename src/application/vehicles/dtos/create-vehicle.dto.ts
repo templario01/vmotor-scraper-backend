@@ -46,6 +46,9 @@ class VehicleSyncDto {
   readonly price?: number;
 
   @Expose()
+  readonly originalPrice?: number;
+
+  @Expose()
   readonly currency?: PriceCurrency;
 
   @Expose()
@@ -53,6 +56,9 @@ class VehicleSyncDto {
 
   @Expose()
   readonly condition?: VehicleCondition;
+
+  @Expose()
+  readonly location?: string;
 }
 
 @Exclude()

@@ -18,7 +18,7 @@ import { cleanSearchName } from '../../shared/utils/vehicle.utils';
 import { AutocosmosSyncService } from '../../jobs/services/autocosmos-sync.service';
 import { AutocosmosVehicleConditionEnum } from '../autocosmos/enums/atocosmos.enum';
 import { GetVehiclesArgs } from './inputs/get-vehicles.input';
-import { ProxyApiV2Service } from '../proxy-api-v2/proxy-api-v2.service';
+import { ProxyService } from '../proxy/proxy.service';
 import { EnvConfigService } from '../../config/env-config.service';
 import { Environment } from '../../config/dtos/config.dto';
 
@@ -33,7 +33,7 @@ export class VehicleService {
     private readonly neoautoService: NeoautoService,
     private readonly autocosmosSyncService: AutocosmosSyncService,
     private readonly envConfigService: EnvConfigService,
-    private readonly proxyApiV2Service: ProxyApiV2Service,
+    private readonly proxyService: ProxyService,
   ) {}
 
   async getBestVehicles(params: GetVehiclesArgs): Promise<IPaginatedVehicleEntity> {
@@ -93,14 +93,13 @@ export class VehicleService {
     let proxyIP: string;
     const { environment } = this.envConfigService.app();
     if (environment === Environment.PROD) {
-      const proxy = await this.proxyApiV2Service.getProxy();
-
-      if (proxy?.host && proxy?.port) {
+      const proxy = await this.proxyService.getProxy();
+      if (proxy) {
         const { host, port } = proxy;
         proxyIP = `${host}:${port}`;
       }
     }
-    console.log(proxyIP);
+
     return proxyIP;
   }
 

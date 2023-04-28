@@ -14,6 +14,8 @@ export interface SyncNeoautoVehicle {
   vehiclePrice?: number;
   websiteId?: number;
   vehicleDescription?: string;
+  mileage?: number;
+  location?: string;
 }
 
 export type VehicleBrandAndModel = {
