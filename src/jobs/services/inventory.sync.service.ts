@@ -26,7 +26,7 @@ export class InventorySyncService {
     const startTime = new Date();
     let proxyIP: string;
     const { environment } = this.envConfigService.app();
-    if (environment === Environment.PROD) {
+    if (environment !== Environment.DEV) {
       const proxy = await this.proxyService.getProxy();
       if (proxy) {
         const { host, port } = proxy;

@@ -54,6 +54,7 @@ export class VehicleService {
   async getVehiclesFromWebsites(inputSearch?: string): Promise<VehicleSearchEntity> {
     const startTime = new Date();
     const cleanSearch = cleanSearchName(inputSearch);
+    const { environment } = this.envConfigService.app();
     const config: PuppeteerLaunchOptions = {
       args: [
         "--proxy-server='direct://'",
@@ -66,7 +67,7 @@ export class VehicleService {
         '--no-zygote',
       ],
 
-      ...(process.env.NODE_ENV === 'staging' && {
+      ...(environment === Environment.PROD && {
         executablePath: process.env.PUPPETEER_EXECUTABLE_PATH,
       }),
       headless: true,
@@ -92,7 +93,7 @@ export class VehicleService {
   private async getProxy() {
     let proxyIP: string;
     const { environment } = this.envConfigService.app();
-    if (environment === Environment.PROD) {
+    if (environment !== Environment.DEV) {
       const proxy = await this.proxyService.getProxy();
       if (proxy) {
         const { host, port } = proxy;
