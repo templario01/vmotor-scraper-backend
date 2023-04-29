@@ -6,7 +6,6 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { EnvConfigService } from '../../config/env-config.service';
 import { UserRepository } from '../../persistence/repositories/user.repository';
 import { SignInInput } from './inputs/sign-in.input';
 import { MailerService } from '../mailer/mailer.service';
@@ -16,13 +15,11 @@ import { AccessTokenEntity } from './entities/access-token.entity';
 import { compare } from 'bcrypt';
 import { SignUpInput } from './inputs/sign-up.input';
 import { NotifyEmailDto } from './dtos/auth.dto';
-import { VerifyUserInput } from '../user/inputs/verify-user.input';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(
-    private readonly envConfigService: EnvConfigService,
     private readonly userRepository: UserRepository,
     private readonly mailerService: MailerService,
     private readonly jwtService: JwtService,
@@ -97,31 +94,16 @@ export class AuthService {
     };
   }
 
-  async confirmAccount(input: VerifyUserInput): Promise<AccessTokenEntity> {
-    const { code, email } = input;
-    const user = await this.userRepository.findUserByEmail(email);
-    if (!user) {
-      throw new ForbiddenException('Please register your email first');
+  async confirmAccount(code: string): Promise<AccessTokenEntity> {
+    const userWithValidCode = await this.userRepository.findUserByEmailCode(code);
+    if (!userWithValidCode) {
+      throw new ForbiddenException('Invalid code');
     }
-    if (user.hasConfirmedEmail === true) {
+    if (userWithValidCode.hasConfirmedEmail === true) {
       throw new BadRequestException('Email already confirmed');
     }
-    const currentTime = new Date().getTime();
-    const lastCode = await this.userRepository.findLastValidationCode(user.id);
 
-    if (!lastCode) {
-      throw new ForbiddenException('please resend a new validation code');
-    }
-    if (currentTime > lastCode.expirationTime.getTime()) {
-      throw new ForbiddenException(
-        'Your validation code has already expired, please send a new one',
-      );
-    }
-    if (code !== lastCode.code) {
-      throw new ForbiddenException('Invalid validation code');
-    }
-
-    const account = await this.userRepository.validateAccount(user.id);
+    const account = await this.userRepository.validateAccount(userWithValidCode.id);
     const payload = { username: account.email, sub: account.uuid };
     const accessToken = await this.jwtService.signAsync(payload);
 

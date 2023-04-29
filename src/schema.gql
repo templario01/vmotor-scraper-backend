@@ -41,7 +41,7 @@ type Mutation {
   syncInventoryBrands: SyncBrandsJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
   syncNeoautoInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
-  verifyUser(verifyUserInput: VerifyUserInput!): AccessTokenEntity!
+  verifyUser(code: String!): AccessTokenEntity!
 }
 
 type PaginatedVehicleEntity {
@@ -155,11 +155,6 @@ type VehicleEntity {
 type VehicleSearchEntity {
   duration: String!
   vehicles: [VehicleEntity!]!
-}
-
-input VerifyUserInput {
-  code: String!
-  email: String!
 }
 
 type WebsiteEntity {

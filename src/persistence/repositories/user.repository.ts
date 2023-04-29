@@ -20,6 +20,21 @@ export class UserRepository {
     });
   }
 
+  async findUserByEmailCode(code: string): Promise<User> {
+    return this.prisma.user.findFirst({
+      where: {
+        validationCodes: {
+          some: {
+            code,
+            expirationTime: {
+              gt: new Date(),
+            },
+          },
+        },
+      },
+    });
+  }
+
   async findVerifiedUserByEmail(email: string): Promise<User> {
     return this.prisma.user.findFirst({
       where: {
@@ -85,30 +100,25 @@ export class UserRepository {
   }
 
   async createValidationCode(userId: number) {
-    const { code, currentTime, MINUTES, MILISECONDS } = {
-      code: generateEmailCode(),
+    const { currentTime, MINUTES, MILISECONDS } = {
       currentTime: new Date(),
       MINUTES: 5,
       MILISECONDS: 60000,
     };
     const expirationTime = new Date(currentTime.getTime() + MINUTES * MILISECONDS);
+    const code = await generateEmailCode(this.prisma);
 
-    return this.prisma.emailValidationCode.upsert({
-      where: { userId },
-      update: {
-        code,
-        expirationTime,
-      },
-      create: {
-        user: {
-          connect: {
-            id: userId,
-          },
-        },
+    const newCode = await this.prisma.emailValidationCode.create({
+      data: {
+        userId,
         code,
         expirationTime,
       },
     });
+
+    console.log(newCode);
+
+    return newCode;
   }
 
   async findLastValidationCode(userId: number) {
