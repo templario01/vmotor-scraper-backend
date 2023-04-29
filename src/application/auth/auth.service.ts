@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
@@ -27,7 +28,7 @@ export class AuthService {
   async signUp({ email, password }: SignUpInput): Promise<CreateAccountEntity> {
     const findUser = await this.userRepository.findUserByEmail(email);
     if (findUser?.hasConfirmedEmail) {
-      throw new BadRequestException('email already taken');
+      throw new ConflictException('email already taken');
     }
     if (findUser && !findUser.hasConfirmedEmail) {
       throw new BadRequestException(

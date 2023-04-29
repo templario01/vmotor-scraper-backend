@@ -29,6 +29,14 @@ import { EnvVariablesConfig, envVariablesConfig } from './config/validator/env-v
         payload,
         connection,
       }),
+      formatResponse: (response, requestContext) => {
+        if (response.errors) {
+          const http = requestContext.response.http;
+          http.status = 400;
+          return { ...response, http };
+        }
+        return response;
+      },
       playground: true,
     }),
     JobsModule,

@@ -1,11 +1,12 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(PrismaService.name);
+
   constructor() {
-    super({ log: ['query', 'info'] });
+    super({ log: process.env.NODE_ENV !== 'test' ? ['query', 'info'] : [] });
   }
 
   async onModuleInit() {
@@ -16,17 +17,20 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$disconnect();
   }
 
-  async clearDatabase(): Promise<number[]> {
-    if (process.env.APP_ENV === 'test') {
-      const models = Reflect.ownKeys(this).filter((key) => key[0] !== '_');
+  async clearDatabase(): Promise<void> {
+    if (process.env.NODE_ENV === 'test') {
+      const tableNames = await this.$queryRaw<
+        Array<{ tablename: string }>
+      >`SELECT tablename FROM pg_tables WHERE schemaname='test' and tablename NOT IN ('_prisma_migrations',
+      'spatial_ref_sys')`;
 
-      return Promise.all(
-        models.map((modelKey) => {
-          const varName =
-            modelKey.toString().charAt(0).toUpperCase() + modelKey.toString().slice(1);
-          return this.$executeRaw`TRUNCATE test."${varName}" CASCADE;`;
-        }),
-      );
+      const tablesToTruncate = tableNames.map(({ tablename }) => `"test"."${tablename}"`);
+
+      try {
+        await this.$executeRawUnsafe(`TRUNCATE TABLE ${tablesToTruncate};`);
+      } catch (error) {
+        this.logger.error({ error, message: 'fail to truncate tables}' });
+      }
     }
   }
 }
