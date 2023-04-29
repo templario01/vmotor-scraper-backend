@@ -1,10 +1,9 @@
 import {
   BadRequestException,
   ForbiddenException,
-  HttpException,
-  HttpStatus,
   Injectable,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UserRepository } from '../../persistence/repositories/user.repository';
 import { SignInInput } from './inputs/sign-in.input';
@@ -28,12 +27,11 @@ export class AuthService {
   async signUp({ email, password }: SignUpInput): Promise<CreateAccountEntity> {
     const findUser = await this.userRepository.findUserByEmail(email);
     if (findUser?.hasConfirmedEmail) {
-      throw new HttpException('email already taken', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('email already taken');
     }
     if (findUser && !findUser.hasConfirmedEmail) {
-      throw new HttpException(
+      throw new BadRequestException(
         'please check your email, the verification code was already sent',
-        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -55,9 +53,9 @@ export class AuthService {
     userAgent: string,
   ): Promise<AccessTokenEntity> {
     const user = await this.userRepository.findUserByEmail(email);
-    const isValidPassword = compare(password, user.password);
+    const isValidPassword = await compare(password, user.password);
     if (!isValidPassword) {
-      throw new HttpException('invalid password', HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException('invalid password');
     }
     const payload = { username: user.email, sub: user.id };
     await this.registerLastSession(user.id, userAgent);
@@ -67,13 +65,13 @@ export class AuthService {
     };
   }
 
-  async resendEmailConfirmation(email: string) {
+  async resendEmailConfirmation(email: string): Promise<CreateAccountEntity> {
     const findUser = await this.userRepository.findUserByEmail(email);
     if (!findUser) {
-      throw new HttpException('please create an account', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('please create an account');
     }
     if (findUser?.hasConfirmedEmail) {
-      throw new HttpException('email already validated', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('email already validated');
     }
 
     const { code, expirationTime } = await this.userRepository.createValidationCode(
