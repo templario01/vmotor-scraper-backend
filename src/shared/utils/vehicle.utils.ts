@@ -26,7 +26,7 @@ export function getMileage(mileage: string): number {
 
 export function formatLocation(texto: string): string {
   try {
-    const regex = /[^a-zA-Z\s]|(^\s+)|(\s+$)/g;
+    const regex = new RegExp(/^\s+|\s+$|[^a-zA-Z\s]/g);
     const indexComma = texto.indexOf(',');
     const formatedLocation =
       texto.slice(0, indexComma).replace(regex, '').trim() +
