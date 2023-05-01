@@ -46,13 +46,15 @@ export class FavoriteVehicleService {
   }
 
   private mapToEntity(vehicle: Vehicle): SyncedVehicleEntity {
-    const { status, condition, mileage, price, currency, ...result } = vehicle;
+    const { status, condition, mileage, price, currency, originalPrice, ...result } =
+      vehicle;
     return {
       ...result,
       status: Status[status],
       condition: VehicleCondition[condition],
       currency: PriceCurrency[currency],
       mileage: Number(mileage) || null,
+      originalPrice: Number(originalPrice) || null,
       price: Number(price),
     };
   }

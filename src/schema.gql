@@ -59,8 +59,8 @@ enum PriceCurrency {
 }
 
 type Query {
-  getBestVehiclesByWebsites(after: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
   getFavoriteVehicles: [SyncedVehicleEntity!]!
+  getVehiclesByAdvancedSearch(after: String, city: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
 
@@ -110,7 +110,9 @@ type SyncedVehicleEntity {
   externalId: String!
   frontImage: String
   images: String
+  location: String
   mileage: Float
+  originalPrice: Float
   price: Float
   speeds: Float
   status: Status!

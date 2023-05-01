@@ -16,7 +16,7 @@ import {
   VehicleCondition,
 } from '../../application/vehicles/dtos/vehicle.enums';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
-import { getMileage } from '../../shared/utils/vehicle.utils';
+import { formatLocation, getMileage } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class AutocosmosSyncService {
@@ -93,7 +93,7 @@ export class AutocosmosSyncService {
 
             const location =
               locationCity && locationRegion
-                ? `${locationCity}, ${locationRegion}`
+                ? formatLocation(`${locationCity}, ${locationRegion}`)
                 : undefined;
             const year = +vehicleYear || null;
             const externalId = getExternalId(path);
@@ -124,7 +124,6 @@ export class AutocosmosSyncService {
                     : VehicleCondition.USED,
               },
             };
-
             const carSynced = await this.vehicleRepository.upsert(vehicleInfo);
             if (carSynced) {
               syncedVehiclesIds.push(carSynced.externalId);

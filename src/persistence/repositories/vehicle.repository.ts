@@ -20,19 +20,25 @@ import { GetVehiclesDto } from '../../application/vehicles/dtos/get-vehicles.dto
 export class VehicleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findBestVehicles(params: GetVehiclesDto): Promise<IPaginatedVehicleEntity> {
-    const { words, year, take, after } = params;
+  async findVehicles(params: GetVehiclesDto): Promise<IPaginatedVehicleEntity> {
+    const { words, year, take, after, city } = params;
 
-    const validateYear: Prisma.VehicleWhereInput = year ? { year: { equals: year } } : {};
-    const validateWords: Prisma.Enumerable<Prisma.VehicleWhereInput> = words.map(
-      (word) => {
-        return {
-          description: { mode: 'insensitive', contains: word },
-        };
-      },
-    );
+    const yearFilter: Prisma.VehicleWhereInput = year ? { year: { equals: year } } : {};
+    const locationFilter: Prisma.VehicleWhereInput = city
+      ? {
+          location: {
+            contains: city,
+            mode: 'insensitive',
+          },
+        }
+      : {};
+    const matchWords: Prisma.Enumerable<Prisma.VehicleWhereInput> = words.map((word) => {
+      return {
+        description: { mode: 'insensitive', contains: word },
+      };
+    });
     const where: Prisma.VehicleWhereInput = {
-      AND: [...validateWords, validateYear],
+      AND: [...matchWords, yearFilter, locationFilter],
     };
 
     const totalCount = await this.prisma.vehicle.count({ where });
@@ -46,13 +52,14 @@ export class VehicleRepository {
     });
 
     const results = vehicles.map(
-      ({ status, condition, mileage, price, currency, ...result }) => ({
+      ({ status, condition, mileage, price, currency, originalPrice, ...result }) => ({
         ...result,
         status: Status[status],
         condition: VehicleCondition[condition],
         currency: PriceCurrency[currency],
         mileage: mileage?.toNumber(),
         price: price?.toNumber(),
+        originalPrice: originalPrice?.toNumber(),
       }),
     );
 
@@ -85,18 +92,20 @@ export class VehicleRepository {
           ...vehicle,
           websiteId,
           status: 'ACTIVE',
-          condition: vehicle.condition,
         },
         update: {
           ...vehicle,
           websiteId,
           status: 'ACTIVE',
-          condition: vehicle.condition,
         },
       });
     } catch (error) {
       return null;
     }
+  }
+
+  async findByExternalId(externalId: string) {
+    return this.prisma.vehicle.findFirst({ where: { externalId } });
   }
 
   async updateStatusForAllInventory({

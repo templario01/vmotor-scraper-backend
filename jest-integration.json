@@ -8,6 +8,7 @@
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "setupFilesAfterEnv": [
+    "jest-extended",
     "<rootDir>/setupJestMock.ts",
     "<rootDir>/jest-integration-custom-matchers.ts"
   ]

@@ -21,6 +21,7 @@ import {
 import { SyncMercadolibreVehicle } from '../../application/vehicles/dtos/mercadolibre-sync.dto';
 import { Vehicle } from '@prisma/client';
 import { CurrencyConverterApiService } from '../../application/currency-converter-api-v1/currency-converter.service';
+import { formatLocation } from '../../shared/utils/vehicle.utils';
 
 const PRICE_LIMIT_PEN = 4500;
 const PRICE_LIMIT_USD = 1500;
@@ -159,7 +160,7 @@ export class MercadolibreSyncService {
         vehicle: {
           externalId: id,
           url: vehicleUrl,
-          location,
+          location: formatLocation(location.replace('-', ',')),
           frontImage: vehicleImageUrl.trim(),
           condition: VehicleCondition.USED,
           year: +year.html(),

@@ -32,3 +32,37 @@ export const buildSignInMutation = ({
       }
     }`,
 });
+
+export const buildGetVehiclesByAdvancedSearchQuery = ({
+  take,
+  after,
+  city,
+  searchName,
+}: {
+  take?: number;
+  after?: string;
+  searchName?: string;
+  city?: string;
+}) => ({
+  query: `query {
+    getVehiclesByAdvancedSearch(
+      ${take ? 'take: ' + take + ',' : ''}
+      ${after ? 'after: "' + after + '",' : ''}
+      ${searchName ? 'searchName: "' + searchName + '",' : ''}
+      ${city ? 'city: "' + city + '",' : ''}
+    ){
+      nodes{
+        uuid
+        externalId
+        description
+        price
+        currency
+        url
+        year
+        location
+      }
+      endCursor
+      totalCount
+    }
+  }`,
+});

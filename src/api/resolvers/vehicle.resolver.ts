@@ -15,22 +15,26 @@ import {
 } from '../../application/vehicles/entities/vehicle-search.entity';
 import { PaginatedVehicleEntity } from '../../application/vehicles/entities/synced-vehicle.entity';
 import { GetVehiclesArgs } from '../../application/vehicles/inputs/get-vehicles.input';
+import { VehicleSyncService } from '../../application/vehicles/vehicle-sync.service';
 @Resolver()
 export class VehicleResolver {
-  constructor(private readonly vehicleService: VehicleService) {}
+  constructor(
+    private readonly vehicleService: VehicleService,
+    private readonly vehicleSyncService: VehicleSyncService,
+  ) {}
+
+  @Query(() => PaginatedVehicleEntity)
+  getVehiclesByAdvancedSearch(
+    @Args() args: GetVehiclesArgs,
+  ): Promise<PaginatedVehicleEntity> {
+    return this.vehicleService.getVehiclesByAdvancedSearch(args);
+  }
 
   @Query(vehicleSearchEntityReturnType)
   getVehiclesByWebsites(
     @Args('searchName') searchName?: string,
   ): Promise<VehicleSearchEntity> {
-    return this.vehicleService.getVehiclesFromWebsites(searchName);
-  }
-
-  @Query(() => PaginatedVehicleEntity)
-  getBestVehiclesByWebsites(
-    @Args() args: GetVehiclesArgs,
-  ): Promise<PaginatedVehicleEntity> {
-    return this.vehicleService.getBestVehicles(args);
+    return this.vehicleSyncService.getVehiclesFromWebsites(searchName);
   }
 
   @Mutation(syncInventoryJobEntityReturnType)
@@ -38,12 +42,12 @@ export class VehicleResolver {
     @Args('syncInvetoryInput')
     input: SyncInventoryInput,
   ): Promise<SyncInventoryJobEntity> {
-    return this.vehicleService.syncNeoautoInventory(input);
+    return this.vehicleSyncService.syncNeoautoInventory(input);
   }
 
   @Mutation(syncInventoryJobEntityReturnType)
   syncMercadolibreInvetory(): Promise<SyncInventoryJobEntity> {
-    return this.vehicleService.syncMercadolibreInventory();
+    return this.vehicleSyncService.syncMercadolibreInventory();
   }
 
   @Mutation(syncInventoryJobEntityReturnType)
@@ -51,11 +55,11 @@ export class VehicleResolver {
     @Args('syncInvetoryInput')
     input: SyncInventoryInput,
   ): Promise<SyncInventoryJobEntity> {
-    return this.vehicleService.syncAutocosmosInventory(input);
+    return this.vehicleSyncService.syncAutocosmosInventory(input);
   }
 
   @Mutation(syncBrandsJobEntityReturnType)
   syncInventoryBrands(): Promise<SyncBrandsJobEntity> {
-    return this.vehicleService.syncInventoryBrands();
+    return this.vehicleSyncService.syncInventoryBrands();
   }
 }

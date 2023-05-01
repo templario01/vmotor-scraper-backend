@@ -3,11 +3,15 @@ export function includesAll(text: string, words: string[]): boolean {
 }
 
 export function cleanSearchName(word: string): string {
-  const caracteresValidos = /[^a-zA-Z0-9]+/g;
-  word = word.replace(caracteresValidos, ' ');
-  word = word.trim().toLowerCase();
+  try {
+    const caracteresValidos = /[^a-zA-Z0-9]+/g;
+    word = word.replace(caracteresValidos, ' ');
+    word = word.trim().toLowerCase();
 
-  return word;
+    return word;
+  } catch (error) {
+    return undefined;
+  }
 }
 
 export function getMileage(mileage: string): number {
@@ -18,4 +22,40 @@ export function getMileage(mileage: string): number {
   } else {
     return null;
   }
+}
+
+export function formatLocation(texto: string): string {
+  try {
+    const regex = /[^a-zA-Z\s]|(^\s+)|(\s+$)/g;
+    const indexComma = texto.indexOf(',');
+    const formatedLocation =
+      texto.slice(0, indexComma).replace(regex, '').trim() +
+      ', ' +
+      texto
+        .slice(indexComma + 1)
+        .replace(regex, '')
+        .trim();
+
+    return formatedLocation;
+  } catch (error) {
+    return null;
+  }
+}
+
+export function getWordsAndYear(searchName: string) {
+  const search = cleanSearchName(searchName);
+
+  if (search) {
+    const yearPattern = new RegExp(/\b\d{4}\b/g);
+    const cleanSearch = search.replace(yearPattern, '');
+    const year = +search.match(yearPattern)?.[0];
+    const words = cleanSearch?.split(' ').filter((word) => word !== '');
+
+    return {
+      year,
+      words,
+    };
+  }
+
+  return { words: [], year: undefined };
 }

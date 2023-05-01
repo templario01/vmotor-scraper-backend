@@ -1,4 +1,6 @@
+import { FavoriteVehicleRepository } from '../../persistence/repositories/favorite-vehicle.repository';
 import { UserRepository } from '../../persistence/repositories/user.repository';
+import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 
 export const buildUserRepositoryMock = () => {
   const userRepository = jest.mocked<UserRepository>(UserRepository as any, true);
@@ -12,4 +14,28 @@ export const buildUserRepositoryMock = () => {
   userRepository.validateAccount = jest.fn();
 
   return userRepository;
+};
+
+export const buildVehicleRepositoryMock = () => {
+  const vehicleRepository = jest.mocked<VehicleRepository>(
+    VehicleRepository as any,
+    true,
+  );
+  vehicleRepository.findVehicles = jest.fn();
+  vehicleRepository.updateStatusForAllInventory = jest.fn();
+  vehicleRepository.upsert = jest.fn();
+
+  return vehicleRepository;
+};
+
+export const buildFavoriteVehicleRepository = () => {
+  const favoriteVehicle = jest.mocked<FavoriteVehicleRepository>(
+    FavoriteVehicleRepository as any,
+    true,
+  );
+  favoriteVehicle.addFavoriteVehicleToUser = jest.fn();
+  favoriteVehicle.deleteFavoriteVehicleToUser = jest.fn();
+  favoriteVehicle.findVehiclesByUser = jest.fn();
+
+  return favoriteVehicle;
 };
