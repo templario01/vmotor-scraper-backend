@@ -8,4 +8,9 @@ export class GetVehiclesArgs extends CursorPagination {
   @IsString()
   @IsOptional()
   readonly searchName?: string;
+
+  @Field({ nullable: true })
+  @IsString()
+  @IsOptional()
+  readonly city?: string;
 }

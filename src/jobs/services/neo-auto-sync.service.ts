@@ -26,6 +26,10 @@ import {
   HTML_DESCRIPTION_USED,
   HTML_IMAGE_CONCESSIONARIE,
   HTML_IMAGE_USED,
+  HTML_LOCATION_CONCESSIONARIE,
+  HTML_LOCATION_USED,
+  HTML_MILEAGE_CONCESSIONARIE,
+  HTML_MILEAGE_USED,
   HTML_PRICE_CONCESSIONAIRE,
   HTML_PRICE_USED,
   HTML_URL_CONCESSIONARIE,
@@ -35,6 +39,7 @@ import {
 import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/neoauto-sync.dto';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
 import { Vehicle } from '@prisma/client';
+import { getMileage } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class NeoAutoSyncService {
@@ -89,13 +94,22 @@ export class NeoAutoSyncService {
             const vehicleDescription = $(vehicleHtmlBlock)
               .find(HTML_DESCRIPTION_CONCESSIONARIE + OR + HTML_DESCRIPTION_USED)
               .text();
+            const mileageHtml = $(vehicleHtmlBlock)
+              .find(HTML_MILEAGE_CONCESSIONARIE + OR + HTML_MILEAGE_USED)
+              .next()
+              .text();
+            const location = $(vehicleHtmlBlock)
+              .find(HTML_LOCATION_CONCESSIONARIE + OR + HTML_LOCATION_USED)
+              .html();
 
             const neoautoVehicle: SyncNeoautoVehicle = {
+              location,
               imageUrl,
               vehiclePrice,
               vehicleURL,
               vehicleDescription,
               websiteId: currentWebsite.id,
+              mileage: getMileage(mileageHtml),
             };
             const carSynced = await this.syncVehicle(neoautoVehicle, vehicleCondition);
 
@@ -126,13 +140,22 @@ export class NeoAutoSyncService {
     condition: NeoautoVehicleConditionEnum,
   ): Promise<Vehicle> {
     try {
-      const { imageUrl, vehicleURL, vehiclePrice, websiteId, vehicleDescription } = data;
+      const {
+        imageUrl,
+        vehicleURL,
+        vehiclePrice,
+        websiteId,
+        vehicleDescription,
+        mileage,
+        location,
+      } = data;
       const { modelWithYear, id } = getVehicleInfoByNeoauto(vehicleURL);
       const { year } = getModelAndYearFromUrl(modelWithYear);
 
       const vehicleInfo: CreateVehicleDto = {
         vehicle: {
-          mileage: 0,
+          location,
+          mileage: condition === NeoautoVehicleConditionEnum.USED ? mileage : 0,
           condition:
             condition === NeoautoVehicleConditionEnum.NEW
               ? VehicleCondition.NEW
@@ -142,6 +165,7 @@ export class NeoAutoSyncService {
           description: vehicleDescription,
           url: `${this.NEOAUTO_URL}/${vehicleURL}`,
           price: vehiclePrice,
+          originalPrice: vehiclePrice,
           currency: PriceCurrency.USD,
           year: +year,
         },

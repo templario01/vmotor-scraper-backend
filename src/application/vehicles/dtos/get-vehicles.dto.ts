@@ -3,4 +3,5 @@ export interface GetVehiclesDto {
   readonly year?: number;
   readonly take?: number;
   readonly after?: string;
+  readonly city?: string;
 }

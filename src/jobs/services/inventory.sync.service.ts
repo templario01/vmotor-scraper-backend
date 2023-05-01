@@ -8,7 +8,7 @@ import { getDurationTime } from '../../shared/utils/time.utils';
 import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/vehicle.enums';
 import { AutocosmosSyncService } from './autocosmos-sync.service';
 import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
-import { ProxyApiV2Service } from '../../application/proxy-api-v2/proxy-api-v2.service';
+import { ProxyService } from '../../application/proxy/proxy.service';
 
 @Injectable()
 export class InventorySyncService {
@@ -18,17 +18,20 @@ export class InventorySyncService {
     private readonly neoautoSyncService: NeoAutoSyncService,
     private readonly mercadolibreSyncService: MercadolibreSyncService,
     private readonly autocosmosSyncService: AutocosmosSyncService,
-    private readonly proxyApiv2Service: ProxyApiV2Service,
+    private readonly proxyService: ProxyService,
   ) {}
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_2_HOURS)
   async syncAllInventory() {
     const startTime = new Date();
     let proxyIP: string;
     const { environment } = this.envConfigService.app();
-    if (environment === Environment.PROD) {
-      const { host, port } = await this.proxyApiv2Service.getProxy();
-      proxyIP = `${host}:${port}`;
+    if (environment !== Environment.DEV) {
+      const proxy = await this.proxyService.getProxy();
+      if (proxy) {
+        const { host, port } = proxy;
+        proxyIP = `${host}:${port}`;
+      }
     }
 
     await Promise.all([

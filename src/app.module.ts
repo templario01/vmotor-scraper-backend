@@ -8,26 +8,13 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ApiModule } from './api/api.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
+import { EnvVariablesConfig, envVariablesConfig } from './config/validator/env-variables';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      validationSchema: Joi.object({
-        NEOAUTO_URL: Joi.string().required(),
-        MERCADOLIBRE_URL: Joi.string().required(),
-        PORT: Joi.number().required(),
-        APP_HOST: Joi.string().required(),
-        EPHEMERAL_PROXIES_API: Joi.string().required(),
-        EPHEMERAL_PROXIES_HOST: Joi.string().required(),
-        CURRENCY_CONVERTER_API: Joi.string().required(),
-        CURRENCY_CONVERTER_HOST: Joi.string().required(),
-        RAPIDAPI_KEY: Joi.string().required(),
-        MAIL_SENDER: Joi.string().required(),
-        MAIL_PASSWORD: Joi.string().required(),
-        MAIL_PORT: Joi.number().required(),
-        MAIL_HOST: Joi.string().required(),
-      }),
+      validationSchema: Joi.object<EnvVariablesConfig>(envVariablesConfig),
       envFilePath: '.env',
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
@@ -42,6 +29,14 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
         payload,
         connection,
       }),
+      formatResponse: (response, requestContext) => {
+        if (response.errors) {
+          const http = requestContext.response.http;
+          http.status = 400;
+          return { ...response, http };
+        }
+        return response;
+      },
       playground: true,
     }),
     JobsModule,

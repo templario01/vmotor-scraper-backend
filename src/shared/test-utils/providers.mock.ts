@@ -2,6 +2,8 @@ import { HttpService } from '@nestjs/axios';
 import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
 import { EnvConfigService } from '../../config/env-config.service';
 import { MercadolibreSyncService } from '../../jobs/services/mercadolibre-sync.service';
+import { JwtService } from '@nestjs/jwt';
+import { MailerService } from '../../application/mailer/mailer.service';
 
 export const buildNestHttpServiceMock = () => {
   const nestHttpService = jest.mocked<HttpService>(HttpService as any, true);
@@ -64,4 +66,20 @@ export const buildEnvConfigServiceMock = () => {
     .mockReturnValue({ url: 'https://fake-neoauto-url.com' });
 
   return envConfigService;
+};
+
+export const buildJwtServiceMock = () => {
+  const jwtService = jest.mocked<JwtService>(JwtService as any, true);
+
+  jwtService.signAsync = jest.fn();
+  jwtService.verifyAsync = jest.fn();
+
+  return jwtService;
+};
+
+export const buildMailerService = () => {
+  const mailerService = jest.mocked<MailerService>(MailerService as any, true);
+  mailerService.sendEmailConfirmation = jest.fn();
+
+  return mailerService;
 };

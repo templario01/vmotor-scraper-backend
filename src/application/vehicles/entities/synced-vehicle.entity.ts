@@ -16,7 +16,7 @@ import {
   PaginatedResponse,
 } from '../../../shared/utils/pagination/cursor-pagination';
 
-type Vehicle = Partial<Omit<PrismaVehicle, 'mileage' | 'price'>>;
+type Vehicle = Partial<Omit<PrismaVehicle, 'mileage' | 'price' | 'originalPrice'>>;
 
 @ObjectType()
 export class SyncedVehicleEntity implements Vehicle {
@@ -88,6 +88,12 @@ export class SyncedVehicleEntity implements Vehicle {
 
   @Field({ nullable: true })
   readonly price?: number;
+
+  @Field({ nullable: true })
+  readonly originalPrice?: number;
+
+  @Field({ nullable: true })
+  readonly location?: string;
 
   @Field(priceCurrencyResultType)
   readonly currency?: PriceCurrency;

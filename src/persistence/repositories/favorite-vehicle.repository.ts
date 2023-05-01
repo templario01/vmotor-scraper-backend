@@ -27,6 +27,20 @@ export class FavoriteVehicleRepository {
     });
   }
 
+  async findUsersByVehicle(externalId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        vehicles: {
+          some: {
+            vehicle: {
+              externalId,
+            },
+          },
+        },
+      },
+    });
+  }
+
   async addFavoriteVehicleToUser(data: AddFavoriteVehicleDto): Promise<Vehicle> {
     const { vehicleUUID, userId } = data;
     const vehicle = await this.prisma.vehicle.findUnique({

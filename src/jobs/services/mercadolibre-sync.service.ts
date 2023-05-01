@@ -20,6 +20,8 @@ import {
 } from '../../application/vehicles/dtos/vehicle.enums';
 import { SyncMercadolibreVehicle } from '../../application/vehicles/dtos/mercadolibre-sync.dto';
 import { Vehicle } from '@prisma/client';
+import { CurrencyConverterApiService } from '../../application/currency-converter-api-v1/currency-converter.service';
+import { formatLocation } from '../../shared/utils/vehicle.utils';
 
 const PRICE_LIMIT_PEN = 4500;
 const PRICE_LIMIT_USD = 1500;
@@ -32,90 +34,104 @@ export class MercadolibreSyncService {
     private readonly config: EnvConfigService,
     private readonly websiteRepository: WebsiteRepository,
     private readonly vehicleRepository: VehicleRepository,
+    private readonly currencyConverterService: CurrencyConverterApiService,
+    private readonly envConfigService: EnvConfigService,
   ) {
     this.logger = new Logger(MercadolibreSyncService.name);
     this.MERCADOLIBRE_URL = this.config.mercadolibre().url;
   }
 
   async syncInventory(proxy?: string) {
-    const syncedVehiclesIds = [];
-    const { proxyServer, pages, websiteId } = await this.getSyncConfig(proxy);
+    try {
+      const syncedVehiclesIds = [];
+      const { proxyServer, pages, websiteId } = await this.getSyncConfig(proxy);
+      const exchangeRate = await this.currencyConverterService.convertCurrency({
+        from: PriceCurrency.PEN,
+        to: PriceCurrency.USD,
+      });
 
-    const browser: Browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
-    });
-    const page: Page = await browser.newPage();
-    await page.setExtraHTTPHeaders({
-      'User-Agent': USER_AGENT,
-      Referer: `${this.MERCADOLIBRE_URL}/autos/autos-camionetas/`,
-    });
+      const browser: Browser = await puppeteer.launch({
+        args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
+      });
+      const page: Page = await browser.newPage();
+      await page.setExtraHTTPHeaders({
+        'User-Agent': USER_AGENT,
+        Referer: `${this.MERCADOLIBRE_URL}/autos/autos-camionetas/`,
+      });
 
-    for (const vehicleNumber of pages) {
-      const paginationLimit = vehicleNumber !== 1 ? `_Desde_${vehicleNumber}_` : '_';
+      for (const vehicleNumber of pages) {
+        const paginationLimit = vehicleNumber !== 1 ? `_Desde_${vehicleNumber}_` : '_';
 
-      await page.goto(
-        `${this.MERCADOLIBRE_URL}/autos/autos-camionetas${paginationLimit}OrderId_PRICE_NoIndex_True`,
-        { timeout: 0 },
-      );
-      await page.evaluate(this.scrollToEndOfPage);
-      const html = await page.content();
-      const $ = cheerio.load(html);
-
-      const vehicleBlocks: Cheerio<CheerioElement> = $('li.ui-search-layout__item');
-
-      for (const vehicleBlock of vehicleBlocks) {
-        const priceHtml = $(vehicleBlock).find(
-          'div.ui-search-price div.ui-search-price__second-line span.price-tag span.price-tag-amount span.price-tag-fraction',
+        await page.goto(
+          `${this.MERCADOLIBRE_URL}/autos/autos-camionetas${paginationLimit}OrderId_PRICE_NoIndex_True`,
+          { timeout: 0 },
         );
-        const tagPriceHtml = $(vehicleBlock).find(
-          'div.ui-search-price div.ui-search-price__second-line span.price-tag span.price-tag-amount span.price-tag-symbol',
-        );
-        const tagPrice = tagPriceHtml.html().trim();
-        const price = parsePrice(priceHtml.html());
-        let syncedVehicle: Vehicle;
+        await page.evaluate(this.scrollToEndOfPage);
+        const html = await page.content();
+        const $ = cheerio.load(html);
 
-        if (tagPrice === 'S/' && price >= PRICE_LIMIT_PEN) {
-          syncedVehicle = await this.SyncVehicleByCurrency({
-            parentHtml: $,
-            currency: PriceCurrency.PEN,
-            websiteId,
-            vehicleBlock,
-            price,
-          });
-        } else if (tagPrice === 'U$S' && price >= PRICE_LIMIT_USD) {
-          syncedVehicle = await this.SyncVehicleByCurrency({
-            parentHtml: $,
-            currency: PriceCurrency.USD,
-            websiteId,
-            vehicleBlock,
-            price,
-          });
-        }
+        const vehicleBlocks: Cheerio<CheerioElement> = $('li.ui-search-layout__item');
 
-        if (syncedVehicle) {
-          syncedVehiclesIds.push(syncedVehicle.externalId);
-          this.logger.verbose(`[USED CAR] Vehicle synced: ${syncedVehicle?.url}`);
+        for (const vehicleBlock of vehicleBlocks) {
+          const priceHtml = $(vehicleBlock).find(
+            'div.ui-search-price div.ui-search-price__second-line span.price-tag span.price-tag-amount span.price-tag-fraction',
+          );
+          const tagPriceHtml = $(vehicleBlock).find(
+            'div.ui-search-price div.ui-search-price__second-line span.price-tag span.price-tag-amount span.price-tag-symbol',
+          );
+          const tagPrice = tagPriceHtml.html().trim();
+          const price = parsePrice(priceHtml.html());
+          let syncedVehicle: Vehicle;
+
+          if (tagPrice === 'S/' && price >= PRICE_LIMIT_PEN) {
+            const exchangeValue = exchangeRate
+              ? exchangeRate.new_amount
+              : this.envConfigService.exchangeRate().penToUsd;
+            console.log(exchangeValue);
+            syncedVehicle = await this.SyncVehicleByCurrency(
+              {
+                parentHtml: $,
+                currency: PriceCurrency.PEN,
+                websiteId,
+                vehicleBlock,
+                price,
+              },
+              exchangeValue,
+            );
+          } else if (tagPrice === 'U$S' && price >= PRICE_LIMIT_USD) {
+            syncedVehicle = await this.SyncVehicleByCurrency({
+              parentHtml: $,
+              currency: PriceCurrency.USD,
+              websiteId,
+              vehicleBlock,
+              price,
+            });
+          }
+
+          if (syncedVehicle) {
+            syncedVehiclesIds.push(syncedVehicle.externalId);
+            this.logger.verbose(`[USED CAR] Vehicle synced: ${syncedVehicle?.url}`);
+          }
         }
       }
+      const deletedCars = await this.vehicleRepository.updateStatusForAllInventory({
+        vehicleCondition: VehicleCondition.USED,
+        syncedVehiclesIds,
+        websiteId,
+      });
+      this.logger.log(
+        `[USED CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
+      );
+      await browser.close();
+    } catch (error) {
+      this.logger.error('fail to sync all inventory', error);
     }
-    const deletedCars = await this.vehicleRepository.updateStatusForAllInventory({
-      vehicleCondition: VehicleCondition.USED,
-      syncedVehiclesIds,
-      websiteId,
-    });
-    this.logger.log(
-      `[USED CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
-    );
-    await browser.close();
   }
 
-  async SyncVehicleByCurrency({
-    parentHtml,
-    vehicleBlock,
-    websiteId,
-    price,
-    currency,
-  }: SyncMercadolibreVehicle): Promise<Vehicle> {
+  async SyncVehicleByCurrency(
+    { parentHtml, vehicleBlock, websiteId, price, currency }: SyncMercadolibreVehicle,
+    exchangeValue?: number,
+  ): Promise<Vehicle> {
     try {
       const vehicleUrlBlock = parentHtml(vehicleBlock).find(
         'div.ui-search-item__group a',
@@ -136,17 +152,22 @@ export class MercadolibreSyncService {
           'div.ui-search-item__group ul.ui-search-card-attributes li.ui-search-card-attributes__attribute',
         )
         .next();
+      const location = parentHtml(vehicleBlock)
+        .find('div.ui-search-item__group--location span')
+        .html();
 
       const createVehicle: CreateVehicleDto = {
         vehicle: {
           externalId: id,
           url: vehicleUrl,
+          location: formatLocation(location.replace('-', ',')),
           frontImage: vehicleImageUrl.trim(),
           condition: VehicleCondition.USED,
           year: +year.html(),
           description,
           mileage: convertToNumber(mileage.html()),
-          price,
+          originalPrice: price,
+          price: exchangeValue ? price * exchangeValue : price,
           currency,
         },
         websiteId,

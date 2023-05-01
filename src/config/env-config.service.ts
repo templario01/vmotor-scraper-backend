@@ -31,6 +31,18 @@ export class EnvConfigService {
     };
   }
 
+  public pubProxy() {
+    return {
+      url: this.configService.get<string>('PUB_PROXY_API'),
+    };
+  }
+
+  public exchangeRate() {
+    return {
+      penToUsd: this.configService.get<number>('DEFAULT_EXCHANGE_RATE'),
+    };
+  }
+
   public ephemeralProxiesApi() {
     return {
       url: this.configService.get<string>('EPHEMERAL_PROXIES_API'),

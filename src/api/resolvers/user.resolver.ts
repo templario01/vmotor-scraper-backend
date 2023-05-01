@@ -5,7 +5,6 @@ import {
   CreateAccountEntity,
   createAccountReturnType,
 } from '../../application/auth/entities/create-account.entity';
-import { VerifyUserInput } from '../../application/user/inputs/verify-user.input';
 import {
   AccessTokenEntity,
   accessTokenReturnType,
@@ -21,9 +20,7 @@ export class UserResolver {
   }
 
   @Mutation(accessTokenReturnType)
-  verifyUser(
-    @Args('verifyUserInput') input: VerifyUserInput,
-  ): Promise<AccessTokenEntity> {
-    return this.authService.confirmAccount(input);
+  verifyUser(@Args('code') code: string): Promise<AccessTokenEntity> {
+    return this.authService.confirmAccount(code);
   }
 }

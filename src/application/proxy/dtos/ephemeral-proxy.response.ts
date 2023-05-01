@@ -26,7 +26,7 @@ interface Visibility {
   readonly region_code: string;
   readonly city: string;
 }
-export interface Proxy {
+export interface EphemeralProxy {
   readonly id: string;
   readonly host: string;
   readonly port: number;
@@ -37,5 +37,5 @@ export interface Proxy {
 }
 export interface EphemeralProxyResponse {
   readonly success: boolean;
-  readonly proxy: Proxy;
+  readonly proxy: EphemeralProxy;
 }

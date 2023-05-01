@@ -1,12 +1,11 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
-  HttpException,
-  HttpStatus,
   Injectable,
   Logger,
+  UnauthorizedException,
 } from '@nestjs/common';
-import { EnvConfigService } from '../../config/env-config.service';
 import { UserRepository } from '../../persistence/repositories/user.repository';
 import { SignInInput } from './inputs/sign-in.input';
 import { MailerService } from '../mailer/mailer.service';
@@ -16,13 +15,11 @@ import { AccessTokenEntity } from './entities/access-token.entity';
 import { compare } from 'bcrypt';
 import { SignUpInput } from './inputs/sign-up.input';
 import { NotifyEmailDto } from './dtos/auth.dto';
-import { VerifyUserInput } from '../user/inputs/verify-user.input';
 
 @Injectable()
 export class AuthService {
   private readonly logger = new Logger(AuthService.name);
   constructor(
-    private readonly envConfigService: EnvConfigService,
     private readonly userRepository: UserRepository,
     private readonly mailerService: MailerService,
     private readonly jwtService: JwtService,
@@ -31,12 +28,11 @@ export class AuthService {
   async signUp({ email, password }: SignUpInput): Promise<CreateAccountEntity> {
     const findUser = await this.userRepository.findUserByEmail(email);
     if (findUser?.hasConfirmedEmail) {
-      throw new HttpException('email already taken', HttpStatus.BAD_REQUEST);
+      throw new ConflictException('email already taken');
     }
     if (findUser && !findUser.hasConfirmedEmail) {
-      throw new HttpException(
+      throw new BadRequestException(
         'please check your email, the verification code was already sent',
-        HttpStatus.BAD_REQUEST,
       );
     }
 
@@ -58,9 +54,9 @@ export class AuthService {
     userAgent: string,
   ): Promise<AccessTokenEntity> {
     const user = await this.userRepository.findUserByEmail(email);
-    const isValidPassword = compare(password, user.password);
+    const isValidPassword = await compare(password, user.password);
     if (!isValidPassword) {
-      throw new HttpException('invalid password', HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException('invalid password');
     }
     const payload = { username: user.email, sub: user.id };
     await this.registerLastSession(user.id, userAgent);
@@ -70,13 +66,13 @@ export class AuthService {
     };
   }
 
-  async resendEmailConfirmation(email: string) {
+  async resendEmailConfirmation(email: string): Promise<CreateAccountEntity> {
     const findUser = await this.userRepository.findUserByEmail(email);
     if (!findUser) {
-      throw new HttpException('please create an account', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('please create an account');
     }
     if (findUser?.hasConfirmedEmail) {
-      throw new HttpException('email already validated', HttpStatus.BAD_REQUEST);
+      throw new BadRequestException('email already validated');
     }
 
     const { code, expirationTime } = await this.userRepository.createValidationCode(
@@ -97,31 +93,16 @@ export class AuthService {
     };
   }
 
-  async confirmAccount(input: VerifyUserInput): Promise<AccessTokenEntity> {
-    const { code, email } = input;
-    const user = await this.userRepository.findUserByEmail(email);
-    if (!user) {
-      throw new ForbiddenException('Please register your email first');
+  async confirmAccount(code: string): Promise<AccessTokenEntity> {
+    const userWithValidCode = await this.userRepository.findUserByEmailCode(code);
+    if (!userWithValidCode) {
+      throw new ForbiddenException('Invalid code');
     }
-    if (user.hasConfirmedEmail === true) {
+    if (userWithValidCode.hasConfirmedEmail === true) {
       throw new BadRequestException('Email already confirmed');
     }
-    const currentTime = new Date().getTime();
-    const lastCode = await this.userRepository.findLastValidationCode(user.id);
 
-    if (!lastCode) {
-      throw new ForbiddenException('please resend a new validation code');
-    }
-    if (currentTime > lastCode.expirationTime.getTime()) {
-      throw new ForbiddenException(
-        'Your validation code has already expired, please send a new one',
-      );
-    }
-    if (code !== lastCode.code) {
-      throw new ForbiddenException('Invalid validation code');
-    }
-
-    const account = await this.userRepository.validateAccount(user.id);
+    const account = await this.userRepository.validateAccount(userWithValidCode.id);
     const payload = { username: account.email, sub: account.uuid };
     const accessToken = await this.jwtService.signAsync(payload);
 

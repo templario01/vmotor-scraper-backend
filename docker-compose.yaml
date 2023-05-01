@@ -76,8 +76,8 @@ services:
     networks:
       - net-vmotor
 
-  vmotor-server:
-    image: vmotor-server
+  server:
+    image: server
     restart: always
     build:
       context: .
@@ -96,7 +96,7 @@ services:
     volumes:
       - "./conf.d:/etc/nginx/conf.d"
     depends_on:
-      - vmotor-server
+      - server
     ports:
       - "3300:3300"
     networks:

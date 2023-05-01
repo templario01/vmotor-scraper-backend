@@ -55,7 +55,8 @@ export class CurrencyConverterApiService {
       return data;
     } catch (error) {
       this.logger.error('request failed', error);
-      return null;
+
+      return undefined;
     }
   }
 }
