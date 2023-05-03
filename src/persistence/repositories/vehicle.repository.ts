@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../services/prisma.service';
-import { Prisma, Vehicle } from '@prisma/client';
+import { Vehicle } from '@prisma/client';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import {
   PriceCurrency,
@@ -14,35 +14,15 @@ import {
 } from '../../application/vehicles/entities/synced-vehicle.entity';
 import { Status } from '../../shared/dtos/status.enum';
 import { IEdgeType } from '../../shared/utils/pagination/cursor-pagination';
-import { GetVehiclesDto } from '../../application/vehicles/dtos/get-vehicles.dto';
+import { GetVehiclesWhereInputDto } from '../../application/vehicles/dtos/get-vehicles.dto';
 
 @Injectable()
 export class VehicleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findVehicles(params: GetVehiclesDto): Promise<IPaginatedVehicleEntity> {
-    const { words, year, take, after, city } = params;
-
-    const yearFilter: Prisma.VehicleWhereInput = year ? { year: { equals: year } } : {};
-    const locationFilter: Prisma.VehicleWhereInput = city
-      ? {
-          location: {
-            contains: city,
-            mode: 'insensitive',
-          },
-        }
-      : {};
-    const matchWords: Prisma.Enumerable<Prisma.VehicleWhereInput> = words.map((word) => {
-      return {
-        description: { mode: 'insensitive', contains: word },
-      };
-    });
-    const where: Prisma.VehicleWhereInput = {
-      AND: [...matchWords, yearFilter, locationFilter],
-    };
-
+  async findVehicles(params: GetVehiclesWhereInputDto): Promise<IPaginatedVehicleEntity> {
+    const { take, after, where } = params;
     const totalCount = await this.prisma.vehicle.count({ where });
-
     const vehicles = await this.prisma.vehicle.findMany({
       where,
       take: typeof take === 'number' ? take + 1 : undefined,
@@ -106,6 +86,23 @@ export class VehicleRepository {
 
   async findByExternalId(externalId: string) {
     return this.prisma.vehicle.findFirst({ where: { externalId } });
+  }
+
+  async getEnabledUsersFromDeletedVehicles(deletedVehiclesIds: number[]) {
+    return this.prisma.user.findMany({
+      where: {
+        hasActiveNotifications: { equals: true },
+        vehicles: {
+          some: {
+            vehicle: {
+              id: {
+                in: deletedVehiclesIds,
+              },
+            },
+          },
+        },
+      },
+    });
   }
 
   async updateStatusForAllInventory({

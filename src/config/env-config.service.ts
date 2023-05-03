@@ -27,7 +27,7 @@ export class EnvConfigService {
   public app() {
     return {
       environment: this.configService.get<Environment>('NODE_ENV'),
-      appHost: this.configService.get<Environment>('APP_HOST'),
+      appHost: this.configService.get<string>('APP_HOST'),
     };
   }
 

@@ -24,23 +24,13 @@ input DeleteFavoriteVehicleInput {
   vehicle: UuidInput!
 }
 
-"""Vehicle condition"""
-enum GetVehicleCondition {
-  ALL
-  NEW
-  USED
-}
-
 type Mutation {
   addFavoriteVehicleToUser(addFavoriteVehicleInput: AddFavoriteVehicleInput!): SyncedVehicleEntity!
   deleteFavoriteVehicleToUser(deleteFavoriteVehicleInput: DeleteFavoriteVehicleInput!): [SyncedVehicleEntity!]!
   resendEmail(email: String!): CreateAccountEntity!
   signIn(signInInput: SignInInput!): AccessTokenEntity!
   signUp(signUpInput: SignUpInput!): CreateAccountEntity!
-  syncAutocosmosInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
-  syncInventoryBrands: SyncBrandsJobEntity!
-  syncMercadolibreInvetory: SyncInventoryJobEntity!
-  syncNeoautoInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
+  toggleUserNotifications(hasActiveNotifications: Boolean!): ToggleUserNotificationsEntity!
   verifyUser(code: String!): AccessTokenEntity!
 }
 
@@ -61,7 +51,6 @@ enum PriceCurrency {
 type Query {
   getFavoriteVehicles: [SyncedVehicleEntity!]!
   getVehiclesByAdvancedSearch(after: String, city: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
-  getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
 
 input SignInInput {
@@ -78,23 +67,6 @@ input SignUpInput {
 enum Status {
   ACTIVE
   INACTIVE
-}
-
-type SyncBrandsJobEntity {
-  duration: String!
-  endTime: DateTime!
-  startTime: DateTime!
-}
-
-input SyncInventoryInput {
-  """Vehicle condition for sync"""
-  condition: GetVehicleCondition!
-}
-
-type SyncInventoryJobEntity {
-  duration: String!
-  endTime: DateTime!
-  startTime: DateTime!
 }
 
 type SyncedVehicleEntity {
@@ -129,34 +101,12 @@ type SyncedVehicleEntityEdge {
   node: SyncedVehicleEntity!
 }
 
+type ToggleUserNotificationsEntity {
+  hasActiveNotifications: Boolean!
+}
+
 input UuidInput {
   uuid: String!
-}
-
-type VehicleEntity {
-  currency: String
-  description: String
-  doors: Float
-  engineFuelType: String
-  enginePowerHp: String
-  enginePowerRpm: String
-  engineType: String
-  externalId: String
-  frontImage: String
-  images: String
-  isEstimatedPrice: Boolean!
-  mileage: Float
-  originalPrice: Float
-  price: Float
-  speeds: Float
-  transmission: String
-  url: String
-  year: Float
-}
-
-type VehicleSearchEntity {
-  duration: String!
-  vehicles: [VehicleEntity!]!
 }
 
 type WebsiteEntity {

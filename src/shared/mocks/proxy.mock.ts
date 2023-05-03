@@ -16,6 +16,9 @@ import {
   randZipCode,
 } from '@ngneat/falso';
 import { EphemeralProxyResponse } from '../../application/proxy/dtos/ephemeral-proxy.response';
+import { Proxy } from '../../application/proxy/dtos/proxy.dto';
+
+export const buildProxyResponse = (): Proxy => ({ host: randIp(), port: randPort() });
 
 export const buildeEphemeralProxyResponse = (): EphemeralProxyResponse => ({
   proxy: {

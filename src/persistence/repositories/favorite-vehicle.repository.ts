@@ -8,6 +8,7 @@ import { PrismaService } from '../services/prisma.service';
 import { AddFavoriteVehicleDto } from '../../application/favorite-vehicle/dtos/add-favorite-vehicle.dto';
 import { DeleteFavoriteVehicleDto } from '../../application/favorite-vehicle/dtos/delete-favorite-vehicle.dto';
 import { Vehicle } from '@prisma/client';
+import { Status } from '../../shared/dtos/status.enum';
 
 @Injectable()
 export class FavoriteVehicleRepository {
@@ -34,6 +35,7 @@ export class FavoriteVehicleRepository {
           some: {
             vehicle: {
               externalId,
+              status: Status.ACTIVE,
             },
           },
         },

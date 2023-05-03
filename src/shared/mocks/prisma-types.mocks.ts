@@ -23,12 +23,15 @@ import {
 export const buildUserMock = ({
   email = randEmail(),
   hasConfirmedEmail = true,
+  hasActiveNotifications = true,
 }: {
   email?: string;
   hasConfirmedEmail?: boolean;
+  hasActiveNotifications?: boolean;
 }): User => ({
   email,
   hasConfirmedEmail,
+  hasActiveNotifications,
   id: randNumber(),
   password: randHexaDecimal(),
   lastSession: randPastDate(),

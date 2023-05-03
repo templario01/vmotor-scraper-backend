@@ -15,6 +15,7 @@ import { EnvConfigService } from '../config/env-config.service';
 import { FavoriteVehicleService } from './favorite-vehicle/favorite-vehicle.service';
 import { WebsiteService } from './websites/website.service';
 import { VehicleSyncService } from './vehicles/vehicle-sync.service';
+import { UserService } from './user/user.service';
 
 const providers = [
   VehicleService,
@@ -26,6 +27,7 @@ const providers = [
   AuthService,
   FavoriteVehicleService,
   WebsiteService,
+  UserService,
 ];
 
 @Module({

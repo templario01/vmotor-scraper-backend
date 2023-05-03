@@ -23,10 +23,11 @@ export class InventorySyncService {
 
   @Cron(CronExpression.EVERY_2_HOURS)
   async syncAllInventory() {
+    console.log('CALLING...');
     const startTime = new Date();
     let proxyIP: string;
     const { environment } = this.envConfigService.app();
-    if (environment !== Environment.DEV) {
+    if (environment !== Environment.DEV && environment !== Environment.TEST) {
       const proxy = await this.proxyService.getProxy();
       if (proxy) {
         const { host, port } = proxy;

@@ -45,15 +45,16 @@ model ProxyConfig {
 }
 
 model User {
-  id                Int                   @id @default(autoincrement())
-  uuid              String                @unique @default(cuid())
-  email             String                @unique
-  hasConfirmedEmail Boolean               @default(false)
-  password          String
-  refreshToken      String?               @map(name: "refresh_token")
-  lastSession       DateTime              @default(now())
-  vehicles          UserFavoriteVehicle[]
-  validationCodes   EmailValidationCode[]
+  id                     Int                   @id @default(autoincrement())
+  uuid                   String                @unique @default(cuid())
+  email                  String                @unique
+  hasConfirmedEmail      Boolean               @default(false)
+  password               String
+  refreshToken           String?               @map(name: "refresh_token")
+  hasActiveNotifications Boolean               @default(false)
+  lastSession            DateTime              @default(now())
+  vehicles               UserFavoriteVehicle[]
+  validationCodes        EmailValidationCode[]
 
   @@map("user")
 }

@@ -17,8 +17,6 @@ import {
   getVehicleInfoByNeoauto,
   parsePrice,
 } from '../../shared/utils/neoauto.utils';
-import { BrandsRepository } from '../../persistence/repositories/brands.repository';
-import { ModelsRepository } from '../../persistence/repositories/models.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import {
@@ -48,8 +46,6 @@ export class NeoAutoSyncService {
   constructor(
     private readonly config: EnvConfigService,
     private readonly websiteRepository: WebsiteRepository,
-    private readonly brandRepository: BrandsRepository,
-    private readonly modelRepository: ModelsRepository,
     private readonly vehicleRepository: VehicleRepository,
   ) {
     this.NEOAUTO_URL = this.config.neoauto().url;

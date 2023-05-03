@@ -1,7 +1,7 @@
-export interface GetVehiclesDto {
-  readonly words?: string[];
-  readonly year?: number;
+import { Prisma } from '@prisma/client';
+
+export interface GetVehiclesWhereInputDto {
   readonly take?: number;
   readonly after?: string;
-  readonly city?: string;
+  readonly where?: Prisma.VehicleWhereInput;
 }

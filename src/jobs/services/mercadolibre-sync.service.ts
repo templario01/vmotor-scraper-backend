@@ -41,7 +41,7 @@ export class MercadolibreSyncService {
     this.MERCADOLIBRE_URL = this.config.mercadolibre().url;
   }
 
-  async syncInventory(proxy?: string) {
+  async syncInventory(proxy?: string): Promise<void> {
     try {
       const syncedVehiclesIds = [];
       const { proxyServer, pages, websiteId } = await this.getSyncConfig(proxy);
