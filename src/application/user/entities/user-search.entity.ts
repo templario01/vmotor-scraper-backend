@@ -1,8 +1,15 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, ID, ObjectType } from '@nestjs/graphql';
 import { graphqlDateReturnType } from '../../../shared/dtos/decimal-scalar';
+import {
+  IPaginatedResponse,
+  PaginatedResponse,
+} from '../../../shared/utils/pagination/cursor-pagination';
 
 @ObjectType()
 export class UserSearchEntity {
+  @Field(() => ID)
+  readonly uuid: string;
+
   @Field(graphqlDateReturnType)
   readonly createdAt: Date;
 
@@ -11,3 +18,9 @@ export class UserSearchEntity {
 }
 
 export const userSearchEntityReturnType = () => UserSearchEntity;
+
+@ObjectType()
+export class PaginatedUserSearchesEntity extends PaginatedResponse(UserSearchEntity) {}
+export type IPaginatedUserSearchesEntity = IPaginatedResponse<UserSearchEntity>;
+
+export const paginatedUserSearchesEntityReturnType = () => PaginatedUserSearchesEntity;

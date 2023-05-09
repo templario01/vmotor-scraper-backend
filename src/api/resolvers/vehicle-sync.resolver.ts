@@ -15,7 +15,7 @@ import {
   vehicleSearchEntityReturnType,
 } from '../../application/vehicles/entities/vehicle-search.entity';
 @Resolver()
-export class VehicleResolver {
+export class VehicleSyncResolver {
   constructor(private readonly vehicleSyncService: VehicleSyncService) {}
 
   @Query(vehicleSearchEntityReturnType)

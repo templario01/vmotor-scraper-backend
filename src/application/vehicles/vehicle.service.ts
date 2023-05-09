@@ -45,14 +45,14 @@ export class VehicleService {
           },
         }
       : {};
-    const matchWords: Prisma.Enumerable<Prisma.VehicleWhereInput> = keywords.map(
+    const matchKeywords: Prisma.Enumerable<Prisma.VehicleWhereInput> = keywords.map(
       (keyWord) => ({
         description: { mode: 'insensitive', contains: keyWord },
       }),
     );
 
     return {
-      AND: [...matchWords, yearFilter, locationFilter],
+      AND: [...matchKeywords, yearFilter, locationFilter],
     };
   }
 

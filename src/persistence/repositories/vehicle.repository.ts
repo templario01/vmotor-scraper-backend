@@ -21,14 +21,14 @@ export class VehicleRepository {
   constructor(private readonly prisma: PrismaService) {}
 
   async findVehicles(params: GetVehiclesWhereInputDto): Promise<IPaginatedVehicleEntity> {
-    const { take, after, where } = params;
+    const { take, after, where, hasOrderBy = true } = params;
     const totalCount = await this.prisma.vehicle.count({ where });
     const vehicles = await this.prisma.vehicle.findMany({
       where,
       take: typeof take === 'number' ? take + 1 : undefined,
       skip: after ? 1 : undefined,
       cursor: after ? { uuid: after } : undefined,
-      orderBy: [{ price: 'asc' }],
+      orderBy: hasOrderBy ? [{ price: 'asc' }] : [],
     });
 
     const results = vehicles.map(
