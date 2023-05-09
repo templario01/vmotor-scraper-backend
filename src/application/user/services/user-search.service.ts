@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 
 import { Prisma } from '@prisma/client';
 import { VehicleSearchRepository } from '../../../persistence/repositories/search.repository';
-import { IPaginatedUserSearchesEntity } from '../entities/user-search.entity';
-import { GetSearchesArgs } from '../inputs/get-searches.input';
+import { UserSearchEntity } from '../entities/user-search.entity';
 import { IPaginatedVehicleEntity } from '../../vehicles/entities/synced-vehicle.entity';
 import { VehicleSearchDto } from '../dtos/user-vehicle-search.dto';
 import { GetRecommendedVehiclesArgs } from '../inputs/get-recommended-vehicles.input';
 import { VehicleRepository } from '../../../persistence/repositories/vehicle.repository';
+import { DeleteSearchInput } from '../inputs/delete-search.input';
 
 @Injectable()
 export class UserSearchService {
@@ -16,11 +16,20 @@ export class UserSearchService {
     private readonly vehicleRepository: VehicleRepository,
   ) {}
 
-  async getSearchHistory(
-    input: GetSearchesArgs,
+  async getSearchHistory(userId: number): Promise<UserSearchEntity[]> {
+    const result = await this.vehicleSearchRepository.findByUser(userId);
+
+    return result.map(({ text, uuid, createdAt }) => ({ text, createdAt, uuid }));
+  }
+
+  async deleteSearch(
+    input: DeleteSearchInput,
     userId: number,
-  ): Promise<IPaginatedUserSearchesEntity> {
-    return this.vehicleSearchRepository.findByUser(input, userId);
+  ): Promise<UserSearchEntity[]> {
+    const { search } = input;
+    const result = await this.vehicleSearchRepository.delete(userId, search.uuid);
+
+    return result.map(({ text, uuid, createdAt }) => ({ text, createdAt, uuid }));
   }
 
   async getRecommendedVehicles(

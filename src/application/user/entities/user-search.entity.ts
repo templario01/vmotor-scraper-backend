@@ -18,6 +18,7 @@ export class UserSearchEntity {
 }
 
 export const userSearchEntityReturnType = () => UserSearchEntity;
+export const userSearchesEntityReturnType = () => [UserSearchEntity];
 
 @ObjectType()
 export class PaginatedUserSearchesEntity extends PaginatedResponse(UserSearchEntity) {}

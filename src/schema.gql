@@ -24,6 +24,10 @@ input DeleteFavoriteVehicleInput {
   vehicle: UuidInput!
 }
 
+input DeleteSearchInput {
+  search: UuidInput!
+}
+
 """Vehicle condition"""
 enum GetVehicleCondition {
   ALL
@@ -34,6 +38,7 @@ enum GetVehicleCondition {
 type Mutation {
   addFavoriteVehicleToUser(addFavoriteVehicleInput: AddFavoriteVehicleInput!): SyncedVehicleEntity!
   deleteFavoriteVehicleToUser(deleteFavoriteVehicleInput: DeleteFavoriteVehicleInput!): [SyncedVehicleEntity!]!
+  deleteSearch(deleteSearchInput: DeleteSearchInput!): [UserSearchEntity!]!
   resendEmail(email: String!): CreateAccountEntity!
   signIn(signInInput: SignInInput!): AccessTokenEntity!
   signUp(signUpInput: SignUpInput!): CreateAccountEntity!
@@ -43,14 +48,6 @@ type Mutation {
   syncNeoautoInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
   toggleUserNotifications(hasActiveNotifications: Boolean!): ToggleUserNotificationsEntity!
   verifyUser(code: String!): AccessTokenEntity!
-}
-
-type PaginatedUserSearchesEntity {
-  edges: [UserSearchEntityEdge!]
-  endCursor: String
-  hasNextPage: Boolean!
-  nodes: [UserSearchEntity!]
-  totalCount: Int!
 }
 
 type PaginatedVehicleEntity {
@@ -70,7 +67,7 @@ enum PriceCurrency {
 type Query {
   getFavoriteVehicles: [SyncedVehicleEntity!]!
   getRecommendedVehicles(after: String, take: Int = 10): PaginatedVehicleEntity!
-  getSearchHistory(after: String, take: Int = 10): PaginatedUserSearchesEntity!
+  getSearchHistory: [UserSearchEntity!]!
   getVehiclesByAdvancedSearch(after: String, city: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
@@ -156,7 +153,7 @@ type UserSearchEntityEdge {
 }
 
 input UuidInput {
-  uuid: String!
+  uuid: ID!
 }
 
 type VehicleEntity {

@@ -1,5 +1,4 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-
 import { AuthService } from '../../application/auth/auth.service';
 import {
   CreateAccountEntity,
@@ -19,13 +18,13 @@ import { AuthGuard } from '../../application/auth/guards/auth.guard';
 import { UseGuards } from '@nestjs/common';
 import { UserService } from '../../application/user/services/user.service';
 import {
-  PaginatedUserSearchesEntity,
-  paginatedUserSearchesEntityReturnType,
+  UserSearchEntity,
+  userSearchesEntityReturnType,
 } from '../../application/user/entities/user-search.entity';
 import { UserSearchService } from '../../application/user/services/user-search.service';
-import { GetSearchesArgs } from '../../application/user/inputs/get-searches.input';
 import { PaginatedVehicleEntity } from '../../application/vehicles/entities/synced-vehicle.entity';
 import { GetRecommendedVehiclesArgs } from '../../application/user/inputs/get-recommended-vehicles.input';
+import { DeleteSearchInput } from '../../application/user/inputs/delete-search.input';
 
 @Resolver()
 export class UserResolver {
@@ -55,12 +54,18 @@ export class UserResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(paginatedUserSearchesEntityReturnType)
-  getSearchHistory(
-    @Args() args: GetSearchesArgs,
+  @Query(userSearchesEntityReturnType)
+  getSearchHistory(@CurrentUser() user: SessionData): Promise<UserSearchEntity[]> {
+    return this.userSearchService.getSearchHistory(user.sub);
+  }
+
+  @UseGuards(AuthGuard)
+  @Mutation(userSearchesEntityReturnType)
+  deleteSearch(
+    @Args('deleteSearchInput') input: DeleteSearchInput,
     @CurrentUser() user: SessionData,
-  ): Promise<PaginatedUserSearchesEntity> {
-    return this.userSearchService.getSearchHistory(args, user.sub);
+  ): Promise<UserSearchEntity[]> {
+    return this.userSearchService.deleteSearch(input, user.sub);
   }
 
   @Query(() => PaginatedVehicleEntity)

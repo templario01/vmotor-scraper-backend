@@ -21,7 +21,6 @@ import { SessionData } from '../../application/auth/dtos/auth.dto';
 export class UserFavoriteVehicleResolver {
   constructor(
     private readonly userFavoriteVehicleService: UserFavoriteVehicleService,
-
     private readonly websiteService: WebsiteService,
   ) {}
 
