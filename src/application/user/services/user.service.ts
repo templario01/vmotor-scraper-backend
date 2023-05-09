@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { UserRepository } from '../../persistence/repositories/user.repository';
-import { ToggleUserNotificationsEntity } from './entities/toggle-user-notifications.entity';
+import { UserRepository } from '../../../persistence/repositories/user.repository';
+import { ToggleUserNotificationsEntity } from '../entities/toggle-user-notifications.entity';
 
 @Injectable()
 export class UserService {

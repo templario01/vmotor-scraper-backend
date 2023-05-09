@@ -8,7 +8,7 @@ import {
   UserVehicleSearchDto,
   VehicleSearchWithNameDto,
 } from '../user/dtos/user-vehicle-search.dto';
-import { VehicleSearchRepository } from '../../persistence/repositories/vehicle-search.repository';
+import { VehicleSearchRepository } from '../../persistence/repositories/search.repository';
 import { BuildPrismaFiltersDto } from './dtos/vehicle.dto';
 
 @Injectable()

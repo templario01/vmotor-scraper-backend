@@ -19,18 +19,3 @@ export class VehicleResolver {
     return this.vehicleService.getVehiclesByAdvancedSearch(args, user?.sub);
   }
 }
-
-/* const searchs = [
-  { searchId: 1, createdAt: '', words: ['mazda', '3'], year: 2018 },
-  { searchId: 2, createdAt: '', words: ['nissan', 'sentra'] },
-  { searchId: 3, createdAt: '', words: ['toyota'], year: 2014 },
-  { searchId: 4, createdAt: '', words: ['mazda', '2'] },
-  { searchId: 4, createdAt: '', words: ['mazda', '3'] },
-];
-
-const completeSearchs = [
-  { searchId: 3, createdAt: '', words: ['toyota'], year: 2014 },
-  { searchId: 1, createdAt: '', words: ['mazda', '3'], year: 2018 },
-];
-const words = ['mazda', '3', 'nissan', 'sentra', 'toyota'];
- */

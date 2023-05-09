@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { buildVehicleRepositoryMock } from '../../shared/test-utils/repositories.mock';
-import { FavoriteVehicleService } from './favorite-vehicle.service';
+import { FavoriteVehicleService } from './user-favorite-vehicle.service';
 import { FavoriteVehicleRepository } from '../../persistence/repositories/favorite-vehicle.repository';
 
 describe('FavoriteVehicleService', () => {

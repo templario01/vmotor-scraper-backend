@@ -9,7 +9,6 @@ import {
   AccessTokenEntity,
   accessTokenReturnType,
 } from '../../application/auth/entities/access-token.entity';
-import { UserService } from '../../application/user/user.service';
 import {
   ToggleUserNotificationsEntity,
   toggleUserNotificationsReturnType,
@@ -18,6 +17,7 @@ import { CurrentUser } from '../../shared/decorators/context.decorator';
 import { SessionData } from '../../application/auth/dtos/auth.dto';
 import { AuthGuard } from '../../application/auth/guards/auth.guard';
 import { UseGuards } from '@nestjs/common';
+import { UserService } from '../../application/user/services/user.service';
 
 @Resolver()
 export class UserResolver {

@@ -7,9 +7,14 @@ import { EnvConfigModule } from '../config/env-config.module';
 import { PersistenceModule } from '../persistence/persistence.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthResolver } from './resolvers/auth.resolver';
-import { UserVehicleResolver } from './resolvers/user-vehicle.resolver';
+import { UserFavoriteVehicleResolver } from './resolvers/user-favorite-vehicle.resolver';
 
-const resolvers = [VehicleResolver, UserResolver, AuthResolver, UserVehicleResolver];
+const resolvers = [
+  VehicleResolver,
+  UserResolver,
+  AuthResolver,
+  UserFavoriteVehicleResolver,
+];
 const controllers = [HealthController];
 const authGuardModules = [EnvConfigModule, PersistenceModule, JwtModule];
 

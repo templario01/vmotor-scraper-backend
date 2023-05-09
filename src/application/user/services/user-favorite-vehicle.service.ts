@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import { FavoriteVehicleRepository } from '../../persistence/repositories/favorite-vehicle.repository';
-import { AddFavoriteVehicleDto } from './dtos/add-favorite-vehicle.dto';
-import { AddFavoriteVehicleInput } from './inputs/add-favorite-vehicle.input';
-import { SyncedVehicleEntity } from '../vehicles/entities/synced-vehicle.entity';
-import { Status } from '../../shared/dtos/status.enum';
-import { PriceCurrency, VehicleCondition } from '../vehicles/dtos/vehicle.enums';
-import { DeleteFavoriteVehicleInput } from './inputs/delete-favorite-vehicle.input';
+import { FavoriteVehicleRepository } from '../../../persistence/repositories/favorite-vehicle.repository';
+import { AddFavoriteVehicleDto } from '../dtos/add-favorite-vehicle.dto';
+import { AddFavoriteVehicleInput } from '../inputs/add-favorite-vehicle.input';
+import { SyncedVehicleEntity } from '../../vehicles/entities/synced-vehicle.entity';
+import { Status } from '../../../shared/dtos/status.enum';
+import { PriceCurrency, VehicleCondition } from '../../vehicles/dtos/vehicle.enums';
+import { DeleteFavoriteVehicleInput } from '../inputs/delete-favorite-vehicle.input';
 import { Vehicle } from '@prisma/client';
 
 @Injectable()
-export class FavoriteVehicleService {
+export class UserFavoriteVehicleService {
   constructor(private readonly favoriteVehicleRepository: FavoriteVehicleRepository) {}
 
   async getAllFavoriteVehicles(userId: number): Promise<SyncedVehicleEntity[]> {

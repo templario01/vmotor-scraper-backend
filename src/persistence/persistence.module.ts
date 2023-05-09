@@ -7,7 +7,7 @@ import { VehicleRepository } from './repositories/vehicle.repository';
 import { UserRepository } from './repositories/user.repository';
 import { FavoriteVehicleRepository } from './repositories/favorite-vehicle.repository';
 import { ProxyRepository } from './repositories/proxy.repository';
-import { VehicleSearchRepository } from './repositories/vehicle-search.repository';
+import { VehicleSearchRepository } from './repositories/search.repository';
 
 const repositories = [
   BrandsRepository,

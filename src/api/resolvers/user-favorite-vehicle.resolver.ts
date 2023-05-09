@@ -1,5 +1,5 @@
-import { FavoriteVehicleService } from '../../application/favorite-vehicle/favorite-vehicle.service';
-import { AddFavoriteVehicleInput } from '../../application/favorite-vehicle/inputs/add-favorite-vehicle.input';
+import { UserFavoriteVehicleService } from '../../application/user/services/user-favorite-vehicle.service';
+import { AddFavoriteVehicleInput } from '../../application/user/inputs/add-favorite-vehicle.input';
 import {
   SyncedVehicleEntity,
   arraySyncedVehicleEntityReturnType,
@@ -12,15 +12,16 @@ import {
   websiteEntityReturnType,
 } from '../../application/websites/entities/website.entity';
 import { WebsiteService } from '../../application/websites/website.service';
-import { DeleteFavoriteVehicleInput } from '../../application/favorite-vehicle/inputs/delete-favorite-vehicle.input';
+import { DeleteFavoriteVehicleInput } from '../../application/user/inputs/delete-favorite-vehicle.input';
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '../../shared/decorators/context.decorator';
 import { SessionData } from '../../application/auth/dtos/auth.dto';
 
 @Resolver(syncedVehicleEntityReturnType)
-export class UserVehicleResolver {
+export class UserFavoriteVehicleResolver {
   constructor(
-    private readonly favoriteVehicleService: FavoriteVehicleService,
+    private readonly userFavoriteVehicleService: UserFavoriteVehicleService,
+
     private readonly websiteService: WebsiteService,
   ) {}
 
@@ -30,7 +31,7 @@ export class UserVehicleResolver {
     @Args('addFavoriteVehicleInput') input: AddFavoriteVehicleInput,
     @CurrentUser() user: SessionData,
   ): Promise<SyncedVehicleEntity> {
-    return this.favoriteVehicleService.addFavoriteVehicleToUser(input, user.sub);
+    return this.userFavoriteVehicleService.addFavoriteVehicleToUser(input, user.sub);
   }
 
   @UseGuards(AuthGuard)
@@ -39,13 +40,13 @@ export class UserVehicleResolver {
     @Args('deleteFavoriteVehicleInput') input: DeleteFavoriteVehicleInput,
     @CurrentUser() user: SessionData,
   ): Promise<SyncedVehicleEntity[]> {
-    return this.favoriteVehicleService.deleteFavoriteVehicleToUser(input, user.sub);
+    return this.userFavoriteVehicleService.deleteFavoriteVehicleToUser(input, user.sub);
   }
 
   @UseGuards(AuthGuard)
   @Query(arraySyncedVehicleEntityReturnType)
   getFavoriteVehicles(@CurrentUser() user: SessionData) {
-    return this.favoriteVehicleService.getAllFavoriteVehicles(user.sub);
+    return this.userFavoriteVehicleService.getAllFavoriteVehicles(user.sub);
   }
 
   @ResolveField(websiteEntityReturnType, { name: 'website' })
