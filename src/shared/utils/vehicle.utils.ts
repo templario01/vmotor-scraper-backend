@@ -49,13 +49,13 @@ export function getWordsAndYear(searchName: string) {
     const yearPattern = new RegExp(/\b\d{4}\b/g);
     const cleanSearch = search.replace(yearPattern, '');
     const year = +search.match(yearPattern)?.[0];
-    const keyWords = cleanSearch?.split(' ').filter((word) => word !== '');
+    const keywords = cleanSearch?.split(' ').filter((word) => word !== '');
 
     return {
       year,
-      keyWords,
+      keywords,
     };
   }
 
-  return { keyWords: [], year: undefined };
+  return { keywords: [], year: undefined };
 }

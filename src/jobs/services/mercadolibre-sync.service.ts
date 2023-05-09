@@ -49,6 +49,9 @@ export class MercadolibreSyncService {
         from: PriceCurrency.PEN,
         to: PriceCurrency.USD,
       });
+      const exchangeValue = exchangeRate
+        ? exchangeRate.new_amount
+        : this.envConfigService.exchangeRate().penToUsd;
 
       const browser: Browser = await puppeteer.launch({
         args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
@@ -84,10 +87,6 @@ export class MercadolibreSyncService {
           let syncedVehicle: Vehicle;
 
           if (tagPrice === 'S/' && price >= PRICE_LIMIT_PEN) {
-            const exchangeValue = exchangeRate
-              ? exchangeRate.new_amount
-              : this.envConfigService.exchangeRate().penToUsd;
-            console.log(exchangeValue);
             syncedVehicle = await this.SyncVehicleByCurrency(
               {
                 parentHtml: $,

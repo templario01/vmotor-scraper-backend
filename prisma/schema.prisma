@@ -14,7 +14,7 @@ model Brand {
   id        Int      @id @default(autoincrement())
   uuid      String   @unique @default(cuid())
   name      String   @unique
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) 
   updatedAt DateTime @default(now()) @updatedAt
   models    Model[]
 
@@ -55,8 +55,20 @@ model User {
   lastSession            DateTime              @default(now())
   vehicles               UserFavoriteVehicle[]
   validationCodes        EmailValidationCode[]
+  searchs                VehicleSearch[]
 
   @@map("user")
+}
+
+model VehicleSearch {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  text      String
+  search    Json
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
+
+  @@map("vehicle_search")
 }
 
 model EmailValidationCode {

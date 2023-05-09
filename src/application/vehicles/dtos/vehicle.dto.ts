@@ -12,3 +12,9 @@ export interface UpdateInventoryStatus {
   readonly websiteId: number;
   readonly vehicleCondition?: VehicleCondition;
 }
+
+export interface BuildPrismaFiltersDto {
+  readonly keywords: string[];
+  readonly year?: number;
+  readonly city?: string;
+}

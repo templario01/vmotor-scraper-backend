@@ -9,9 +9,17 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ApiModule } from './api/api.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { EnvVariablesConfig, envVariablesConfig } from './config/validator/env-variables';
+import { LoggerModule } from 'nestjs-pino';
+import { SentryModule } from './sentry/sentry.module';
 
 @Module({
   imports: [
+    SentryModule.forRoot({
+      dsn: process.env.SENTRY_DNS,
+      tracesSampleRate: parseInt(process.env.SENTRY_TRACE_RATE),
+      environment: process.env.NODE_ENV,
+    }),
+    LoggerModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object<EnvVariablesConfig>(envVariablesConfig),

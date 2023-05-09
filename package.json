@@ -26,6 +26,7 @@
     "clean": "rm -rf ./node_modules/.cache && rm -rf ./dist && rm -rf ./coverage && find . -type f -name '*.log' -delete"
   },
   "dependencies": {
+    "@logtail/pino": "^0.4.0",
     "@nestjs-modules/mailer": "^1.8.1",
     "@nestjs/apollo": "^10.2.0",
     "@nestjs/axios": "^2.0.0",
@@ -37,6 +38,8 @@
     "@nestjs/platform-express": "^9.0.0",
     "@nestjs/schedule": "^2.2.0",
     "@prisma/client": "^4.8.0",
+    "@sentry/node": "^7.51.0",
+    "@sentry/tracing": "^7.51.0",
     "@types/bcrypt": "^5.0.0",
     "@types/crypto-js": "^4.1.1",
     "@willsoto/nestjs-prometheus": "^5.1.1",
@@ -50,6 +53,8 @@
     "dinero.js": "^1.9.1",
     "graphql": "^16.6.0",
     "joi": "^17.7.1",
+    "nest-raven": "^9.2.0",
+    "nestjs-pino": "^3.2.0",
     "p-retry": "^5.1.2",
     "prom-client": "^14.2.0",
     "puppeteer": "^19.7.1",
