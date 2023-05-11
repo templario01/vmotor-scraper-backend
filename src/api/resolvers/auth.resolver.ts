@@ -1,5 +1,4 @@
 import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
-
 import { AuthService } from '../../application/auth/auth.service';
 import {
   CreateAccountEntity,
@@ -28,5 +27,15 @@ export class AuthResolver {
     @Context() context: any,
   ): Promise<AccessTokenEntity> {
     return this.authService.signIn(input, getUserAgentFromHeaders(context));
+  }
+
+  @Mutation(createAccountReturnType)
+  resendEmail(@Args('email') email: string): Promise<CreateAccountEntity> {
+    return this.authService.resendEmailConfirmation(email);
+  }
+
+  @Mutation(accessTokenReturnType)
+  verifyUser(@Args('code') code: string): Promise<AccessTokenEntity> {
+    return this.authService.confirmAccount(code);
   }
 }

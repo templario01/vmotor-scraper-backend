@@ -7,6 +7,7 @@ import { Status } from '../../../shared/dtos/status.enum';
 import { PriceCurrency, VehicleCondition } from '../../vehicles/enums/vehicle.enums';
 import { DeleteFavoriteVehicleInput } from '../inputs/delete-favorite-vehicle.input';
 import { Vehicle } from '@prisma/client';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UserFavoriteVehicleService {
@@ -48,7 +49,7 @@ export class UserFavoriteVehicleService {
   private mapToEntity(vehicle: Vehicle): SyncedVehicleEntity {
     const { status, condition, mileage, price, currency, originalPrice, ...result } =
       vehicle;
-    return {
+    return plainToInstance(SyncedVehicleEntity, <SyncedVehicleEntity>{
       ...result,
       status: Status[status],
       condition: VehicleCondition[condition],
@@ -56,6 +57,6 @@ export class UserFavoriteVehicleService {
       mileage: Number(mileage) || null,
       originalPrice: Number(originalPrice) || null,
       price: Number(price),
-    };
+    });
   }
 }

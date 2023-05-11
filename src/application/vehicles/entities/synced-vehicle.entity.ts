@@ -105,3 +105,5 @@ export const arraySyncedVehicleEntityReturnType = () => [SyncedVehicleEntity];
 @ObjectType()
 export class PaginatedVehicleEntity extends PaginatedResponse(SyncedVehicleEntity) {}
 export type IPaginatedVehicleEntity = IPaginatedResponse<SyncedVehicleEntity>;
+
+export const typeofPaginatedVehicleEntity = () => PaginatedVehicleEntity;

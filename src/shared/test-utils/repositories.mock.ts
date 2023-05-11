@@ -1,4 +1,5 @@
 import { FavoriteVehicleRepository } from '../../persistence/repositories/favorite-vehicle.repository';
+import { SearchRepository } from '../../persistence/repositories/search.repository';
 import { UserRepository } from '../../persistence/repositories/user.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 
@@ -38,4 +39,14 @@ export const buildFavoriteVehicleRepository = () => {
   favoriteVehicle.findVehiclesByUser = jest.fn();
 
   return favoriteVehicle;
+};
+
+export const buildSearchRepository = () => {
+  const searchRepository = jest.mocked<SearchRepository>(SearchRepository as any, true);
+  searchRepository.create = jest.fn();
+  searchRepository.delete = jest.fn();
+  searchRepository.findByUser = jest.fn();
+  searchRepository.findLastSearchesByUser = jest.fn();
+
+  return searchRepository;
 };

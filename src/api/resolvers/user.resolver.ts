@@ -1,13 +1,4 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { AuthService } from '../../application/auth/auth.service';
-import {
-  CreateAccountEntity,
-  createAccountReturnType,
-} from '../../application/auth/entities/create-account.entity';
-import {
-  AccessTokenEntity,
-  accessTokenReturnType,
-} from '../../application/auth/entities/access-token.entity';
 import {
   ToggleUserNotificationsEntity,
   toggleUserNotificationsReturnType,
@@ -22,27 +13,14 @@ import {
   userSearchesEntityReturnType,
 } from '../../application/user/entities/user-search.entity';
 import { UserSearchService } from '../../application/user/services/user-search.service';
-import { PaginatedVehicleEntity } from '../../application/vehicles/entities/synced-vehicle.entity';
-import { GetRecommendedVehiclesArgs } from '../../application/user/inputs/get-recommended-vehicles.input';
 import { DeleteSearchInput } from '../../application/user/inputs/delete-search.input';
 
 @Resolver()
 export class UserResolver {
   constructor(
-    private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly userSearchService: UserSearchService,
   ) {}
-
-  @Mutation(createAccountReturnType)
-  resendEmail(@Args('email') email: string): Promise<CreateAccountEntity> {
-    return this.authService.resendEmailConfirmation(email);
-  }
-
-  @Mutation(accessTokenReturnType)
-  verifyUser(@Args('code') code: string): Promise<AccessTokenEntity> {
-    return this.authService.confirmAccount(code);
-  }
 
   @UseGuards(AuthGuard)
   @Mutation(toggleUserNotificationsReturnType)
@@ -66,14 +44,5 @@ export class UserResolver {
     @CurrentUser() user: SessionData,
   ): Promise<UserSearchEntity[]> {
     return this.userSearchService.deleteSearch(input, user.sub);
-  }
-
-  @Query(() => PaginatedVehicleEntity)
-  @UseGuards(AuthGuard)
-  getRecommendedVehicles(
-    @CurrentUser() user: SessionData,
-    @Args() args: GetRecommendedVehiclesArgs,
-  ): Promise<PaginatedVehicleEntity> {
-    return this.userSearchService.getRecommendedVehicles(args, user.sub);
   }
 }

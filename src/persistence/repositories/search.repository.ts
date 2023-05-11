@@ -6,12 +6,12 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../services/prisma.service';
 import { Prisma, Search } from '@prisma/client';
-import { UserVehicleSearchDto } from '../../application/user/dtos/user-vehicle-search.dto';
+import { UserVehicleSearchDto } from '../../application/vehicles/dtos/user-vehicle-search.dto';
 import { PrismaErrorCodes } from '../../shared/dtos/prisma.dto';
 
 @Injectable()
-export class VehicleSearchRepository {
-  private readonly logger = new Logger(VehicleSearchRepository.name);
+export class SearchRepository {
+  private readonly logger = new Logger(SearchRepository.name);
 
   constructor(private readonly prisma: PrismaService) {}
 
