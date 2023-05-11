@@ -6,7 +6,7 @@ import {
   PriceCurrency,
   VehicleCondition,
   VehicleStatusEnum,
-} from '../../application/vehicles/dtos/vehicle.enums';
+} from '../../application/vehicles/enums/vehicle.enums';
 import { UpdateInventoryStatus } from '../../application/vehicles/dtos/vehicle.dto';
 import {
   IPaginatedVehicleEntity,

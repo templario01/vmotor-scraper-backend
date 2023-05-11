@@ -1,4 +1,4 @@
-import { VehicleCondition } from './vehicle.enums';
+import { VehicleCondition } from '../enums/vehicle.enums';
 import { CheerioAPI } from 'cheerio';
 
 export interface SearchVehicleDto {

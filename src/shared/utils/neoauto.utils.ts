@@ -1,4 +1,4 @@
-import { VehicleBrandAndModel } from '../../application/vehicles/dtos/neoauto-sync.dto';
+import { VehicleBrandAndModel } from '../../application/neoauto/dtos/neoauto-sync.dto';
 
 export function parsePrice(price: string): number {
   try {

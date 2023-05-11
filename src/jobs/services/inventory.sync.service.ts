@@ -5,10 +5,10 @@ import { EnvConfigService } from '../../config/env-config.service';
 import { Environment } from '../../config/dtos/config.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { getDurationTime } from '../../shared/utils/time.utils';
-import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/vehicle.enums';
 import { AutocosmosSyncService } from './autocosmos-sync.service';
 import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
 import { ProxyService } from '../../application/proxy/proxy.service';
+import { NeoautoVehicleConditionEnum } from '../../application/neoauto/enums/neoauto.enum';
 
 @Injectable()
 export class InventorySyncService {
@@ -23,7 +23,6 @@ export class InventorySyncService {
 
   @Cron(CronExpression.EVERY_2_HOURS)
   async syncAllInventory() {
-    console.log('CALLING...');
     const startTime = new Date();
     let proxyIP: string;
     const { environment } = this.envConfigService.app();

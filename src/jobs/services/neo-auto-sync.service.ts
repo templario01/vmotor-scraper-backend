@@ -5,11 +5,9 @@ import { Browser, Page } from 'puppeteer';
 import * as puppeteer from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import {
-  NeoautoVehicleConditionEnum,
   PriceCurrency,
   VehicleCondition,
-} from '../../application/vehicles/dtos/vehicle.enums';
-
+} from '../../application/vehicles/enums/vehicle.enums';
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
 import {
   getEnumKeyByValue,
@@ -34,10 +32,11 @@ import {
   HTML_URL_USED,
   OR,
 } from '../../application/vehicles/constants/neoauto.constants';
-import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/neoauto-sync.dto';
+import { SyncNeoautoVehicle } from '../../application/neoauto/dtos/neoauto-sync.dto';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
 import { Vehicle } from '@prisma/client';
 import { getMileage } from '../../shared/utils/vehicle.utils';
+import { NeoautoVehicleConditionEnum } from '../../application/neoauto/enums/neoauto.enum';
 
 @Injectable()
 export class NeoAutoSyncService {

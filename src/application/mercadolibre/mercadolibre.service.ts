@@ -6,7 +6,7 @@ import { CheerioAPI, Cheerio, Element as CheerioElement } from 'cheerio';
 import { includesAll } from '../../shared/utils/vehicle.utils';
 import { VehicleEntity } from '../vehicles/entities/vehicle.entity';
 import { convertToNumber, parsePrice } from '../../shared/utils/mercado-libre.utils';
-import { PriceCurrency } from '../vehicles/dtos/vehicle.enums';
+import { PriceCurrency } from '../vehicles/enums/vehicle.enums';
 import { CurrencyConverterApiService } from '../currency-converter-api-v1/currency-converter.service';
 import { AddVehicleByCurrency } from './dtos/mercadolibre.dto';
 import {

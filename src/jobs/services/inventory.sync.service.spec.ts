@@ -13,10 +13,10 @@ import {
 } from '../../shared/test-utils/providers.mock';
 import { EnvConfigService } from '../../config/env-config.service';
 import { Environment } from '../../config/dtos/config.dto';
-import { NeoautoVehicleConditionEnum } from '../../application/vehicles/dtos/vehicle.enums';
 import { ProxyService } from '../../application/proxy/proxy.service';
 import { AutocosmosSyncService } from './autocosmos-sync.service';
 import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
+import { NeoautoVehicleConditionEnum } from '../../application/neoauto/enums/neoauto.enum';
 
 describe('InventorySyncService', () => {
   let service: InventorySyncService;

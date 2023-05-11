@@ -14,7 +14,7 @@ import { getEnumKeyByValue } from '../../shared/utils/neoauto.utils';
 import {
   PriceCurrency,
   VehicleCondition,
-} from '../../application/vehicles/dtos/vehicle.enums';
+} from '../../application/vehicles/enums/vehicle.enums';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import { formatLocation, getMileage } from '../../shared/utils/vehicle.utils';
 

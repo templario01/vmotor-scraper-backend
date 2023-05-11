@@ -1,5 +1,5 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { GetVehicleCondition } from '../dtos/vehicle.enums';
+import { GetVehicleCondition } from '../enums/vehicle.enums';
 
 export const SyncInventoryTypeFunc = () => GetVehicleCondition;
 

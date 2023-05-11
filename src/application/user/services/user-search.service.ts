@@ -4,7 +4,7 @@ import { Prisma } from '@prisma/client';
 import { VehicleSearchRepository } from '../../../persistence/repositories/search.repository';
 import { UserSearchEntity } from '../entities/user-search.entity';
 import { IPaginatedVehicleEntity } from '../../vehicles/entities/synced-vehicle.entity';
-import { VehicleSearchDto } from '../dtos/user-vehicle-search.dto';
+import { UserFiltersDto, VehicleSearchDto } from '../dtos/user-vehicle-search.dto';
 import { GetRecommendedVehiclesArgs } from '../inputs/get-recommended-vehicles.input';
 import { VehicleRepository } from '../../../persistence/repositories/vehicle.repository';
 import { DeleteSearchInput } from '../inputs/delete-search.input';
@@ -57,7 +57,7 @@ export class UserSearchService {
       ),
     ];
 
-    const where = this.buildPrismaFilters(locations, keywords, completeSearches);
+    const where = this.buildPrismaFilters({ locations, keywords, completeSearches });
 
     return this.vehicleRepository.findVehicles({
       hasOrderBy: false,
@@ -66,11 +66,8 @@ export class UserSearchService {
     });
   }
 
-  private buildPrismaFilters(
-    locations: string[],
-    keywords: string[],
-    completeSearches: VehicleSearchDto[],
-  ): Prisma.VehicleWhereInput {
+  private buildPrismaFilters(data: UserFiltersDto): Prisma.VehicleWhereInput {
+    const { keywords, completeSearches, locations } = data;
     const matchKeywords: Prisma.Enumerable<Prisma.VehicleWhereInput> = keywords.map(
       (keyWord) => ({
         description: { mode: 'insensitive', contains: keyWord },

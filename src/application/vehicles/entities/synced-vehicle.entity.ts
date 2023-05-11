@@ -5,7 +5,7 @@ import {
   PriceCurrency,
   VehicleCondition,
   priceCurrencyResultType,
-} from '../dtos/vehicle.enums';
+} from '../enums/vehicle.enums';
 import { graphqlDateReturnType } from '../../../shared/dtos/decimal-scalar';
 import {
   WebsiteEntity,

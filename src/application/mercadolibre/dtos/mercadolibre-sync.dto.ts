@@ -1,5 +1,5 @@
 import { CheerioAPI, Element as CheerioElement } from 'cheerio';
-import { PriceCurrency } from './vehicle.enums';
+import { PriceCurrency } from '../../vehicles/enums/vehicle.enums';
 
 export interface SyncMercadolibreVehicle {
   readonly parentHtml: CheerioAPI;

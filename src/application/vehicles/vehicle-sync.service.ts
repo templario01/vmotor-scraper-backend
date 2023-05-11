@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
 import { SyncInventoryInput } from './inputs/sync-inventory.input';
-import { GetVehicleCondition, NeoautoVehicleConditionEnum } from './dtos/vehicle.enums';
+import { GetVehicleCondition } from './enums/vehicle.enums';
 import { SyncInventoryJobEntity } from './entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../shared/utils/time.utils';
 import { BrandsSyncService } from '../../jobs/services/brands-sync.service';
@@ -18,6 +18,7 @@ import { AutocosmosVehicleConditionEnum } from '../autocosmos/enums/atocosmos.en
 import { ProxyService } from '../proxy/proxy.service';
 import { EnvConfigService } from '../../config/env-config.service';
 import { Environment } from '../../config/dtos/config.dto';
+import { NeoautoVehicleConditionEnum } from '../neoauto/enums/neoauto.enum';
 
 @Injectable()
 export class VehicleSyncService {

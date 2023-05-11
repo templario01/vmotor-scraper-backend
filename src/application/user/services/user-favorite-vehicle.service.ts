@@ -4,7 +4,7 @@ import { AddFavoriteVehicleDto } from '../dtos/add-favorite-vehicle.dto';
 import { AddFavoriteVehicleInput } from '../inputs/add-favorite-vehicle.input';
 import { SyncedVehicleEntity } from '../../vehicles/entities/synced-vehicle.entity';
 import { Status } from '../../../shared/dtos/status.enum';
-import { PriceCurrency, VehicleCondition } from '../../vehicles/dtos/vehicle.enums';
+import { PriceCurrency, VehicleCondition } from '../../vehicles/enums/vehicle.enums';
 import { DeleteFavoriteVehicleInput } from '../inputs/delete-favorite-vehicle.input';
 import { Vehicle } from '@prisma/client';
 

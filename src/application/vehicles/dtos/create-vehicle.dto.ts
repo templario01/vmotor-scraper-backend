@@ -1,5 +1,5 @@
 import { Exclude, Expose } from 'class-transformer';
-import { PriceCurrency, VehicleCondition } from './vehicle.enums';
+import { PriceCurrency, VehicleCondition } from '../enums/vehicle.enums';
 
 @Exclude()
 class VehicleSyncDto {

@@ -17,8 +17,8 @@ import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle
 import {
   PriceCurrency,
   VehicleCondition,
-} from '../../application/vehicles/dtos/vehicle.enums';
-import { SyncMercadolibreVehicle } from '../../application/vehicles/dtos/mercadolibre-sync.dto';
+} from '../../application/vehicles/enums/vehicle.enums';
+import { SyncMercadolibreVehicle } from '../../application/mercadolibre/dtos/mercadolibre-sync.dto';
 import { Vehicle } from '@prisma/client';
 import { CurrencyConverterApiService } from '../../application/currency-converter-api-v1/currency-converter.service';
 import { formatLocation } from '../../shared/utils/vehicle.utils';
