@@ -2,8 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 import * as puppeteer from 'puppeteer';
 import { Cheerio, Element as CheerioElement } from 'cheerio';
-
-import { Browser, Page } from 'puppeteer';
+import { Browser as PuppeteerBrowser, Page } from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import {
   convertToNumber,
@@ -22,6 +21,7 @@ import { SyncMercadolibreVehicle } from '../../application/mercadolibre/dtos/mer
 import { Vehicle } from '@prisma/client';
 import { CurrencyConverterApiService } from '../../application/currency-converter-api-v1/currency-converter.service';
 import { formatLocation } from '../../shared/utils/vehicle.utils';
+import { getLaunchOptions } from '../../shared/utils/puppeter.utils';
 
 const PRICE_LIMIT_PEN = 4500;
 const PRICE_LIMIT_USD = 1500;
@@ -53,9 +53,13 @@ export class MercadolibreSyncService {
         ? exchangeRate.new_amount
         : this.envConfigService.exchangeRate().penToUsd;
 
-      const browser: Browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
-      });
+      const { environment } = this.config.app();
+      const options = getLaunchOptions(environment, proxyServer);
+
+      console.log(options);
+
+      const browser: PuppeteerBrowser = await puppeteer.launch(options);
+
       const page: Page = await browser.newPage();
       await page.setExtraHTTPHeaders({
         'User-Agent': USER_AGENT,

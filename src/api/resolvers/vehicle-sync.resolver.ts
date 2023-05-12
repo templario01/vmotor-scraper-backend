@@ -25,12 +25,9 @@ export class VehicleSyncResolver {
     return this.vehicleSyncService.getVehiclesFromWebsites(searchName);
   }
 
-  @Mutation(syncInventoryJobEntityReturnType)
-  syncNeoautoInvetory(
-    @Args('syncInvetoryInput')
-    input: SyncInventoryInput,
-  ): Promise<SyncInventoryJobEntity> {
-    return this.vehicleSyncService.syncNeoautoInventory(input);
+  @Query(syncInventoryJobEntityReturnType)
+  syncNeoautoInvetory(): Promise<SyncInventoryJobEntity> {
+    return this.vehicleSyncService.syncNeoautoInventory();
   }
 
   @Mutation(syncInventoryJobEntityReturnType)

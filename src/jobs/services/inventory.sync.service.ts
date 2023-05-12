@@ -9,6 +9,9 @@ import { AutocosmosSyncService } from './autocosmos-sync.service';
 import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
 import { ProxyService } from '../../application/proxy/proxy.service';
 import { NeoautoVehicleConditionEnum } from '../../application/neoauto/enums/neoauto.enum';
+import { getLaunchOptions } from '../../shared/utils/puppeter.utils';
+import * as puppeteer from 'puppeteer';
+import { Browser as PuppeteerBrowser } from 'puppeteer';
 
 @Injectable()
 export class InventorySyncService {
@@ -33,10 +36,14 @@ export class InventorySyncService {
         proxyIP = `${host}:${port}`;
       }
     }
+    const proxyServer = proxyIP ? [`'--proxy-server=${proxyIP}`] : [];
+    const options = getLaunchOptions(environment, proxyServer);
+
+    const browser: PuppeteerBrowser = await puppeteer.launch(options);
 
     await Promise.all([
-      this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.NEW, proxyIP),
-      this.neoautoSyncService.syncInventory(NeoautoVehicleConditionEnum.USED, proxyIP),
+      this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.NEW),
+      this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.USED),
       this.autocosmosSyncService.syncInventory(
         AutocosmosVehicleConditionEnum.NEW,
         proxyIP,

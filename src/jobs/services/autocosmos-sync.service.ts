@@ -4,7 +4,7 @@ import { WebsiteRepository } from '../../persistence/repositories/website.reposi
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { Cheerio, CheerioAPI, Element as CheerioElement } from 'cheerio';
 import * as cheerio from 'cheerio';
-import { Browser, Page } from 'puppeteer';
+import { Browser as PuppeteerBrowser, Page } from 'puppeteer';
 import * as puppeteer from 'puppeteer';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
 import { MercadolibreSyncService } from './mercadolibre-sync.service';
@@ -17,6 +17,7 @@ import {
 } from '../../application/vehicles/enums/vehicle.enums';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import { formatLocation, getMileage } from '../../shared/utils/vehicle.utils';
+import { getLaunchOptions } from '../../shared/utils/puppeter.utils';
 
 @Injectable()
 export class AutocosmosSyncService {
@@ -38,16 +39,13 @@ export class AutocosmosSyncService {
       const syncedVehiclesIds = [];
       const { condition, currentUrl, currentPages, proxyServer, currentWebsite } =
         await this.getSyncConfig(vehicleCondition, proxy);
+      const { environment } = this.config.app();
+      const options = getLaunchOptions(environment, proxyServer);
 
-      const browser: Browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
-      });
+      console.log(options);
+
+      const browser: PuppeteerBrowser = await puppeteer.launch(options);
       const page: Page = await browser.newPage();
-
-      await page.setExtraHTTPHeaders({
-        'User-Agent': USER_AGENT,
-        Referer: currentUrl,
-      });
 
       for (let index = 1; index < currentPages; index++) {
         await page.goto(`${currentUrl}?pidx=${index}`, { timeout: 0 });
@@ -150,7 +148,7 @@ export class AutocosmosSyncService {
   }
 
   private async getPages(condition: string): Promise<number> {
-    const browser: Browser = await puppeteer.launch();
+    const browser: PuppeteerBrowser = await puppeteer.launch();
     const puppeteerPage: Page = await browser.newPage();
 
     await puppeteerPage.setExtraHTTPHeaders({

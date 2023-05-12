@@ -45,7 +45,6 @@ type Mutation {
   syncAutocosmosInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
   syncInventoryBrands: SyncBrandsJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
-  syncNeoautoInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
   toggleUserNotifications(hasActiveNotifications: Boolean!): ToggleUserNotificationsEntity!
   verifyUser(code: String!): AccessTokenEntity!
 }
@@ -70,6 +69,7 @@ type Query {
   getSearchHistory: [UserSearchEntity!]!
   getVehiclesByAdvancedSearch(after: String, city: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
+  syncNeoautoInvetory: SyncInventoryJobEntity!
 }
 
 input SignInInput {

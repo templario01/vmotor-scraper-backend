@@ -15,6 +15,32 @@ services:
       POSTGRES_DB: vmotor_db
     networks:
       - net-vmotor
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  prisma-studio:
+    container_name: prisma-studio
+    image: timothyjmiller/prisma-studio:latest
+    restart: unless-stopped
+    environment:
+      PROJECT_NAME: vmotor_project
+      POSTGRES_DATABASE: vmotor_db
+      POSTGRES_HOST: postgres-vmotor
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_PORT: 5432
+      PRISMA_STUDIO_PORT: 5555
+      POSTGRES_URL: postgresql://postgres:root@postgres-vmotor:5432/vmotor_db?schema=public
+      POSTGRES_PATH: /postgres
+    ports:
+      - "5555:5555"
+    networks:
+      - net-vmotor
+    depends_on:
+      - postgres-vmotor
 
   grafana:
     image: grafana/grafana:8.0.6

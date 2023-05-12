@@ -1,8 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cheerio, CheerioAPI, Element as CheerioElement } from 'cheerio';
 import * as cheerio from 'cheerio';
-import { Browser, Page } from 'puppeteer';
-import * as puppeteer from 'puppeteer';
+import { Browser as PuppeteerBrowser, Page } from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import {
   PriceCurrency,
@@ -51,22 +50,17 @@ export class NeoAutoSyncService {
   }
 
   async syncInventory(
+    browser: PuppeteerBrowser,
     vehicleCondition: NeoautoVehicleConditionEnum,
-    proxy?: string,
   ): Promise<void> {
     try {
       const syncedVehiclesIds = [];
-      const { condition, currentUrl, currentPages, proxyServer, currentWebsite } =
-        await this.getSyncConfig(vehicleCondition, proxy);
-      const browser: Browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
-      });
-      const page: Page = await browser.newPage();
+      const { condition, currentUrl, currentWebsite } = await this.getSyncConfig(
+        vehicleCondition,
+      );
+      const currentPages = await this.getPages(browser, condition);
 
-      await page.setExtraHTTPHeaders({
-        'User-Agent': USER_AGENT,
-        Referer: currentUrl,
-      });
+      const page: Page = await browser.newPage();
 
       for (let index = 1; index <= currentPages; index++) {
         await page.goto(`${currentUrl}?page=${index}`, { timeout: 0 });
@@ -110,7 +104,7 @@ export class NeoAutoSyncService {
 
             if (carSynced) {
               syncedVehiclesIds.push(carSynced.externalId);
-              this.logger.verbose(`[${condition} CAR] Vehicle synced: ${carSynced?.url}`);
+              this.logger.log(`[${condition} CAR] Vehicle synced: ${carSynced?.url}`);
             }
           }
         }
@@ -123,8 +117,6 @@ export class NeoAutoSyncService {
       this.logger.log(
         `[${condition} CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
       );
-
-      await browser.close();
     } catch (error) {
       this.logger.error('fail to sync all inventory', error);
     }
@@ -173,8 +165,7 @@ export class NeoAutoSyncService {
     }
   }
 
-  private async getPages(condition: string): Promise<number> {
-    const browser: Browser = await puppeteer.launch();
+  private async getPages(browser: PuppeteerBrowser, condition: string): Promise<number> {
     const puppeteerPage: Page = await browser.newPage();
 
     await puppeteerPage.setExtraHTTPHeaders({
@@ -184,6 +175,7 @@ export class NeoAutoSyncService {
     await puppeteerPage.goto(`${this.NEOAUTO_URL}/venta-de-autos-${condition}?page=1`, {
       timeout: 0,
     });
+
     const html: string = await puppeteerPage.content();
     const $: CheerioAPI = cheerio.load(html);
 
@@ -191,15 +183,10 @@ export class NeoAutoSyncService {
     const paginationUrl = lastPaginationBtn.attr('href');
     const [, maxPages] = paginationUrl.split('page=');
 
-    await browser.close();
-
     return +maxPages;
   }
 
-  private async getSyncConfig(
-    vehicleCondition: NeoautoVehicleConditionEnum,
-    proxy?: string,
-  ) {
+  private async getSyncConfig(vehicleCondition: NeoautoVehicleConditionEnum) {
     const condition = getEnumKeyByValue(
       NeoautoVehicleConditionEnum,
       vehicleCondition,
@@ -207,16 +194,13 @@ export class NeoAutoSyncService {
     const hostname = new URL(this.NEOAUTO_URL).hostname;
     const [name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
-    const currentPages = await this.getPages(vehicleCondition);
+
     const currentUrl = `${this.NEOAUTO_URL}/venta-de-autos-${vehicleCondition}`;
-    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
 
     return {
       condition,
       currentWebsite,
-      currentPages,
       currentUrl,
-      proxyServer,
     };
   }
 
