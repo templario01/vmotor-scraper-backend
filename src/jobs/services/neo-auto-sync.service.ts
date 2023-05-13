@@ -104,7 +104,7 @@ export class NeoAutoSyncService {
 
             if (carSynced) {
               syncedVehiclesIds.push(carSynced.externalId);
-              this.logger.log(`[${condition} CAR] Vehicle synced: ${carSynced?.url}`);
+              this.logger.verbose(`[${condition} CAR] Vehicle synced: ${carSynced?.url}`);
             }
           }
         }

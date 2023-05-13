@@ -10,49 +10,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Brand {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(cuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  models    Model[]
-
-  @@map("brand")
-}
-
-model Model {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @default(cuid())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-  brand     Brand?   @relation(fields: [brandId], references: [id])
-  brandId   Int?
-
-  @@unique([brandId, name])
-  @@map("model")
-}
-
-model ProxyConfig {
-  id        Int      @id @default(autoincrement())
-  uuid      String   @unique @default(cuid())
-  expiresAt DateTime
-  host      String
-  port      Int
-
-  @@map("proxy_config")
-}
-
 model User {
   id                     Int                   @id @default(autoincrement())
   uuid                   String                @unique @default(cuid())
   email                  String                @unique
-  hasConfirmedEmail      Boolean               @default(false)
+  hasConfirmedEmail      Boolean               @default(false) @map("has_confirmed_email")
   password               String
-  refreshToken           String?               @map(name: "refresh_token")
-  hasActiveNotifications Boolean               @default(false)
-  lastSession            DateTime              @default(now())
+  refreshToken           String?               @map("refresh_token")
+  hasActiveNotifications Boolean               @default(false) @map("has_active_notifications")
+  lastSession            DateTime              @default(now()) @map("lat_session")
+  createdAt              DateTime              @default(now()) @map("created_at")
   vehicles               UserFavoriteVehicle[]
   validationCodes        EmailValidationCode[]
   searchs                Search[]
@@ -63,11 +30,11 @@ model User {
 model Search {
   id        Int      @id @default(autoincrement())
   uuid      String   @unique @default(cuid())
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
   text      String
   search    Json
   user      User?    @relation(fields: [userId], references: [id])
-  userId    Int?
+  userId    Int?     @map("user_id")
 
   @@map("search")
 }
@@ -76,21 +43,21 @@ model EmailValidationCode {
   id             Int      @id @default(autoincrement())
   uuid           String   @unique @default(cuid())
   code           String
-  expirationTime DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @default(now()) @updatedAt
+  expirationTime DateTime @map("expiration_time")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
   user           User     @relation(fields: [userId], references: [id])
-  userId         Int
+  userId         Int      @map("user_id")
 
   @@map("email_validation_code")
 }
 
 model UserFavoriteVehicle {
   user       User     @relation(fields: [userId], references: [id])
-  userId     Int
+  userId     Int      @map("user_id")
   vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
-  vehicleId  Int
-  assignedAt DateTime @default(now())
+  vehicleId  Int      @map("vehicle_id")
+  assignedAt DateTime @default(now()) @map("assigned_at")
 
   @@id([userId, vehicleId])
   @@map("user_favorite_vehicle")
@@ -102,43 +69,47 @@ model Website {
   name      String    @unique
   url       String    @unique
   status    Status    @default(ACTIVE)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @default(now()) @updatedAt
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at")
   vehicle   Vehicle[]
 
   @@map("website")
 }
 
 model Vehicle {
-  id             Int                   @id @default(autoincrement())
-  uuid           String                @unique @default(cuid())
-  externalId     String?               @unique
-  url            String
-  description    String?
-  year           Int?
-  transmission   String?
-  mileage        Decimal?              @default(0) @db.Decimal(12, 2)
-  engineType     String?
-  enginePowerRpm String?
-  enginePowerHp  String?
-  engineFuelType String?
-  speeds         Int?
-  frontImage     String?
-  images         String?
-  doors          Int?
-  location       String?
-  condition      Condition?
-  originalPrice  Decimal?              @default(0) @db.Decimal(12, 2)
-  price          Decimal?              @default(0) @db.Decimal(12, 2)
-  currency       Currency?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @default(now()) @updatedAt
-  website        Website?              @relation(fields: [websiteId], references: [id])
-  websiteId      Int?
-  status         Status                @default(ACTIVE)
-  users          UserFavoriteVehicle[]
+  id            Int                   @id @default(autoincrement())
+  uuid          String                @unique @default(cuid())
+  externalId    String?               @unique @map("external_id")
+  url           String
+  description   String?
+  year          Int?
+  transmission  String?
+  mileage       Decimal?              @default(0) @db.Decimal(12, 2)
+  frontImage    String?               @map("front_image")
+  images        String?
+  location      String?
+  condition     Condition?
+  originalPrice Decimal?              @default(0) @map("original_price") @db.Decimal(12, 2)
+  price         Decimal?              @default(0) @db.Decimal(12, 2)
+  currency      Currency?
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @default(now()) @updatedAt @map("updated_at")
+  website       Website?              @relation(fields: [websiteId], references: [id])
+  websiteId     Int?                  @map("website_id")
+  status        Status                @default(ACTIVE)
+  users         UserFavoriteVehicle[]
 
   @@map("vehicle")
+}
+
+model ProxyConfig {
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(cuid())
+  expiresAt DateTime @map("expires_at")
+  host      String
+  port      Int
+
+  @@map("proxy_config")
 }
 
 enum Status {

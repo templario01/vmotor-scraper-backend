@@ -17,7 +17,6 @@ import {
 } from '../../application/vehicles/enums/vehicle.enums';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import { formatLocation, getMileage } from '../../shared/utils/vehicle.utils';
-import { getLaunchOptions } from '../../shared/utils/puppeter.utils';
 
 @Injectable()
 export class AutocosmosSyncService {
@@ -32,19 +31,14 @@ export class AutocosmosSyncService {
   }
 
   async syncInventory(
+    browser: PuppeteerBrowser,
     vehicleCondition: AutocosmosVehicleConditionEnum,
-    proxy?: string,
   ): Promise<void> {
     try {
       const syncedVehiclesIds = [];
-      const { condition, currentUrl, currentPages, proxyServer, currentWebsite } =
-        await this.getSyncConfig(vehicleCondition, proxy);
-      const { environment } = this.config.app();
-      const options = getLaunchOptions(environment, proxyServer);
+      const { condition, currentUrl, currentPages, currentWebsite } =
+        await this.getSyncConfig(vehicleCondition);
 
-      console.log(options);
-
-      const browser: PuppeteerBrowser = await puppeteer.launch(options);
       const page: Page = await browser.newPage();
 
       for (let index = 1; index < currentPages; index++) {
@@ -140,8 +134,6 @@ export class AutocosmosSyncService {
       this.logger.log(
         `[${condition} CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
       );
-
-      await browser.close();
     } catch (error) {
       this.logger.error('fail to sync all inventory', error);
     }
@@ -165,15 +157,11 @@ export class AutocosmosSyncService {
       'div.filtros-section-container section.m-with-filters header strong',
     ).html();
     const vehicles = getPages(Number(totalVehicles));
-    await browser.close();
 
     return vehicles;
   }
 
-  private async getSyncConfig(
-    vehicleCondition: AutocosmosVehicleConditionEnum,
-    proxy?: string,
-  ) {
+  private async getSyncConfig(vehicleCondition: AutocosmosVehicleConditionEnum) {
     const condition = getEnumKeyByValue(
       AutocosmosVehicleConditionEnum,
       vehicleCondition,
@@ -183,8 +171,7 @@ export class AutocosmosSyncService {
     const currentWebsite = await this.websiteRepository.findByName(name);
     const currentPages = await this.getPages(vehicleCondition);
     const currentUrl = `${this.AUTOCOSMOS}/auto/${vehicleCondition}`;
-    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
 
-    return { condition, currentUrl, currentPages, proxyServer, currentWebsite };
+    return { condition, currentUrl, currentPages, currentWebsite };
   }
 }

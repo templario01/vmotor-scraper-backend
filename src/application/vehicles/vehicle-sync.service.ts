@@ -1,11 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
-import { SyncInventoryInput } from './inputs/sync-inventory.input';
-import { GetVehicleCondition } from './enums/vehicle.enums';
 import { SyncInventoryJobEntity } from './entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../shared/utils/time.utils';
-import { BrandsSyncService } from '../../jobs/services/brands-sync.service';
-import { SyncBrandsJobEntity } from './entities/sync-brands-job.entity';
 import { MercadolibreSyncService } from '../../jobs/services/mercadolibre-sync.service';
 import * as puppeteer from 'puppeteer';
 import { Browser as PuppeteerBrowser } from 'puppeteer';
@@ -20,13 +16,13 @@ import { EnvConfigService } from '../../config/env-config.service';
 import { Environment } from '../../config/dtos/config.dto';
 import { NeoautoVehicleConditionEnum } from '../neoauto/enums/neoauto.enum';
 import { getLaunchOptions } from '../../shared/utils/puppeter.utils';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class VehicleSyncService {
   constructor(
     private readonly neoautoSyncService: NeoAutoSyncService,
     private readonly mercadolibreSyncService: MercadolibreSyncService,
-    private readonly brandsSyncService: BrandsSyncService,
     private readonly mercadolibreService: MercadolibreService,
     private readonly neoautoService: NeoautoService,
     private readonly autocosmosSyncService: AutocosmosSyncService,
@@ -42,16 +38,13 @@ export class VehicleSyncService {
     const { environment } = this.envConfigService.app();
     const options = getLaunchOptions(environment, proxyServer);
 
-    console.log(options);
-
     const browser: PuppeteerBrowser = await puppeteer.launch(options);
 
     await Promise.all([
       this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.NEW),
       this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.USED),
     ]);
-
-    browser.close();
+    await browser.close();
 
     const endTime = new Date();
 
@@ -65,66 +58,47 @@ export class VehicleSyncService {
   async syncMercadolibreInventory(): Promise<SyncInventoryJobEntity> {
     const startTime = new Date();
     const proxy = await this.getProxy();
-    await this.mercadolibreSyncService.syncInventory(proxy);
+    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
+
+    const { environment } = this.envConfigService.app();
+    const options = getLaunchOptions(environment, proxyServer);
+
+    const browser: PuppeteerBrowser = await puppeteer.launch(options);
+
+    await Promise.all([this.mercadolibreSyncService.syncInventory(browser)]);
+    await browser.close();
+
     const endTime = new Date();
 
-    return {
+    return plainToInstance(SyncInventoryJobEntity, <SyncInventoryJobEntity>{
       startTime,
       endTime,
       duration: getDurationTime(startTime, endTime),
-    };
+    });
   }
 
-  async syncAutocosmosInventory(
-    input: SyncInventoryInput,
-  ): Promise<SyncInventoryJobEntity> {
-    const syncPromises: Promise<void>[] = [];
+  async syncAutocosmosInventory(): Promise<SyncInventoryJobEntity> {
     const startTime = new Date();
     const proxy = await this.getProxy();
-    switch (input.condition) {
-      case GetVehicleCondition.NEW:
-        syncPromises.push(
-          this.autocosmosSyncService.syncInventory(
-            AutocosmosVehicleConditionEnum.NEW,
-            proxy,
-          ),
-        );
-        break;
-      case GetVehicleCondition.USED:
-        syncPromises.push(
-          this.autocosmosSyncService.syncInventory(
-            AutocosmosVehicleConditionEnum.USED,
-            proxy,
-          ),
-        );
-        break;
-      case GetVehicleCondition.ALL:
-        syncPromises.push(
-          this.autocosmosSyncService.syncInventory(
-            AutocosmosVehicleConditionEnum.NEW,
-            proxy,
-          ),
-          this.autocosmosSyncService.syncInventory(
-            AutocosmosVehicleConditionEnum.USED,
-            proxy,
-          ),
-        );
-        break;
-    }
+    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
 
-    await Promise.all(syncPromises);
-    const endTime = new Date();
+    const { environment } = this.envConfigService.app();
+    const options = getLaunchOptions(environment, proxyServer);
 
-    return {
-      startTime,
-      endTime,
-      duration: getDurationTime(startTime, endTime),
-    };
-  }
+    const browser: PuppeteerBrowser = await puppeteer.launch(options);
 
-  async syncInventoryBrands(): Promise<SyncBrandsJobEntity> {
-    const startTime = new Date();
-    await this.brandsSyncService.syncBrands();
+    await Promise.all([
+      this.autocosmosSyncService.syncInventory(
+        browser,
+        AutocosmosVehicleConditionEnum.NEW,
+      ),
+      this.autocosmosSyncService.syncInventory(
+        browser,
+        AutocosmosVehicleConditionEnum.USED,
+      ),
+    ]);
+    await browser.close();
+
     const endTime = new Date();
 
     return {

@@ -10,6 +10,7 @@ import { ApiModule } from './api/api.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { EnvVariablesConfig, envVariablesConfig } from './config/validator/env-variables';
 import { SentryModule } from './sentry/sentry.module';
+import { GraphQLFormattedError } from 'graphql';
 
 @Module({
   imports: [
@@ -35,16 +36,14 @@ import { SentryModule } from './sentry/sentry.module';
         payload,
         connection,
       }),
-      formatResponse: (response, requestContext) => {
-        if (response.errors) {
-          const http = {
-            ...requestContext.response.http,
-            status: 400,
-          };
-
-          return { ...response, http };
-        }
-        return response;
+      formatError: (error: GraphQLFormattedError) => {
+        return {
+          message: error.message,
+          enxtensions: {
+            status: error.extensions.status,
+            originalError: error.extensions.originalError,
+          },
+        };
       },
       playground: true,
     }),

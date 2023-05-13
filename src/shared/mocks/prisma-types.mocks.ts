@@ -37,6 +37,7 @@ export const buildUserMock = ({
   lastSession: randPastDate(),
   refreshToken: randUuid(),
   uuid: randUuid(),
+  createdAt: randPastDate(),
 });
 
 export const buildValidationCodeMock = (): EmailValidationCode => ({

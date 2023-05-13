@@ -28,13 +28,6 @@ input DeleteSearchInput {
   search: UuidInput!
 }
 
-"""Vehicle condition"""
-enum GetVehicleCondition {
-  ALL
-  NEW
-  USED
-}
-
 type Mutation {
   addFavoriteVehicleToUser(addFavoriteVehicleInput: AddFavoriteVehicleInput!): SyncedVehicleEntity!
   deleteFavoriteVehicleToUser(deleteFavoriteVehicleInput: DeleteFavoriteVehicleInput!): [SyncedVehicleEntity!]!
@@ -42,9 +35,9 @@ type Mutation {
   resendEmail(email: String!): CreateAccountEntity!
   signIn(signInInput: SignInInput!): AccessTokenEntity!
   signUp(signUpInput: SignUpInput!): CreateAccountEntity!
-  syncAutocosmosInvetory(syncInvetoryInput: SyncInventoryInput!): SyncInventoryJobEntity!
-  syncInventoryBrands: SyncBrandsJobEntity!
+  syncAutocosmosInvetory: SyncInventoryJobEntity!
   syncMercadolibreInvetory: SyncInventoryJobEntity!
+  syncNeoautoInvetory: SyncInventoryJobEntity!
   toggleUserNotifications(hasActiveNotifications: Boolean!): ToggleUserNotificationsEntity!
   verifyUser(code: String!): AccessTokenEntity!
 }
@@ -69,7 +62,6 @@ type Query {
   getSearchHistory: [UserSearchEntity!]!
   getVehiclesByAdvancedSearch(after: String, city: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
-  syncNeoautoInvetory: SyncInventoryJobEntity!
 }
 
 input SignInInput {
@@ -86,17 +78,6 @@ input SignUpInput {
 enum Status {
   ACTIVE
   INACTIVE
-}
-
-type SyncBrandsJobEntity {
-  duration: String!
-  endTime: DateTime!
-  startTime: DateTime!
-}
-
-input SyncInventoryInput {
-  """Vehicle condition for sync"""
-  condition: GetVehicleCondition!
 }
 
 type SyncInventoryJobEntity {

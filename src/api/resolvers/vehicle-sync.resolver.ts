@@ -1,19 +1,14 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-
-import { SyncInventoryInput } from '../../application/vehicles/inputs/sync-inventory.input';
 import {
   SyncInventoryJobEntity,
   syncInventoryJobEntityReturnType,
 } from '../../application/vehicles/entities/sync-inventory-job.entity';
-import {
-  SyncBrandsJobEntity,
-  syncBrandsJobEntityReturnType,
-} from '../../application/vehicles/entities/sync-brands-job.entity';
 import { VehicleSyncService } from '../../application/vehicles/vehicle-sync.service';
 import {
   VehicleSearchEntity,
   vehicleSearchEntityReturnType,
 } from '../../application/vehicles/entities/vehicle-search.entity';
+
 @Resolver()
 export class VehicleSyncResolver {
   constructor(private readonly vehicleSyncService: VehicleSyncService) {}
@@ -25,7 +20,7 @@ export class VehicleSyncResolver {
     return this.vehicleSyncService.getVehiclesFromWebsites(searchName);
   }
 
-  @Query(syncInventoryJobEntityReturnType)
+  @Mutation(syncInventoryJobEntityReturnType)
   syncNeoautoInvetory(): Promise<SyncInventoryJobEntity> {
     return this.vehicleSyncService.syncNeoautoInventory();
   }
@@ -36,15 +31,7 @@ export class VehicleSyncResolver {
   }
 
   @Mutation(syncInventoryJobEntityReturnType)
-  syncAutocosmosInvetory(
-    @Args('syncInvetoryInput')
-    input: SyncInventoryInput,
-  ): Promise<SyncInventoryJobEntity> {
-    return this.vehicleSyncService.syncAutocosmosInventory(input);
-  }
-
-  @Mutation(syncBrandsJobEntityReturnType)
-  syncInventoryBrands(): Promise<SyncBrandsJobEntity> {
-    return this.vehicleSyncService.syncInventoryBrands();
+  syncAutocosmosInvetory(): Promise<SyncInventoryJobEntity> {
+    return this.vehicleSyncService.syncAutocosmosInventory();
   }
 }

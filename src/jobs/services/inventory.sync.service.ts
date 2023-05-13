@@ -45,15 +45,16 @@ export class InventorySyncService {
       this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.NEW),
       this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.USED),
       this.autocosmosSyncService.syncInventory(
+        browser,
         AutocosmosVehicleConditionEnum.NEW,
-        proxyIP,
       ),
       this.autocosmosSyncService.syncInventory(
+        browser,
         AutocosmosVehicleConditionEnum.USED,
-        proxyIP,
       ),
-      this.mercadolibreSyncService.syncInventory(proxyIP),
+      this.mercadolibreSyncService.syncInventory(browser),
     ]);
+    await browser.close();
 
     const endTime = new Date();
     const duration = getDurationTime(startTime, endTime);
