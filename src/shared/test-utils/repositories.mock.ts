@@ -36,7 +36,6 @@ export const buildFavoriteVehicleRepository = () => {
   );
   favoriteVehicle.addFavoriteVehicleToUser = jest.fn();
   favoriteVehicle.deleteFavoriteVehicleToUser = jest.fn();
-  favoriteVehicle.findVehiclesByUser = jest.fn();
 
   return favoriteVehicle;
 };

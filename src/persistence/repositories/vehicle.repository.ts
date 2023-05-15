@@ -84,27 +84,6 @@ export class VehicleRepository {
     }
   }
 
-  async findByExternalId(externalId: string) {
-    return this.prisma.vehicle.findFirst({ where: { externalId } });
-  }
-
-  async getEnabledUsersFromDeletedVehicles(deletedVehiclesIds: number[]) {
-    return this.prisma.user.findMany({
-      where: {
-        hasActiveNotifications: { equals: true },
-        vehicles: {
-          some: {
-            vehicle: {
-              id: {
-                in: deletedVehiclesIds,
-              },
-            },
-          },
-        },
-      },
-    });
-  }
-
   async updateStatusForAllInventory({
     syncedVehiclesIds,
     websiteId,

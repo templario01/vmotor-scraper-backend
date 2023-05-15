@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
-import { SyncInventoryJobEntity } from './entities/sync-inventory-job.entity';
 import { getDurationTime } from '../../shared/utils/time.utils';
 import { MercadolibreSyncService } from '../../jobs/services/mercadolibre-sync.service';
 import * as puppeteer from 'puppeteer';
@@ -17,6 +16,7 @@ import { Environment } from '../../config/dtos/config.dto';
 import { NeoautoVehicleConditionEnum } from '../neoauto/enums/neoauto.enum';
 import { getLaunchOptions } from '../../shared/utils/puppeter.utils';
 import { plainToInstance } from 'class-transformer';
+import { SyncInventoryDto } from './dtos/sync-invetory.dto';
 
 @Injectable()
 export class VehicleSyncService {
@@ -30,8 +30,7 @@ export class VehicleSyncService {
     private readonly proxyService: ProxyService,
   ) {}
 
-  async syncNeoautoInventory(): Promise<SyncInventoryJobEntity> {
-    const startTime = new Date();
+  async syncInventory(): Promise<SyncInventoryDto> {
     const proxy = await this.getProxy();
     const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
 
@@ -40,54 +39,9 @@ export class VehicleSyncService {
 
     const browser: PuppeteerBrowser = await puppeteer.launch(options);
 
-    await Promise.all([
+    Promise.all([
       this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.NEW),
       this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.USED),
-    ]);
-    await browser.close();
-
-    const endTime = new Date();
-
-    return {
-      startTime,
-      endTime,
-      duration: getDurationTime(startTime, endTime),
-    };
-  }
-
-  async syncMercadolibreInventory(): Promise<SyncInventoryJobEntity> {
-    const startTime = new Date();
-    const proxy = await this.getProxy();
-    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
-
-    const { environment } = this.envConfigService.app();
-    const options = getLaunchOptions(environment, proxyServer);
-
-    const browser: PuppeteerBrowser = await puppeteer.launch(options);
-
-    await Promise.all([this.mercadolibreSyncService.syncInventory(browser)]);
-    await browser.close();
-
-    const endTime = new Date();
-
-    return plainToInstance(SyncInventoryJobEntity, <SyncInventoryJobEntity>{
-      startTime,
-      endTime,
-      duration: getDurationTime(startTime, endTime),
-    });
-  }
-
-  async syncAutocosmosInventory(): Promise<SyncInventoryJobEntity> {
-    const startTime = new Date();
-    const proxy = await this.getProxy();
-    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
-
-    const { environment } = this.envConfigService.app();
-    const options = getLaunchOptions(environment, proxyServer);
-
-    const browser: PuppeteerBrowser = await puppeteer.launch(options);
-
-    await Promise.all([
       this.autocosmosSyncService.syncInventory(
         browser,
         AutocosmosVehicleConditionEnum.NEW,
@@ -96,16 +50,12 @@ export class VehicleSyncService {
         browser,
         AutocosmosVehicleConditionEnum.USED,
       ),
-    ]);
-    await browser.close();
+      this.mercadolibreSyncService.syncInventory(browser),
+    ]).then(() => browser.close());
 
-    const endTime = new Date();
-
-    return {
-      startTime,
-      endTime,
-      duration: getDurationTime(startTime, endTime),
-    };
+    return plainToInstance(SyncInventoryDto, <SyncInventoryDto>{
+      jobs_started_at: new Date(),
+    });
   }
 
   async getVehiclesFromWebsites(inputSearch?: string): Promise<VehicleSearchEntity> {

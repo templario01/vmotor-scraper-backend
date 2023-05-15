@@ -18,7 +18,7 @@ import { GetRecommendedVehiclesArgs } from './inputs/get-recommended-vehicles.in
 export class VehicleService {
   constructor(
     private readonly vehicleRepository: VehicleRepository,
-    private readonly vehicleSearchRepository: SearchRepository,
+    private readonly searchRepository: SearchRepository,
   ) {}
 
   async getVehiclesByAdvancedSearch(
@@ -41,7 +41,7 @@ export class VehicleService {
     input: GetRecommendedVehiclesArgs,
     userId: number,
   ): Promise<IPaginatedVehicleEntity> {
-    const result = await this.vehicleSearchRepository.findLastSearchesByUser(userId);
+    const result = await this.searchRepository.findLastSearchesByUser(userId);
     const searches: VehicleSearchDto[] = result.map(({ search }) =>
       JSON.parse(<string>search),
     );
@@ -149,6 +149,6 @@ export class VehicleService {
       },
     };
 
-    await this.vehicleSearchRepository.create(userId, newSearch);
+    await this.searchRepository.create(userId, newSearch);
   }
 }

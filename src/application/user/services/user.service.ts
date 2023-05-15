@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { UserRepository } from '../../../persistence/repositories/user.repository';
 import { ToggleUserNotificationsEntity } from '../entities/toggle-user-notifications.entity';
+import { UserEntity } from '../entities/user.entity';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class UserService {
@@ -16,5 +18,11 @@ export class UserService {
     );
 
     return { hasActiveNotifications: result.hasActiveNotifications };
+  }
+
+  async getUserInfo(userId: number): Promise<UserEntity> {
+    const user = await this.userRepository.findUserById(userId);
+
+    return plainToInstance(UserEntity, <UserEntity>user);
   }
 }

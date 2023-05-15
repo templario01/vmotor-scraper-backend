@@ -2,21 +2,40 @@ import { Injectable } from '@nestjs/common';
 import { FavoriteVehicleRepository } from '../../../persistence/repositories/favorite-vehicle.repository';
 import { AddFavoriteVehicleDto } from '../dtos/add-favorite-vehicle.dto';
 import { AddFavoriteVehicleInput } from '../inputs/add-favorite-vehicle.input';
-import { SyncedVehicleEntity } from '../../vehicles/entities/synced-vehicle.entity';
+import {
+  PaginatedVehicleEntity,
+  SyncedVehicleEntity,
+} from '../../vehicles/entities/synced-vehicle.entity';
 import { Status } from '../../../shared/dtos/status.enum';
 import { PriceCurrency, VehicleCondition } from '../../vehicles/enums/vehicle.enums';
 import { DeleteFavoriteVehicleInput } from '../inputs/delete-favorite-vehicle.input';
-import { Vehicle } from '@prisma/client';
+import { Prisma, Vehicle } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
+import { VehicleRepository } from '../../../persistence/repositories/vehicle.repository';
+import { GetFavoriteVehiclesArgs } from '../inputs/get-searches.input';
 
 @Injectable()
 export class UserFavoriteVehicleService {
-  constructor(private readonly favoriteVehicleRepository: FavoriteVehicleRepository) {}
+  constructor(
+    private readonly favoriteVehicleRepository: FavoriteVehicleRepository,
+    private readonly vehicleRepository: VehicleRepository,
+  ) {}
 
-  async getAllFavoriteVehicles(userId: number): Promise<SyncedVehicleEntity[]> {
-    const vehicles = await this.favoriteVehicleRepository.findVehiclesByUser(userId);
+  async getAllFavoriteVehicles(
+    userId: number,
+    params: GetFavoriteVehiclesArgs,
+  ): Promise<PaginatedVehicleEntity> {
+    const where: Prisma.VehicleWhereInput = {
+      users: {
+        some: {
+          user: {
+            id: userId,
+          },
+        },
+      },
+    };
 
-    return vehicles.map((vehicle) => this.mapToEntity(vehicle));
+    return this.vehicleRepository.findVehicles({ ...params, where });
   }
 
   async addFavoriteVehicleToUser(

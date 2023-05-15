@@ -1,9 +1,11 @@
 import { UserFavoriteVehicleService } from '../../application/user/services/user-favorite-vehicle.service';
 import { AddFavoriteVehicleInput } from '../../application/user/inputs/add-favorite-vehicle.input';
 import {
+  PaginatedVehicleEntity,
   SyncedVehicleEntity,
   arraySyncedVehicleEntityReturnType,
   syncedVehicleEntityReturnType,
+  typeofPaginatedVehicleEntity,
 } from '../../application/vehicles/entities/synced-vehicle.entity';
 import { UseGuards } from '@nestjs/common';
 import { AuthGuard } from '../../application/auth/guards/auth.guard';
@@ -16,6 +18,7 @@ import { DeleteFavoriteVehicleInput } from '../../application/user/inputs/delete
 import { Args, Mutation, Parent, Query, ResolveField, Resolver } from '@nestjs/graphql';
 import { CurrentUser } from '../../shared/decorators/context.decorator';
 import { SessionData } from '../../application/auth/dtos/auth.dto';
+import { GetFavoriteVehiclesArgs } from '../../application/user/inputs/get-searches.input';
 
 @Resolver(syncedVehicleEntityReturnType)
 export class UserFavoriteVehicleResolver {
@@ -43,9 +46,12 @@ export class UserFavoriteVehicleResolver {
   }
 
   @UseGuards(AuthGuard)
-  @Query(arraySyncedVehicleEntityReturnType)
-  getFavoriteVehicles(@CurrentUser() user: SessionData) {
-    return this.userFavoriteVehicleService.getAllFavoriteVehicles(user.sub);
+  @Query(typeofPaginatedVehicleEntity)
+  getFavoriteVehicles(
+    @CurrentUser() user: SessionData,
+    @Args() args: GetFavoriteVehiclesArgs,
+  ): Promise<PaginatedVehicleEntity> {
+    return this.userFavoriteVehicleService.getAllFavoriteVehicles(user.sub, args);
   }
 
   @ResolveField(websiteEntityReturnType, { name: 'website' })

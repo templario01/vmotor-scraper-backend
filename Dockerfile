@@ -19,7 +19,7 @@ RUN npm install
 
 COPY ${BASE_DIR} .
 
-EXPOSE 3000
+EXPOSE 3300
 
 RUN npx prisma generate
 

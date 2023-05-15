@@ -8,6 +8,12 @@ import { PrismaService } from '../services/prisma.service';
 import { Prisma, Search } from '@prisma/client';
 import { UserVehicleSearchDto } from '../../application/vehicles/dtos/user-vehicle-search.dto';
 import { PrismaErrorCodes } from '../../shared/dtos/prisma.dto';
+import { GetUserSearchWhereInputDto } from '../../application/user/dtos/get-user-search.dto';
+import {
+  IPaginatedUserSearchEntity,
+  UserSearchEntity,
+} from '../../application/user/entities/user-search.entity';
+import { IEdgeType } from '../../shared/utils/pagination/cursor-pagination';
 
 @Injectable()
 export class SearchRepository {
@@ -83,5 +89,42 @@ export class SearchRepository {
       take: 10,
       orderBy: { createdAt: 'desc' },
     });
+  }
+
+  async findSearches(
+    params: GetUserSearchWhereInputDto,
+  ): Promise<IPaginatedUserSearchEntity> {
+    const { take, after, where } = params;
+    const totalCount = await this.prisma.search.count({ where });
+    const searches = await this.prisma.search.findMany({
+      where,
+      take: typeof take === 'number' ? take + 1 : undefined,
+      skip: after ? 1 : undefined,
+      cursor: after ? { uuid: after } : undefined,
+    });
+
+    const results = searches.map(({ uuid, createdAt, text }) => ({
+      uuid,
+      createdAt,
+      text,
+    }));
+
+    const hasNextPage = typeof take === 'number' ? results.length > take : false;
+    if (hasNextPage) results.pop();
+
+    const lastItem = results[results?.length - 1];
+    const endCursor = lastItem?.uuid;
+    const edges = results.map<IEdgeType<UserSearchEntity>>((search) => ({
+      cursor: search.uuid,
+      node: search,
+    }));
+
+    return {
+      edges,
+      nodes: results,
+      hasNextPage,
+      endCursor,
+      totalCount,
+    };
   }
 }

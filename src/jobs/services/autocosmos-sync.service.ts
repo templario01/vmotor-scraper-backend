@@ -5,9 +5,7 @@ import { VehicleRepository } from '../../persistence/repositories/vehicle.reposi
 import { Cheerio, CheerioAPI, Element as CheerioElement } from 'cheerio';
 import * as cheerio from 'cheerio';
 import { Browser as PuppeteerBrowser, Page } from 'puppeteer';
-import * as puppeteer from 'puppeteer';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
-import { MercadolibreSyncService } from './mercadolibre-sync.service';
 import { getExternalId, getPages } from '../../shared/utils/autocosmos.utils';
 import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
 import { getEnumKeyByValue } from '../../shared/utils/neoauto.utils';
@@ -20,7 +18,7 @@ import { formatLocation, getMileage } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class AutocosmosSyncService {
-  private readonly logger = new Logger(MercadolibreSyncService.name);
+  private readonly logger = new Logger(AutocosmosSyncService.name);
   private readonly AUTOCOSMOS: string;
   constructor(
     private readonly config: EnvConfigService,
@@ -36,8 +34,10 @@ export class AutocosmosSyncService {
   ): Promise<void> {
     try {
       const syncedVehiclesIds = [];
-      const { condition, currentUrl, currentPages, currentWebsite } =
-        await this.getSyncConfig(vehicleCondition);
+      const { condition, currentUrl, currentWebsite } = await this.getSyncConfig(
+        vehicleCondition,
+      );
+      const currentPages = await this.getPages(browser, vehicleCondition);
 
       const page: Page = await browser.newPage();
 
@@ -139,8 +139,7 @@ export class AutocosmosSyncService {
     }
   }
 
-  private async getPages(condition: string): Promise<number> {
-    const browser: PuppeteerBrowser = await puppeteer.launch();
+  private async getPages(browser: PuppeteerBrowser, condition: string): Promise<number> {
     const puppeteerPage: Page = await browser.newPage();
 
     await puppeteerPage.setExtraHTTPHeaders({
@@ -169,9 +168,8 @@ export class AutocosmosSyncService {
     const hostname = new URL(this.AUTOCOSMOS).hostname;
     const [name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
-    const currentPages = await this.getPages(vehicleCondition);
     const currentUrl = `${this.AUTOCOSMOS}/auto/${vehicleCondition}`;
 
-    return { condition, currentUrl, currentPages, currentWebsite };
+    return { condition, currentUrl, currentWebsite };
   }
 }

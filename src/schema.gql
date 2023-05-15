@@ -35,11 +35,16 @@ type Mutation {
   resendEmail(email: String!): CreateAccountEntity!
   signIn(signInInput: SignInInput!): AccessTokenEntity!
   signUp(signUpInput: SignUpInput!): CreateAccountEntity!
-  syncAutocosmosInvetory: SyncInventoryJobEntity!
-  syncMercadolibreInvetory: SyncInventoryJobEntity!
-  syncNeoautoInvetory: SyncInventoryJobEntity!
   toggleUserNotifications(hasActiveNotifications: Boolean!): ToggleUserNotificationsEntity!
   verifyUser(code: String!): AccessTokenEntity!
+}
+
+type PaginatedUserSearchEntity {
+  edges: [UserSearchEntityEdge!]
+  endCursor: String
+  hasNextPage: Boolean!
+  nodes: [UserSearchEntity!]
+  totalCount: Int!
 }
 
 type PaginatedVehicleEntity {
@@ -57,9 +62,10 @@ enum PriceCurrency {
 }
 
 type Query {
-  getFavoriteVehicles: [SyncedVehicleEntity!]!
+  getFavoriteVehicles(after: String, take: Int = 10): PaginatedVehicleEntity!
   getRecommendedVehicles(after: String, take: Int = 10): PaginatedVehicleEntity!
-  getSearchHistory: [UserSearchEntity!]!
+  getSearchHistory(after: String, take: Int = 10): PaginatedUserSearchEntity!
+  getUserInfo: UserEntity!
   getVehiclesByAdvancedSearch(after: String, city: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
   getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
@@ -78,12 +84,6 @@ input SignUpInput {
 enum Status {
   ACTIVE
   INACTIVE
-}
-
-type SyncInventoryJobEntity {
-  duration: String!
-  endTime: DateTime!
-  startTime: DateTime!
 }
 
 type SyncedVehicleEntity {
@@ -120,6 +120,16 @@ type SyncedVehicleEntityEdge {
 
 type ToggleUserNotificationsEntity {
   hasActiveNotifications: Boolean!
+}
+
+type UserEntity {
+  email: String!
+  favoriteVehicles(after: String, take: Int = 10): PaginatedVehicleEntity!
+  favoritesVehicles: PaginatedVehicleEntity
+  hasActiveNotifications: Boolean!
+  lastSession: DateTime!
+  searches(after: String, take: Int = 10): PaginatedUserSearchEntity
+  uuid: ID!
 }
 
 type UserSearchEntity {

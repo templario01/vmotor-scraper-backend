@@ -7,7 +7,6 @@ import {
 import { PrismaService } from '../services/prisma.service';
 import { AddFavoriteVehicleDto } from '../../application/user/dtos/add-favorite-vehicle.dto';
 import { Vehicle } from '@prisma/client';
-import { Status } from '../../shared/dtos/status.enum';
 import { DeleteFavoriteVehicleDto } from '../../application/user/dtos/delete-favorite-vehicle.dto';
 
 @Injectable()
@@ -15,33 +14,6 @@ export class FavoriteVehicleRepository {
   private readonly logger = new Logger(FavoriteVehicleRepository.name);
 
   constructor(private readonly prisma: PrismaService) {}
-
-  async findVehiclesByUser(userId: number): Promise<Vehicle[]> {
-    return this.prisma.vehicle.findMany({
-      where: {
-        users: {
-          some: {
-            user: { id: userId },
-          },
-        },
-      },
-    });
-  }
-
-  async findUsersByVehicle(externalId: string) {
-    return this.prisma.user.findMany({
-      where: {
-        vehicles: {
-          some: {
-            vehicle: {
-              externalId,
-              status: Status.ACTIVE,
-            },
-          },
-        },
-      },
-    });
-  }
 
   async addFavoriteVehicleToUser(data: AddFavoriteVehicleDto): Promise<Vehicle> {
     const { vehicleUUID, userId } = data;

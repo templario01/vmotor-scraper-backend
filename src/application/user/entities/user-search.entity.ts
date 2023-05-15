@@ -17,11 +17,11 @@ export class UserSearchEntity {
   readonly text: string;
 }
 
-export const userSearchEntityReturnType = () => UserSearchEntity;
-export const userSearchesEntityReturnType = () => [UserSearchEntity];
+export const typeofUserSearchEntity = () => UserSearchEntity;
+export const typeofArrayUserSearcheEntity = () => [UserSearchEntity];
 
 @ObjectType()
-export class PaginatedUserSearchesEntity extends PaginatedResponse(UserSearchEntity) {}
-export type IPaginatedUserSearchesEntity = IPaginatedResponse<UserSearchEntity>;
+export class PaginatedUserSearchEntity extends PaginatedResponse(UserSearchEntity) {}
+export type IPaginatedUserSearchEntity = IPaginatedResponse<UserSearchEntity>;
 
-export const paginatedUserSearchesEntityReturnType = () => PaginatedUserSearchesEntity;
+export const typeofPaginatedUserSearchesEntity = () => PaginatedUserSearchEntity;
