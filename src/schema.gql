@@ -67,7 +67,6 @@ type Query {
   getSearchHistory(after: String, take: Int = 10): PaginatedUserSearchEntity!
   getUserInfo: UserEntity!
   getVehiclesByAdvancedSearch(after: String, city: String, searchName: String, take: Int = 10): PaginatedVehicleEntity!
-  getVehiclesByWebsites(searchName: String!): VehicleSearchEntity!
 }
 
 input SignInInput {
@@ -145,32 +144,6 @@ type UserSearchEntityEdge {
 
 input UuidInput {
   uuid: ID!
-}
-
-type VehicleEntity {
-  currency: String
-  description: String
-  doors: Float
-  engineFuelType: String
-  enginePowerHp: String
-  enginePowerRpm: String
-  engineType: String
-  externalId: String
-  frontImage: String
-  images: String
-  isEstimatedPrice: Boolean!
-  mileage: Float
-  originalPrice: Float
-  price: Float
-  speeds: Float
-  transmission: String
-  url: String
-  year: Float
-}
-
-type VehicleSearchEntity {
-  duration: String!
-  vehicles: [VehicleEntity!]!
 }
 
 type WebsiteEntity {

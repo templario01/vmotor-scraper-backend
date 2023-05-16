@@ -9,7 +9,7 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ApiModule } from './api/api.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { EnvVariablesConfig, envVariablesConfig } from './config/validator/env-variables';
-import { SentryModule } from './sentry/sentry.module';
+import { SentryModule } from './shared/sentry/sentry.module';
 import { GraphQLFormattedError } from 'graphql';
 
 @Module({

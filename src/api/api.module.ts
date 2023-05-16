@@ -8,7 +8,6 @@ import { PersistenceModule } from '../persistence/persistence.module';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthResolver } from './resolvers/auth.resolver';
 import { UserFavoriteVehicleResolver } from './resolvers/user-favorite-vehicle.resolver';
-import { VehicleSyncResolver } from './resolvers/vehicle-sync.resolver';
 import { SyncController } from './controllers/jobs.controller';
 
 const resolvers = [
@@ -16,7 +15,6 @@ const resolvers = [
   UserResolver,
   AuthResolver,
   UserFavoriteVehicleResolver,
-  VehicleSyncResolver,
 ];
 const controllers = [HealthController, SyncController];
 const authGuardModules = [EnvConfigModule, PersistenceModule, JwtModule];

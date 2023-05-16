@@ -9,10 +9,8 @@ services:
       - "5500:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: vmotor_db
+    env_file:
+      - ./docker/postgres.env
     networks:
       - net-vmotor
     healthcheck:
@@ -25,16 +23,8 @@ services:
     container_name: prisma-studio
     image: timothyjmiller/prisma-studio:latest
     restart: unless-stopped
-    environment:
-      PROJECT_NAME: vmotor_project
-      POSTGRES_DATABASE: vmotor_db
-      POSTGRES_HOST: postgres-vmotor
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_PORT: 5432
-      PRISMA_STUDIO_PORT: 5555
-      POSTGRES_URL: postgresql://postgres:root@postgres-vmotor:5432/vmotor_db?schema=public
-      POSTGRES_PATH: /postgres
+    env_file:
+      - ./docker/prisma-studio.env
     ports:
       - "5555:5555"
     networks:
@@ -50,7 +40,6 @@ services:
       - "3000:3000"
     volumes:
       - grafanadata:/var/lib/grafana
-
 
   prometheus:
     image: prom/prometheus:v2.28.1
@@ -69,6 +58,21 @@ services:
     networks:
       - net-vmotor
 
+  cadvisor:
+    image: zcube/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
+    networks:
+      - net-vmotor
+
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node_exporter
@@ -78,21 +82,6 @@ services:
     command:
      - '--path.rootfs=/host'
     pid: host
-    volumes:
-      - "/:/rootfs:ro"
-      - "/var/run:/var/run:ro"
-      - "/sys:/sys:ro"
-      - "/var/lib/docker/:/var/lib/docker:ro"
-      - "/dev/disk/:/dev/disk:ro"
-    networks:
-      - net-vmotor
-        
-  cadvisor:
-    image: zcube/cadvisor:latest
-    container_name: cadvisor
-    restart: unless-stopped
-    ports:
-      - "8080"
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"
