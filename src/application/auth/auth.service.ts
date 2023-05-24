@@ -54,11 +54,18 @@ export class AuthService {
     userAgent: string,
   ): Promise<AccessTokenEntity> {
     const user = await this.userRepository.findUserByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('invalid email or password');
+    }
     const isValidPassword = await compare(password, user.password);
     if (!isValidPassword) {
       throw new UnauthorizedException('invalid password');
     }
-    const payload = { username: user.email, sub: user.id };
+    const payload = {
+      username: user.email,
+      sub: user.id,
+      hasActiveNotifications: user.hasActiveNotifications,
+    };
     await this.registerLastSession(user.id, userAgent);
 
     return {

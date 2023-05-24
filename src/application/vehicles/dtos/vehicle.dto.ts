@@ -1,4 +1,4 @@
-import { VehicleCondition } from '../enums/vehicle.enums';
+import { GetVehicleCondition, VehicleCondition } from '../enums/vehicle.enums';
 import { CheerioAPI } from 'cheerio';
 
 export interface SearchVehicleDto {
@@ -17,4 +17,5 @@ export interface BuildPrismaFiltersDto {
   readonly keywords: string[];
   readonly year?: number;
   readonly city?: string;
+  readonly condition?: GetVehicleCondition;
 }

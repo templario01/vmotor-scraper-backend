@@ -13,6 +13,7 @@ import {
 import { SearchRepository } from '../../persistence/repositories/search.repository';
 import { BuildPrismaFiltersDto } from './dtos/vehicle.dto';
 import { GetRecommendedVehiclesArgs } from './inputs/get-recommended-vehicles.input';
+import { VehicleCondition } from './enums/vehicle.enums';
 
 @Injectable()
 export class VehicleService {
@@ -25,10 +26,10 @@ export class VehicleService {
     params: GetVehiclesArgs,
     userId?: number,
   ): Promise<IPaginatedVehicleEntity> {
-    const { searchName, city, ...inputProps } = params;
+    const { searchName, city, condition, ...inputProps } = params;
     const { keywords, year } = getWordsAndYear(searchName);
 
-    const where = this.buildPrismaFiltersForSearch({ keywords, city, year });
+    const where = this.buildPrismaFiltersForSearch({ keywords, city, year, condition });
     await this.saveVehicleSearch({ keywords, searchName, year, location: city }, userId);
 
     return this.vehicleRepository.findVehicles({
@@ -78,9 +79,14 @@ export class VehicleService {
   private buildPrismaFiltersForSearch(
     params: BuildPrismaFiltersDto,
   ): Prisma.VehicleWhereInput {
-    const { keywords, year, city } = params;
+    const { keywords, year, city, condition } = params;
+    const vehicleCondition = condition === 'ALL' ? undefined : condition;
+    const location = city === 'Todas' ? undefined : city;
     const yearFilter: Prisma.VehicleWhereInput = year ? { year: { equals: year } } : {};
-    const locationFilter: Prisma.VehicleWhereInput = city
+    const conditionFilter: Prisma.VehicleWhereInput = vehicleCondition
+      ? { condition: { equals: VehicleCondition[vehicleCondition] } }
+      : {};
+    const locationFilter: Prisma.VehicleWhereInput = location
       ? {
           location: {
             contains: city,
@@ -95,7 +101,7 @@ export class VehicleService {
     );
 
     return {
-      AND: [...matchKeywords, yearFilter, locationFilter],
+      AND: [...matchKeywords, yearFilter, locationFilter, conditionFilter],
     };
   }
 

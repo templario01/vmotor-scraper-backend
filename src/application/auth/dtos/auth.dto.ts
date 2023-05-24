@@ -10,6 +10,7 @@ export interface SessionData {
   readonly iat: number;
   readonly exp: number;
   readonly username: string;
+  readonly hasActiveNotifications: boolean;
 }
 
 export interface UserRequest extends Request {

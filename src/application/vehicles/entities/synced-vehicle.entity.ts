@@ -4,7 +4,7 @@ import { Status, statusReturnType } from '../../../shared/dtos/status.enum';
 import {
   PriceCurrency,
   VehicleCondition,
-  priceCurrencyResultType,
+  typeofPriceCurrency,
 } from '../enums/vehicle.enums';
 import { graphqlDateReturnType } from '../../../shared/dtos/decimal-scalar';
 import {
@@ -63,28 +63,10 @@ export class SyncedVehicleEntity implements Vehicle {
   readonly mileage?: number;
 
   @Field({ nullable: true })
-  readonly engineType?: string;
-
-  @Field({ nullable: true })
-  readonly enginePowerRpm?: string;
-
-  @Field({ nullable: true })
-  readonly enginePowerHp?: string;
-
-  @Field({ nullable: true })
-  readonly engineFuelType?: string;
-
-  @Field({ nullable: true })
-  readonly speeds?: number;
-
-  @Field({ nullable: true })
   readonly frontImage?: string;
 
   @Field({ nullable: true })
   readonly images?: string;
-
-  @Field({ nullable: true })
-  readonly doors?: number;
 
   @Field({ nullable: true })
   readonly price?: number;
@@ -95,7 +77,7 @@ export class SyncedVehicleEntity implements Vehicle {
   @Field({ nullable: true })
   readonly location?: string;
 
-  @Field(priceCurrencyResultType)
+  @Field(typeofPriceCurrency)
   readonly currency?: PriceCurrency;
 }
 

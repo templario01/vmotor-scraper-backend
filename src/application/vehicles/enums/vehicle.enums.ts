@@ -36,5 +36,10 @@ registerEnumType(PriceCurrency, {
   description: 'USD or PEN',
 });
 
-export const priceCurrencyResultType = () => PriceCurrency;
-export const vehicleConditionReturnType = () => VehicleCondition;
+registerEnumType(VehicleCondition, {
+  name: 'VehicleCondition',
+  description: 'NEW or USED',
+});
+
+export const typeofPriceCurrency = () => PriceCurrency;
+export const typeofVehicleCondition = () => GetVehicleCondition;
