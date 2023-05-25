@@ -25,6 +25,7 @@ import {
   HTML_LOCATION_USED,
   HTML_MILEAGE_CONCESSIONARIE,
   HTML_MILEAGE_USED,
+  HTML_MILEAGE_USED2,
   HTML_PRICE_CONCESSIONAIRE,
   HTML_PRICE_USED,
   HTML_URL_CONCESSIONARIE,
@@ -84,9 +85,16 @@ export class NeoAutoSyncService {
               .find(HTML_DESCRIPTION_CONCESSIONARIE + OR + HTML_DESCRIPTION_USED)
               .text();
             const mileageHtml = $(vehicleHtmlBlock)
-              .find(HTML_MILEAGE_CONCESSIONARIE + OR + HTML_MILEAGE_USED)
+              .find(
+                HTML_MILEAGE_CONCESSIONARIE +
+                  OR +
+                  HTML_MILEAGE_USED +
+                  OR +
+                  HTML_MILEAGE_USED2,
+              )
               .next()
               .text();
+            console.log(mileageHtml);
             const location = $(vehicleHtmlBlock)
               .find(HTML_LOCATION_CONCESSIONARIE + OR + HTML_LOCATION_USED)
               .html();
@@ -100,6 +108,7 @@ export class NeoAutoSyncService {
               websiteId: currentWebsite.id,
               mileage: getMileage(mileageHtml),
             };
+            console.log(neoautoVehicle);
             const carSynced = await this.syncVehicle(neoautoVehicle, vehicleCondition);
 
             if (carSynced) {
