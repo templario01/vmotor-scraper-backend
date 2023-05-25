@@ -9,12 +9,28 @@ services:
       - "5500:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: root
-      POSTGRES_DB: vmotor_db
+    env_file:
+      - ./docker/postgres.env
     networks:
       - net-vmotor
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+  prisma-studio:
+    container_name: prisma-studio
+    image: timothyjmiller/prisma-studio:latest
+    restart: unless-stopped
+    env_file:
+      - ./docker/prisma-studio.env
+    ports:
+      - "5555:5555"
+    networks:
+      - net-vmotor
+    depends_on:
+      - postgres-vmotor
 
   grafana:
     image: grafana/grafana:8.0.6
@@ -24,7 +40,6 @@ services:
       - "3000:3000"
     volumes:
       - grafanadata:/var/lib/grafana
-
 
   prometheus:
     image: prom/prometheus:v2.28.1
@@ -43,6 +58,21 @@ services:
     networks:
       - net-vmotor
 
+  cadvisor:
+    image: zcube/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    ports:
+      - "8080"
+    volumes:
+      - "/:/rootfs:ro"
+      - "/var/run:/var/run:ro"
+      - "/sys:/sys:ro"
+      - "/var/lib/docker/:/var/lib/docker:ro"
+      - "/dev/disk/:/dev/disk:ro"
+    networks:
+      - net-vmotor
+
   node_exporter:
     image: quay.io/prometheus/node-exporter:latest
     container_name: node_exporter
@@ -52,21 +82,6 @@ services:
     command:
      - '--path.rootfs=/host'
     pid: host
-    volumes:
-      - "/:/rootfs:ro"
-      - "/var/run:/var/run:ro"
-      - "/sys:/sys:ro"
-      - "/var/lib/docker/:/var/lib/docker:ro"
-      - "/dev/disk/:/dev/disk:ro"
-    networks:
-      - net-vmotor
-        
-  cadvisor:
-    image: zcube/cadvisor:latest
-    container_name: cadvisor
-    restart: unless-stopped
-    ports:
-      - "8080"
     volumes:
       - "/:/rootfs:ro"
       - "/var/run:/var/run:ro"

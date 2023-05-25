@@ -12,9 +12,11 @@ import { AuthService } from './auth/auth.service';
 import { MailerModule } from './mailer/mailer.module';
 import { JwtModule } from '@nestjs/jwt';
 import { EnvConfigService } from '../config/env-config.service';
-import { FavoriteVehicleService } from './favorite-vehicle/favorite-vehicle.service';
 import { WebsiteService } from './websites/website.service';
 import { VehicleSyncService } from './vehicles/vehicle-sync.service';
+import { UserService } from './user/services/user.service';
+import { UserFavoriteVehicleService } from './user/services/user-favorite-vehicle.service';
+import { UserSearchService } from './user/services/user-search.service';
 
 const providers = [
   VehicleService,
@@ -24,8 +26,10 @@ const providers = [
   AutocosmosService,
   CurrencyConverterApiService,
   AuthService,
-  FavoriteVehicleService,
+  UserFavoriteVehicleService,
   WebsiteService,
+  UserService,
+  UserSearchService,
 ];
 
 @Module({

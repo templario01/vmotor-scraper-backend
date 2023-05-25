@@ -1,18 +1,18 @@
 import { VehicleEntity } from '../../vehicles/entities/vehicle.entity';
 
 export interface MercadolibreSearchResponse {
-  id: string;
-  vehicleImageUrl: string;
-  mileage: number;
-  url: string;
-  year: number;
-  price: number;
-  tagPrice: string;
-  description: string;
+  readonly id: string;
+  readonly vehicleImageUrl: string;
+  readonly mileage: number;
+  readonly url: string;
+  readonly year: number;
+  readonly price: number;
+  readonly tagPrice: string;
+  readonly description: string;
 }
 
 export interface AddVehicleByCurrency {
-  mercadolibreVehicles: VehicleEntity[];
-  mercadolibreSearchResponse: MercadolibreSearchResponse;
-  exchangeRate?: number;
+  readonly mercadolibreVehicles: VehicleEntity[];
+  readonly mercadolibreSearchResponse: MercadolibreSearchResponse;
+  readonly exchangeRate?: number;
 }

@@ -9,9 +9,16 @@ import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ApiModule } from './api/api.module';
 import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { EnvVariablesConfig, envVariablesConfig } from './config/validator/env-variables';
+import { SentryModule } from './shared/sentry/sentry.module';
+import { GraphQLFormattedError } from 'graphql';
 
 @Module({
   imports: [
+    SentryModule.forRoot({
+      dsn: process.env.SENTRY_DNS,
+      tracesSampleRate: parseInt(process.env.SENTRY_TRACE_RATE),
+      environment: process.env.NODE_ENV,
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: Joi.object<EnvVariablesConfig>(envVariablesConfig),
@@ -29,13 +36,14 @@ import { EnvVariablesConfig, envVariablesConfig } from './config/validator/env-v
         payload,
         connection,
       }),
-      formatResponse: (response, requestContext) => {
-        if (response.errors) {
-          const http = requestContext.response.http;
-          http.status = 400;
-          return { ...response, http };
-        }
-        return response;
+      formatError: (error: GraphQLFormattedError) => {
+        return {
+          message: error.message,
+          enxtensions: {
+            status: error.extensions.status,
+            originalError: error.extensions.originalError,
+          },
+        };
       },
       playground: true,
     }),

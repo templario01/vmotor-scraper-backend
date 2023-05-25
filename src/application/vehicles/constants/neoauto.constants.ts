@@ -24,7 +24,9 @@ export const HTML_DESCRIPTION_USED =
   'div.c-results-used__header h2.c-results-used__title';
 
 export const HTML_MILEAGE_USED =
-  'div.c-results-used-content div.c-results-used__details div.c-results-used__details-wrap p.c-results-used__detail span.c-results-used__subtitle-description';
+  'div.c-results-used-content div.c-results-used__details div.c-results-used__details-wrap p.c-results-used__detail';
+export const HTML_MILEAGE_USED2 =
+  'div.c-results-used-content div.c-results-used__details div.c-results-used__details-wrap p.c-results-used__detail-subtitle';
 export const HTML_MILEAGE_CONCESSIONARIE =
   'div.c-results-concessionaire-content div.c-results-concessionaire__details div.c-results-concessionaire__details-wrap p.c-results-concessionaire__detail';
 

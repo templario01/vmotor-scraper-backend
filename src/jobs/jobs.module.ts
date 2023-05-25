@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { BrandsSyncService } from './services/brands-sync.service';
 import { HttpModule } from '@nestjs/axios';
 import { PersistenceModule } from '../persistence/persistence.module';
 import { EnvConfigModule } from '../config/env-config.module';
@@ -11,7 +10,6 @@ import { ProxyService } from '../application/proxy/proxy.service';
 import { CurrencyConverterApiService } from '../application/currency-converter-api-v1/currency-converter.service';
 
 const providers = [
-  BrandsSyncService,
   NeoAutoSyncService,
   MercadolibreSyncService,
   AutocosmosSyncService,

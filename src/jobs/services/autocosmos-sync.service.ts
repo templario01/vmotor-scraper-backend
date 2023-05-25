@@ -4,23 +4,21 @@ import { WebsiteRepository } from '../../persistence/repositories/website.reposi
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { Cheerio, CheerioAPI, Element as CheerioElement } from 'cheerio';
 import * as cheerio from 'cheerio';
-import { Browser, Page } from 'puppeteer';
-import * as puppeteer from 'puppeteer';
+import { Browser as PuppeteerBrowser, Page } from 'puppeteer';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
-import { MercadolibreSyncService } from './mercadolibre-sync.service';
 import { getExternalId, getPages } from '../../shared/utils/autocosmos.utils';
 import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
 import { getEnumKeyByValue } from '../../shared/utils/neoauto.utils';
 import {
   PriceCurrency,
   VehicleCondition,
-} from '../../application/vehicles/dtos/vehicle.enums';
+} from '../../application/vehicles/enums/vehicle.enums';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import { formatLocation, getMileage } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class AutocosmosSyncService {
-  private readonly logger = new Logger(MercadolibreSyncService.name);
+  private readonly logger = new Logger(AutocosmosSyncService.name);
   private readonly AUTOCOSMOS: string;
   constructor(
     private readonly config: EnvConfigService,
@@ -31,23 +29,17 @@ export class AutocosmosSyncService {
   }
 
   async syncInventory(
+    browser: PuppeteerBrowser,
     vehicleCondition: AutocosmosVehicleConditionEnum,
-    proxy?: string,
   ): Promise<void> {
     try {
       const syncedVehiclesIds = [];
-      const { condition, currentUrl, currentPages, proxyServer, currentWebsite } =
-        await this.getSyncConfig(vehicleCondition, proxy);
+      const { condition, currentUrl, currentWebsite } = await this.getSyncConfig(
+        vehicleCondition,
+      );
+      const currentPages = await this.getPages(browser, vehicleCondition);
 
-      const browser: Browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
-      });
       const page: Page = await browser.newPage();
-
-      await page.setExtraHTTPHeaders({
-        'User-Agent': USER_AGENT,
-        Referer: currentUrl,
-      });
 
       for (let index = 1; index < currentPages; index++) {
         await page.goto(`${currentUrl}?pidx=${index}`, { timeout: 0 });
@@ -142,15 +134,12 @@ export class AutocosmosSyncService {
       this.logger.log(
         `[${condition} CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
       );
-
-      await browser.close();
     } catch (error) {
       this.logger.error('fail to sync all inventory', error);
     }
   }
 
-  private async getPages(condition: string): Promise<number> {
-    const browser: Browser = await puppeteer.launch();
+  private async getPages(browser: PuppeteerBrowser, condition: string): Promise<number> {
     const puppeteerPage: Page = await browser.newPage();
 
     await puppeteerPage.setExtraHTTPHeaders({
@@ -167,15 +156,11 @@ export class AutocosmosSyncService {
       'div.filtros-section-container section.m-with-filters header strong',
     ).html();
     const vehicles = getPages(Number(totalVehicles));
-    await browser.close();
 
     return vehicles;
   }
 
-  private async getSyncConfig(
-    vehicleCondition: AutocosmosVehicleConditionEnum,
-    proxy?: string,
-  ) {
+  private async getSyncConfig(vehicleCondition: AutocosmosVehicleConditionEnum) {
     const condition = getEnumKeyByValue(
       AutocosmosVehicleConditionEnum,
       vehicleCondition,
@@ -183,10 +168,8 @@ export class AutocosmosSyncService {
     const hostname = new URL(this.AUTOCOSMOS).hostname;
     const [name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
-    const currentPages = await this.getPages(vehicleCondition);
     const currentUrl = `${this.AUTOCOSMOS}/auto/${vehicleCondition}`;
-    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
 
-    return { condition, currentUrl, currentPages, proxyServer, currentWebsite };
+    return { condition, currentUrl, currentWebsite };
   }
 }

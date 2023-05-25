@@ -1,24 +1,21 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
-import * as puppeteer from 'puppeteer';
-import { Cheerio, Element as CheerioElement } from 'cheerio';
-
-import { Browser, Page } from 'puppeteer';
+import { Cheerio, Element as CheerioElement, CheerioAPI } from 'cheerio';
+import { Browser as PuppeteerBrowser, Page } from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import {
   convertToNumber,
   getMultiplesOfFortyEight,
   parsePrice,
 } from '../../shared/utils/mercado-libre.utils';
-import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import {
   PriceCurrency,
   VehicleCondition,
-} from '../../application/vehicles/dtos/vehicle.enums';
-import { SyncMercadolibreVehicle } from '../../application/vehicles/dtos/mercadolibre-sync.dto';
+} from '../../application/vehicles/enums/vehicle.enums';
+import { SyncMercadolibreVehicle } from '../../application/mercadolibre/dtos/mercadolibre-sync.dto';
 import { Vehicle } from '@prisma/client';
 import { CurrencyConverterApiService } from '../../application/currency-converter-api-v1/currency-converter.service';
 import { formatLocation } from '../../shared/utils/vehicle.utils';
@@ -28,7 +25,7 @@ const PRICE_LIMIT_USD = 1500;
 
 @Injectable()
 export class MercadolibreSyncService {
-  private readonly logger: Logger;
+  private readonly logger = new Logger(MercadolibreSyncService.name);
   private readonly MERCADOLIBRE_URL: string;
   constructor(
     private readonly config: EnvConfigService,
@@ -37,27 +34,17 @@ export class MercadolibreSyncService {
     private readonly currencyConverterService: CurrencyConverterApiService,
     private readonly envConfigService: EnvConfigService,
   ) {
-    this.logger = new Logger(MercadolibreSyncService.name);
     this.MERCADOLIBRE_URL = this.config.mercadolibre().url;
   }
 
-  async syncInventory(proxy?: string) {
+  async syncInventory(browser: PuppeteerBrowser): Promise<void> {
     try {
       const syncedVehiclesIds = [];
-      const { proxyServer, pages, websiteId } = await this.getSyncConfig(proxy);
-      const exchangeRate = await this.currencyConverterService.convertCurrency({
-        from: PriceCurrency.PEN,
-        to: PriceCurrency.USD,
-      });
+      const { websiteId, exchangeValue } = await this.getSyncConfig();
 
-      const browser: Browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
-      });
+      const pages = await this.getPages(browser);
+
       const page: Page = await browser.newPage();
-      await page.setExtraHTTPHeaders({
-        'User-Agent': USER_AGENT,
-        Referer: `${this.MERCADOLIBRE_URL}/autos/autos-camionetas/`,
-      });
 
       for (const vehicleNumber of pages) {
         const paginationLimit = vehicleNumber !== 1 ? `_Desde_${vehicleNumber}_` : '_';
@@ -67,8 +54,9 @@ export class MercadolibreSyncService {
           { timeout: 0 },
         );
         await page.evaluate(this.scrollToEndOfPage);
-        const html = await page.content();
-        const $ = cheerio.load(html);
+
+        const html: string = await page.content();
+        const $: CheerioAPI = cheerio.load(html);
 
         const vehicleBlocks: Cheerio<CheerioElement> = $('li.ui-search-layout__item');
 
@@ -84,10 +72,6 @@ export class MercadolibreSyncService {
           let syncedVehicle: Vehicle;
 
           if (tagPrice === 'S/' && price >= PRICE_LIMIT_PEN) {
-            const exchangeValue = exchangeRate
-              ? exchangeRate.new_amount
-              : this.envConfigService.exchangeRate().penToUsd;
-            console.log(exchangeValue);
             syncedVehicle = await this.SyncVehicleByCurrency(
               {
                 parentHtml: $,
@@ -122,7 +106,6 @@ export class MercadolibreSyncService {
       this.logger.log(
         `[USED CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
       );
-      await browser.close();
     } catch (error) {
       this.logger.error('fail to sync all inventory', error);
     }
@@ -201,8 +184,7 @@ export class MercadolibreSyncService {
     });
   }
 
-  async getPages(): Promise<number> {
-    const browser = await puppeteer.launch();
+  async getPages(browser: PuppeteerBrowser): Promise<number[]> {
     const page = await browser.newPage();
     await page.goto(
       `${this.MERCADOLIBRE_URL}/autos/autos-camionetas/_OrderId_PRICE_NoIndex_True`,
@@ -214,23 +196,24 @@ export class MercadolibreSyncService {
     const pages = $('li.andes-pagination__page-count');
     const totalPages = pages.html().split('>')[1].trim();
 
-    await browser.close();
-
-    return +totalPages;
+    return getMultiplesOfFortyEight(+totalPages);
   }
 
-  private async getSyncConfig(proxy?: string) {
-    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
-    const totalPages = await this.getPages();
+  private async getSyncConfig() {
     const hostname = new URL(this.MERCADOLIBRE_URL).hostname;
     const [, name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
-    const pages = getMultiplesOfFortyEight(totalPages);
+    const exchangeRate = await this.currencyConverterService.convertCurrency({
+      from: PriceCurrency.PEN,
+      to: PriceCurrency.USD,
+    });
+    const exchangeValue = exchangeRate
+      ? exchangeRate.new_amount
+      : this.envConfigService.exchangeRate().penToUsd;
 
     return {
       websiteId: currentWebsite.id,
-      pages,
-      proxyServer,
+      exchangeValue,
     };
   }
 }

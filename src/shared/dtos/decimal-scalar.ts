@@ -1,5 +1,5 @@
 import { Scalar, CustomScalar, GraphQLISODateTime } from '@nestjs/graphql';
-import { Decimal } from '@prisma/client/runtime';
+import { Decimal } from '@prisma/client/runtime/library';
 import { Kind, ValueNode } from 'graphql';
 
 @Scalar('Decimal')

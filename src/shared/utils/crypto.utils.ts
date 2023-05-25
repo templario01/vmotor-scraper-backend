@@ -1,8 +1,9 @@
+import { Logger } from '@nestjs/common';
 import crypto from 'crypto';
 
 const CRYPTO_KEY = Buffer.from('abcdefghijklmnopqrstuvwxyz123456', 'utf8');
 
-export function encrypt(text, key = CRYPTO_KEY) {
+export function encrypt(logger: Logger, text, key = CRYPTO_KEY) {
   try {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(key), iv);
@@ -10,7 +11,7 @@ export function encrypt(text, key = CRYPTO_KEY) {
     encrypted += cipher.final('hex');
     return iv.toString('hex') + '|' + encrypted;
   } catch (error) {
-    console.log(error);
+    logger.log(error);
   }
 }
 

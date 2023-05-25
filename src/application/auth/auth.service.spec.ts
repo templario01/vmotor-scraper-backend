@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   buildJwtServiceMock,
-  buildMailerService,
+  buildMailerServiceMock,
 } from '../../shared/test-utils/providers.mock';
 import { AuthService } from './auth.service';
 import { buildUserRepositoryMock } from '../../shared/test-utils/repositories.mock';
@@ -32,7 +32,7 @@ describe('AuthService', () => {
   let module: TestingModule;
   const jwtServiceMock = buildJwtServiceMock();
   const userRepositoryMock = buildUserRepositoryMock();
-  const mailerServiceMock = buildMailerService();
+  const mailerServiceMock = buildMailerServiceMock();
 
   beforeAll(async () => {
     module = await Test.createTestingModule({

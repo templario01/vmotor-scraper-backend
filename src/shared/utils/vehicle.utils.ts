@@ -26,7 +26,7 @@ export function getMileage(mileage: string): number {
 
 export function formatLocation(texto: string): string {
   try {
-    const regex = /[^a-zA-Z\s]|(^\s+)|(\s+$)/g;
+    const regex = new RegExp(/^\s+|\s+$|[^a-zA-Z\s]/g);
     const indexComma = texto.indexOf(',');
     const formatedLocation =
       texto.slice(0, indexComma).replace(regex, '').trim() +
@@ -49,13 +49,13 @@ export function getWordsAndYear(searchName: string) {
     const yearPattern = new RegExp(/\b\d{4}\b/g);
     const cleanSearch = search.replace(yearPattern, '');
     const year = +search.match(yearPattern)?.[0];
-    const words = cleanSearch?.split(' ').filter((word) => word !== '');
+    const keywords = cleanSearch?.split(' ').filter((word) => word !== '');
 
     return {
       year,
-      words,
+      keywords,
     };
   }
 
-  return { words: [], year: undefined };
+  return { keywords: [], year: undefined };
 }

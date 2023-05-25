@@ -1,15 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cheerio, CheerioAPI, Element as CheerioElement } from 'cheerio';
 import * as cheerio from 'cheerio';
-import { Browser, Page } from 'puppeteer';
-import * as puppeteer from 'puppeteer';
+import { Browser as PuppeteerBrowser, Page } from 'puppeteer';
 import { EnvConfigService } from '../../config/env-config.service';
 import {
-  NeoautoVehicleConditionEnum,
   PriceCurrency,
   VehicleCondition,
-} from '../../application/vehicles/dtos/vehicle.enums';
-
+} from '../../application/vehicles/enums/vehicle.enums';
 import { WebsiteRepository } from '../../persistence/repositories/website.repository';
 import {
   getEnumKeyByValue,
@@ -17,8 +14,6 @@ import {
   getVehicleInfoByNeoauto,
   parsePrice,
 } from '../../shared/utils/neoauto.utils';
-import { BrandsRepository } from '../../persistence/repositories/brands.repository';
-import { ModelsRepository } from '../../persistence/repositories/models.repository';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
 import {
@@ -30,16 +25,18 @@ import {
   HTML_LOCATION_USED,
   HTML_MILEAGE_CONCESSIONARIE,
   HTML_MILEAGE_USED,
+  HTML_MILEAGE_USED2,
   HTML_PRICE_CONCESSIONAIRE,
   HTML_PRICE_USED,
   HTML_URL_CONCESSIONARIE,
   HTML_URL_USED,
   OR,
 } from '../../application/vehicles/constants/neoauto.constants';
-import { SyncNeoautoVehicle } from '../../application/vehicles/dtos/neoauto-sync.dto';
+import { SyncNeoautoVehicle } from '../../application/neoauto/dtos/neoauto-sync.dto';
 import { USER_AGENT } from '../../shared/dtos/puppeteer.constant';
 import { Vehicle } from '@prisma/client';
 import { getMileage } from '../../shared/utils/vehicle.utils';
+import { NeoautoVehicleConditionEnum } from '../../application/neoauto/enums/neoauto.enum';
 
 @Injectable()
 export class NeoAutoSyncService {
@@ -48,30 +45,23 @@ export class NeoAutoSyncService {
   constructor(
     private readonly config: EnvConfigService,
     private readonly websiteRepository: WebsiteRepository,
-    private readonly brandRepository: BrandsRepository,
-    private readonly modelRepository: ModelsRepository,
     private readonly vehicleRepository: VehicleRepository,
   ) {
     this.NEOAUTO_URL = this.config.neoauto().url;
   }
 
   async syncInventory(
+    browser: PuppeteerBrowser,
     vehicleCondition: NeoautoVehicleConditionEnum,
-    proxy?: string,
   ): Promise<void> {
     try {
       const syncedVehiclesIds = [];
-      const { condition, currentUrl, currentPages, proxyServer, currentWebsite } =
-        await this.getSyncConfig(vehicleCondition, proxy);
-      const browser: Browser = await puppeteer.launch({
-        args: ['--no-sandbox', '--disable-setuid-sandbox', ...proxyServer],
-      });
-      const page: Page = await browser.newPage();
+      const { condition, currentUrl, currentWebsite } = await this.getSyncConfig(
+        vehicleCondition,
+      );
+      const currentPages = await this.getPages(browser, condition);
 
-      await page.setExtraHTTPHeaders({
-        'User-Agent': USER_AGENT,
-        Referer: currentUrl,
-      });
+      const page: Page = await browser.newPage();
 
       for (let index = 1; index <= currentPages; index++) {
         await page.goto(`${currentUrl}?page=${index}`, { timeout: 0 });
@@ -95,9 +85,16 @@ export class NeoAutoSyncService {
               .find(HTML_DESCRIPTION_CONCESSIONARIE + OR + HTML_DESCRIPTION_USED)
               .text();
             const mileageHtml = $(vehicleHtmlBlock)
-              .find(HTML_MILEAGE_CONCESSIONARIE + OR + HTML_MILEAGE_USED)
+              .find(
+                HTML_MILEAGE_CONCESSIONARIE +
+                  OR +
+                  HTML_MILEAGE_USED +
+                  OR +
+                  HTML_MILEAGE_USED2,
+              )
               .next()
               .text();
+            console.log(mileageHtml);
             const location = $(vehicleHtmlBlock)
               .find(HTML_LOCATION_CONCESSIONARIE + OR + HTML_LOCATION_USED)
               .html();
@@ -111,6 +108,7 @@ export class NeoAutoSyncService {
               websiteId: currentWebsite.id,
               mileage: getMileage(mileageHtml),
             };
+            console.log(neoautoVehicle);
             const carSynced = await this.syncVehicle(neoautoVehicle, vehicleCondition);
 
             if (carSynced) {
@@ -128,8 +126,6 @@ export class NeoAutoSyncService {
       this.logger.log(
         `[${condition} CARS] Job to sync vehicles finished successfully, deleted cars: ${deletedCars.count}`,
       );
-
-      await browser.close();
     } catch (error) {
       this.logger.error('fail to sync all inventory', error);
     }
@@ -178,8 +174,7 @@ export class NeoAutoSyncService {
     }
   }
 
-  private async getPages(condition: string): Promise<number> {
-    const browser: Browser = await puppeteer.launch();
+  private async getPages(browser: PuppeteerBrowser, condition: string): Promise<number> {
     const puppeteerPage: Page = await browser.newPage();
 
     await puppeteerPage.setExtraHTTPHeaders({
@@ -189,6 +184,7 @@ export class NeoAutoSyncService {
     await puppeteerPage.goto(`${this.NEOAUTO_URL}/venta-de-autos-${condition}?page=1`, {
       timeout: 0,
     });
+
     const html: string = await puppeteerPage.content();
     const $: CheerioAPI = cheerio.load(html);
 
@@ -196,15 +192,10 @@ export class NeoAutoSyncService {
     const paginationUrl = lastPaginationBtn.attr('href');
     const [, maxPages] = paginationUrl.split('page=');
 
-    await browser.close();
-
     return +maxPages;
   }
 
-  private async getSyncConfig(
-    vehicleCondition: NeoautoVehicleConditionEnum,
-    proxy?: string,
-  ) {
+  private async getSyncConfig(vehicleCondition: NeoautoVehicleConditionEnum) {
     const condition = getEnumKeyByValue(
       NeoautoVehicleConditionEnum,
       vehicleCondition,
@@ -212,16 +203,13 @@ export class NeoAutoSyncService {
     const hostname = new URL(this.NEOAUTO_URL).hostname;
     const [name] = hostname.split('.');
     const currentWebsite = await this.websiteRepository.findByName(name);
-    const currentPages = await this.getPages(vehicleCondition);
+
     const currentUrl = `${this.NEOAUTO_URL}/venta-de-autos-${vehicleCondition}`;
-    const proxyServer = proxy ? [`'--proxy-server=${proxy}`] : [];
 
     return {
       condition,
       currentWebsite,
-      currentPages,
       currentUrl,
-      proxyServer,
     };
   }
 

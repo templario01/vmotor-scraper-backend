@@ -5,41 +5,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../services/prisma.service';
-import { AddFavoriteVehicleDto } from '../../application/favorite-vehicle/dtos/add-favorite-vehicle.dto';
-import { DeleteFavoriteVehicleDto } from '../../application/favorite-vehicle/dtos/delete-favorite-vehicle.dto';
+import { AddFavoriteVehicleDto } from '../../application/user/dtos/add-favorite-vehicle.dto';
 import { Vehicle } from '@prisma/client';
+import { DeleteFavoriteVehicleDto } from '../../application/user/dtos/delete-favorite-vehicle.dto';
 
 @Injectable()
 export class FavoriteVehicleRepository {
   private readonly logger = new Logger(FavoriteVehicleRepository.name);
 
   constructor(private readonly prisma: PrismaService) {}
-
-  async findVehiclesByUser(userId: number): Promise<Vehicle[]> {
-    return this.prisma.vehicle.findMany({
-      where: {
-        users: {
-          some: {
-            user: { id: userId },
-          },
-        },
-      },
-    });
-  }
-
-  async findUsersByVehicle(externalId: string) {
-    return this.prisma.user.findMany({
-      where: {
-        vehicles: {
-          some: {
-            vehicle: {
-              externalId,
-            },
-          },
-        },
-      },
-    });
-  }
 
   async addFavoriteVehicleToUser(data: AddFavoriteVehicleDto): Promise<Vehicle> {
     const { vehicleUUID, userId } = data;

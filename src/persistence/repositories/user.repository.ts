@@ -104,4 +104,16 @@ export class UserRepository {
       data: { hasConfirmedEmail: true },
     });
   }
+
+  async changeUserNotifications(userId: number, hasActiveNotifications: boolean) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        hasActiveNotifications,
+      },
+      select: {
+        hasActiveNotifications: true,
+      },
+    });
+  }
 }
