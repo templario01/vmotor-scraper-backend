@@ -33,7 +33,7 @@ model Search {
   createdAt DateTime @default(now()) @map("created_at")
   text      String
   search    Json
-  user      User?    @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int?     @map("user_id")
 
   @@map("search")
@@ -46,16 +46,16 @@ model EmailValidationCode {
   expirationTime DateTime @map("expiration_time")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
-  user           User     @relation(fields: [userId], references: [id])
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId         Int      @map("user_id")
 
   @@map("email_validation_code")
 }
 
 model UserFavoriteVehicle {
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int      @map("user_id")
-  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id])
+  vehicle    Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
   vehicleId  Int      @map("vehicle_id")
   assignedAt DateTime @default(now()) @map("assigned_at")
 

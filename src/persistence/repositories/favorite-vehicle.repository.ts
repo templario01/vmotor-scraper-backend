@@ -15,7 +15,7 @@ export class FavoriteVehicleRepository {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async addFavoriteVehicleToUser(data: AddFavoriteVehicleDto): Promise<Vehicle> {
+  async addFavoriteVehicleToUser(data: AddFavoriteVehicleDto): Promise<Vehicle[]> {
     const { vehicleUUID, userId } = data;
     const vehicle = await this.prisma.vehicle.findUnique({
       where: { uuid: vehicleUUID },
@@ -53,7 +53,17 @@ export class FavoriteVehicleRepository {
       },
     });
 
-    return vehicle;
+    const result = await this.prisma.vehicle.findMany({
+      where: {
+        users: {
+          some: {
+            userId,
+          },
+        },
+      },
+    });
+
+    return result;
   }
 
   async deleteFavoriteVehicleToUser(data: DeleteFavoriteVehicleDto): Promise<Vehicle[]> {

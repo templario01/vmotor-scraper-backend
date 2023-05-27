@@ -3,9 +3,9 @@ import { PrismaClient, Website } from '@prisma/client';
 const prisma = new PrismaClient();
 
 const websites = [
-  { name: 'neoauto', url: process.env.NEOAUTO_URL },
-  { name: 'mercadolibre', url: process.env.MERCADOLIBRE_URL },
-  { name: 'autocosmos', url: process.env.AUTOCOSMOS_URL },
+  { name: 'neoauto', url: String(process.env.NEOAUTO_URL) },
+  { name: 'mercadolibre', url: String(process.env.MERCADOLIBRE_URL) },
+  { name: 'autocosmos', url: String(process.env.AUTOCOSMOS_URL) },
 ];
 
 async function main() {

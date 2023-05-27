@@ -28,11 +28,11 @@ export class UserFavoriteVehicleResolver {
   ) {}
 
   @UseGuards(AuthGuard)
-  @Mutation(syncedVehicleEntityReturnType)
+  @Mutation(arraySyncedVehicleEntityReturnType)
   addFavoriteVehicleToUser(
     @Args('addFavoriteVehicleInput') input: AddFavoriteVehicleInput,
     @CurrentUser() user: SessionData,
-  ): Promise<SyncedVehicleEntity> {
+  ): Promise<SyncedVehicleEntity[]> {
     return this.userFavoriteVehicleService.addFavoriteVehicleToUser(input, user.sub);
   }
 

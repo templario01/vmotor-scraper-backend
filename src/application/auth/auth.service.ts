@@ -28,11 +28,11 @@ export class AuthService {
   async signUp({ email, password }: SignUpInput): Promise<CreateAccountEntity> {
     const findUser = await this.userRepository.findUserByEmail(email);
     if (findUser?.hasConfirmedEmail) {
-      throw new ConflictException('email already taken');
+      throw new ConflictException('Email ya registrado');
     }
     if (findUser && !findUser.hasConfirmedEmail) {
       throw new BadRequestException(
-        'please check your email, the verification code was already sent',
+        'Por favor revisa tu correo, tu código de verificación ya ha sido enviado',
       );
     }
 
@@ -55,11 +55,11 @@ export class AuthService {
   ): Promise<AccessTokenEntity> {
     const user = await this.userRepository.findUserByEmail(email);
     if (!user) {
-      throw new UnauthorizedException('invalid email or password');
+      throw new UnauthorizedException('Correo o contraseña inválida');
     }
     const isValidPassword = await compare(password, user.password);
     if (!isValidPassword) {
-      throw new UnauthorizedException('invalid password');
+      throw new UnauthorizedException('Contraseña inválida');
     }
     const payload = {
       username: user.email,
@@ -76,10 +76,10 @@ export class AuthService {
   async resendEmailConfirmation(email: string): Promise<CreateAccountEntity> {
     const findUser = await this.userRepository.findUserByEmail(email);
     if (!findUser) {
-      throw new BadRequestException('please create an account');
+      throw new BadRequestException('Por favor crea una cuenta');
     }
     if (findUser?.hasConfirmedEmail) {
-      throw new BadRequestException('email already validated');
+      throw new BadRequestException('Correo electrónico ya validado');
     }
 
     const { code, expirationTime } = await this.userRepository.createValidationCode(
@@ -93,9 +93,7 @@ export class AuthService {
     await this.mailerService.sendEmailConfirmation(email, code);
 
     return {
-      message:
-        `Please write your validation code send to ${email}. If you don't see the email,` +
-        ` please check your spam folder. The validation code expires in 5 minutes`,
+      message: `Tu código de verificación se envió exitosamente al correo: ${email}`,
       expirationTime,
     };
   }
@@ -103,14 +101,14 @@ export class AuthService {
   async confirmAccount(code: string): Promise<AccessTokenEntity> {
     const userWithValidCode = await this.userRepository.findUserByEmailCode(code);
     if (!userWithValidCode) {
-      throw new ForbiddenException('Invalid code');
+      throw new ForbiddenException('Código inválido');
     }
     if (userWithValidCode.hasConfirmedEmail === true) {
-      throw new BadRequestException('Email already confirmed');
+      throw new BadRequestException('Correo ya confirmado');
     }
 
     const account = await this.userRepository.validateAccount(userWithValidCode.id);
-    const payload = { username: account.email, sub: account.uuid };
+    const payload = { username: account.email, sub: account.id };
     const accessToken = await this.jwtService.signAsync(payload);
 
     return {

@@ -30,7 +30,12 @@ export class VehicleService {
     const { keywords, year } = getWordsAndYear(searchName);
 
     const where = this.buildPrismaFiltersForSearch({ keywords, city, year, condition });
-    await this.saveVehicleSearch({ keywords, searchName, year, location: city }, userId);
+    if (keywords.length > 0) {
+      await this.saveVehicleSearch(
+        { keywords, searchName, year, location: city },
+        userId,
+      );
+    }
 
     return this.vehicleRepository.findVehicles({
       where,
@@ -119,20 +124,20 @@ export class VehicleService {
         location: { mode: 'insensitive', contains: location },
       }),
     );
-
-    const specificSearches = completeSearches.map(({ keywords, year }) => ({
+    const specificSearches = completeSearches.map(({ keywords, year, condition }) => ({
       AND: [
         ...keywords.map<Prisma.VehicleWhereInput>((keyword) => ({
           description: { mode: 'insensitive', contains: keyword },
         })),
         { year },
+        { condition: VehicleCondition[condition] },
       ],
     }));
 
     return {
       OR: [
         {
-          AND: [...matchKeywords, ...matchLocations],
+          OR: [...matchKeywords, ...matchLocations],
         },
         ...specificSearches,
       ],
@@ -143,7 +148,7 @@ export class VehicleService {
     params: VehicleSearchWithNameDto,
     userId?: number,
   ): Promise<void> {
-    const { searchName, location, keywords, year } = params;
+    const { searchName, location, keywords, year, condition } = params;
     if (!userId) return;
 
     const newSearch: UserVehicleSearchDto = {
@@ -152,6 +157,7 @@ export class VehicleService {
         location,
         keywords,
         year,
+        condition,
       },
     };
 
