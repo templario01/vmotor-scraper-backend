@@ -1,5 +1,10 @@
 import { PrismaClient, Website } from '@prisma/client';
 
+interface WebsiteInfo {
+  readonly name: string;
+  readonly url: string;
+}
+
 const prisma = new PrismaClient();
 
 const websites = [
@@ -11,7 +16,6 @@ const websites = [
 async function main() {
   console.log('sedding data...');
   const websites = await createWebsites();
-
   console.log({ websites });
 }
 
@@ -21,13 +25,7 @@ async function createWebsites(): Promise<Website[]> {
   return newWebs;
 }
 
-async function createWebsite({
-  name,
-  url,
-}: {
-  name: string;
-  url: string;
-}): Promise<Website> {
+async function createWebsite({ name, url }: WebsiteInfo): Promise<Website> {
   return prisma.website.upsert({
     where: { url },
     create: { url, name },

@@ -29,7 +29,7 @@ export class AuthGuard implements CanActivate {
       });
       const user = await this.userRepository.findUserByEmail(payload.email);
       if (!user) {
-        throw new Error('invalid email or unverified account');
+        throw new Error('Cuenta no verificada o usuario inválido');
       }
       request['user'] = payload;
     } catch {
