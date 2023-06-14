@@ -32,7 +32,13 @@ export class VehicleService {
     const where = this.buildPrismaFiltersForSearch({ keywords, city, year, condition });
     if (keywords.length > 0) {
       await this.saveVehicleSearch(
-        { keywords, searchName, year, location: city },
+        {
+          keywords,
+          searchName,
+          year,
+          location: city,
+          condition: VehicleCondition[condition],
+        },
         userId,
       );
     }

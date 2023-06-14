@@ -46,6 +46,7 @@ export const buildSearchRepository = () => {
   searchRepository.delete = jest.fn();
   searchRepository.findByUser = jest.fn();
   searchRepository.findLastSearchesByUser = jest.fn();
+  searchRepository.findSearches = jest.fn();
 
   return searchRepository;
 };

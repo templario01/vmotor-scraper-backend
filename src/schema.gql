@@ -36,7 +36,7 @@ enum GetVehicleCondition {
 }
 
 type Mutation {
-  addFavoriteVehicleToUser(addFavoriteVehicleInput: AddFavoriteVehicleInput!): SyncedVehicleEntity!
+  addFavoriteVehicleToUser(addFavoriteVehicleInput: AddFavoriteVehicleInput!): [SyncedVehicleEntity!]!
   deleteFavoriteVehicleToUser(deleteFavoriteVehicleInput: DeleteFavoriteVehicleInput!): [SyncedVehicleEntity!]!
   deleteSearch(deleteSearchInput: DeleteSearchInput!): [UserSearchEntity!]!
   resendEmail(email: String!): CreateAccountEntity!
@@ -124,8 +124,7 @@ type ToggleUserNotificationsEntity {
 
 type UserEntity {
   email: String!
-  favoriteVehicles(after: String, take: Int = 10): PaginatedVehicleEntity!
-  favoritesVehicles: PaginatedVehicleEntity
+  favoriteVehicles(after: String, take: Int = 10): PaginatedVehicleEntity
   hasActiveNotifications: Boolean!
   lastSession: DateTime!
   searches(after: String, take: Int = 10): PaginatedUserSearchEntity
