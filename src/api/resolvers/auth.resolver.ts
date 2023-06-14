@@ -1,4 +1,4 @@
-import { Args, Context, Mutation, Resolver } from '@nestjs/graphql';
+import { Args, Mutation, Resolver } from '@nestjs/graphql';
 import { AuthService } from '../../application/auth/auth.service';
 import {
   CreateAccountEntity,
@@ -10,7 +10,7 @@ import {
 } from '../../application/auth/entities/access-token.entity';
 import { SignUpInput } from '../../application/auth/inputs/sign-up.input';
 import { SignInInput } from '../../application/auth/inputs/sign-in.input';
-import { getUserAgentFromHeaders } from '../../shared/utils/auth.utils';
+import { UserAgent } from '../../shared/decorators/context.decorator';
 
 @Resolver()
 export class AuthResolver {
@@ -24,9 +24,9 @@ export class AuthResolver {
   @Mutation(accessTokenReturnType)
   signIn(
     @Args('signInInput') input: SignInInput,
-    @Context() context: any,
+    @UserAgent() userAgent: string,
   ): Promise<AccessTokenEntity> {
-    return this.authService.signIn(input, getUserAgentFromHeaders(context));
+    return this.authService.signIn(input, userAgent);
   }
 
   @Mutation(createAccountReturnType)

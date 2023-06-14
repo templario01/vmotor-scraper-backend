@@ -25,7 +25,7 @@ export class InventorySyncService {
   ) {}
 
   @Cron(CronExpression.EVERY_2_HOURS)
-  async syncAllInventory() {
+  async syncAllInventory(): Promise<void> {
     const startTime = new Date();
     let proxyIP: string;
     const { environment } = this.envConfigService.app();
