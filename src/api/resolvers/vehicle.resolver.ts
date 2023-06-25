@@ -30,6 +30,6 @@ export class VehicleResolver {
     @CurrentUser() user: SessionData,
     @Args() args: GetRecommendedVehiclesArgs,
   ): Promise<PaginatedVehicleEntity> {
-    return this.vehicleService.getRecommendedVehicles(args, user.sub);
+    return this.vehicleService.getRecommendedVehicles(args, user?.sub);
   }
 }

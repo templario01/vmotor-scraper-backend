@@ -41,16 +41,16 @@ export class UserFavoriteVehicleService {
   async addFavoriteVehicleToUser(
     { vehicle }: AddFavoriteVehicleInput,
     userId: number,
-  ): Promise<SyncedVehicleEntity> {
+  ): Promise<SyncedVehicleEntity[]> {
     const request: AddFavoriteVehicleDto = {
       vehicleUUID: vehicle.uuid,
       userId,
     };
-    const favoriteVehicle = await this.favoriteVehicleRepository.addFavoriteVehicleToUser(
+    const vehicles = await this.favoriteVehicleRepository.addFavoriteVehicleToUser(
       request,
     );
 
-    return this.mapToEntity(favoriteVehicle);
+    return vehicles.map((vehicle) => this.mapToEntity(vehicle));
   }
 
   async deleteFavoriteVehicleToUser(

@@ -94,7 +94,6 @@ export class NeoAutoSyncService {
               )
               .next()
               .text();
-            console.log(mileageHtml);
             const location = $(vehicleHtmlBlock)
               .find(HTML_LOCATION_CONCESSIONARIE + OR + HTML_LOCATION_USED)
               .html();
@@ -108,7 +107,6 @@ export class NeoAutoSyncService {
               websiteId: currentWebsite.id,
               mileage: getMileage(mileageHtml),
             };
-            console.log(neoautoVehicle);
             const carSynced = await this.syncVehicle(neoautoVehicle, vehicleCondition);
 
             if (carSynced) {

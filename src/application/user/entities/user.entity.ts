@@ -21,7 +21,7 @@ export class UserEntity implements User {
   readonly searches?: PaginatedUserSearchEntity;
 
   @Field(() => PaginatedVehicleEntity, { nullable: true })
-  readonly favoritesVehicles?: PaginatedVehicleEntity;
+  readonly favoriteVehicles?: PaginatedVehicleEntity;
 
   @HideField()
   readonly id: number;

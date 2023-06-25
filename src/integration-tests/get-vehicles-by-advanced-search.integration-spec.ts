@@ -23,11 +23,12 @@ describe('Get vehicles by advanced search', () => {
   });
 
   describe('Happy Path', () => {
-    it('should return status 200 and PaginatedVehicleEntity when the input is correct', async () => {
-      const { websiteOneVehicles, websiteTwoVehicles } = {
-        websiteOneVehicles: 6,
-        websiteTwoVehicles: 5,
-      };
+    const { websiteOneVehicles, websiteTwoVehicles } = {
+      websiteOneVehicles: 6,
+      websiteTwoVehicles: 5,
+    };
+
+    beforeAll(async () => {
       await Promise.all([
         vehicleFactory.makeMany(websiteOneVehicles, {
           description: 'mazda 3',
@@ -42,6 +43,9 @@ describe('Get vehicles by advanced search', () => {
           website: { connect: { id: websiteTwo.id } },
         }),
       ]);
+    });
+
+    it('should return status 200 and PaginatedVehicleEntity with correct size of elements when the input is correct', async () => {
       const buildGetVehiclesByAdvancedSearchQuery = ({
         take,
         after,
@@ -100,7 +104,10 @@ describe('Get vehicles by advanced search', () => {
         },
       });
       expect(nodes).toSatisfyAll(
-        ({ year, description }) => year === 2018 && /(mazda|3)/i.test(description),
+        ({ year, description, location }) =>
+          year === 2018 &&
+          /(mazda|3)/i.test(description) &&
+          location.includes(input.city),
       );
     });
 

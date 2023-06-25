@@ -1,17 +1,21 @@
 import { PrismaClient, Website } from '@prisma/client';
 
+interface WebsiteInfo {
+  readonly name: string;
+  readonly url: string;
+}
+
 const prisma = new PrismaClient();
 
 const websites = [
-  { name: 'neoauto', url: process.env.NEOAUTO_URL },
-  { name: 'mercadolibre', url: process.env.MERCADOLIBRE_URL },
-  { name: 'autocosmos', url: process.env.AUTOCOSMOS_URL },
+  { name: 'neoauto', url: String(process.env.NEOAUTO_URL) },
+  { name: 'mercadolibre', url: String(process.env.MERCADOLIBRE_URL) },
+  { name: 'autocosmos', url: String(process.env.AUTOCOSMOS_URL) },
 ];
 
 async function main() {
   console.log('sedding data...');
   const websites = await createWebsites();
-
   console.log({ websites });
 }
 
@@ -21,13 +25,7 @@ async function createWebsites(): Promise<Website[]> {
   return newWebs;
 }
 
-async function createWebsite({
-  name,
-  url,
-}: {
-  name: string;
-  url: string;
-}): Promise<Website> {
+async function createWebsite({ name, url }: WebsiteInfo): Promise<Website> {
   return prisma.website.upsert({
     where: { url },
     create: { url, name },
