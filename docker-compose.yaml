@@ -100,7 +100,7 @@ services:
       args:
         - BASE_DIR=.
     env_file:
-      - ./docker/.env
+      - .env.prod
     networks:
       - net-vmotor
     depends_on:

@@ -15,7 +15,7 @@ export function cleanSearchName(word: string): string {
 }
 
 export function getMileage(mileage: string): number {
-  const match = mileage.match(/(\d{1,3}(?:,\d{3})*|\d+)/);
+  const match = RegExp(/(\d{1,3}(?:,\d{3})*|\d+)/).exec(mileage);
   if (match) {
     const numberString = match[1].replace(/,/g, '');
     return parseInt(numberString, 10);
@@ -48,7 +48,7 @@ export function getWordsAndYear(searchName: string) {
   if (search) {
     const yearPattern = new RegExp(/\b\d{4}\b/g);
     const cleanSearch = search.replace(yearPattern, '');
-    const year = +search.match(yearPattern)?.[0];
+    const year = +RegExp(yearPattern).exec(search)?.[0];
     const keywords = cleanSearch?.split(' ').filter((word) => word !== '');
 
     return {

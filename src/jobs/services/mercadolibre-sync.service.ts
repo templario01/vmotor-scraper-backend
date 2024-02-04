@@ -50,7 +50,7 @@ export class MercadolibreSyncService {
         const paginationLimit = vehicleNumber !== 1 ? `_Desde_${vehicleNumber}_` : '_';
 
         await page.goto(
-          `${this.MERCADOLIBRE_URL}/autos/autos-camionetas${paginationLimit}OrderId_PRICE_NoIndex_True`,
+          `${this.MERCADOLIBRE_URL}/autos/autos-camionetas/${paginationLimit}OrderId_PRICE_NoIndex_True`,
           { timeout: 0 },
         );
         await page.evaluate(this.scrollToEndOfPage);
