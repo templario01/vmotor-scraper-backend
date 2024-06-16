@@ -1,12 +1,11 @@
 import { registerEnumType } from '@nestjs/graphql';
-
 export enum GetVehicleCondition {
   NEW = 'NEW',
   USED = 'USED',
   ALL = 'ALL',
 }
 
-export enum VehicleCondition {
+export enum Condition {
   NEW = 'NEW',
   USED = 'USED',
 }
@@ -26,7 +25,7 @@ registerEnumType(GetVehicleCondition, {
   description: 'Vehicle condition',
 });
 
-registerEnumType(VehicleCondition, {
+registerEnumType(Condition, {
   name: 'VehicleCondition',
   description: 'NEW or USED',
 });
@@ -36,7 +35,7 @@ registerEnumType(PriceCurrency, {
   description: 'USD or PEN',
 });
 
-registerEnumType(VehicleCondition, {
+registerEnumType(Condition, {
   name: 'VehicleCondition',
   description: 'NEW or USED',
 });

@@ -8,6 +8,7 @@ import {
   randSoonDate,
   randUrl,
   randUuid,
+  randVehicleModel,
   randWord,
 } from '@ngneat/falso';
 import {
@@ -60,6 +61,7 @@ export const buildVehiclesMock = ({
   return Array.from({ length: size }, (_, index) => ({
     id: index,
     uuid: randUuid(),
+    name: randVehicleModel(),
     url: randUrl(),
     price: new Prisma.Decimal(randAmount()),
     description: `${pattern} ${randWord()}`,

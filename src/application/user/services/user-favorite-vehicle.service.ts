@@ -7,7 +7,7 @@ import {
   SyncedVehicleEntity,
 } from '../../vehicles/entities/synced-vehicle.entity';
 import { Status } from '../../../shared/dtos/status.enum';
-import { PriceCurrency, VehicleCondition } from '../../vehicles/enums/vehicle.enums';
+import { PriceCurrency, Condition } from '../../vehicles/enums/vehicle.enums';
 import { DeleteFavoriteVehicleInput } from '../inputs/delete-favorite-vehicle.input';
 import { Prisma, Vehicle } from '@prisma/client';
 import { plainToInstance } from 'class-transformer';
@@ -71,7 +71,7 @@ export class UserFavoriteVehicleService {
     return plainToInstance(SyncedVehicleEntity, <SyncedVehicleEntity>{
       ...result,
       status: Status[status],
-      condition: VehicleCondition[condition],
+      condition: Condition[condition],
       currency: PriceCurrency[currency],
       mileage: Number(mileage) || null,
       originalPrice: Number(originalPrice) || null,

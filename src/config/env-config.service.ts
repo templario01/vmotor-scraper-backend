@@ -6,6 +6,12 @@ import { Environment } from './dtos/config.dto';
 export class EnvConfigService {
   constructor(private readonly configService: ConfigService) {}
 
+  get redis() {
+    return {
+      url: this.configService.get<string>('REDIS_URL'),
+    };
+  }
+
   public neoauto() {
     return {
       url: this.configService.get<string>('NEOAUTO_URL'),

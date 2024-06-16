@@ -1,10 +1,10 @@
-import { VehicleCondition } from '../enums/vehicle.enums';
+import { Condition } from '../enums/vehicle.enums';
 
 export interface VehicleSearchDto {
   readonly keywords: string[];
   readonly year?: number;
   readonly location?: string;
-  readonly condition?: VehicleCondition;
+  readonly condition?: Condition;
 }
 
 export interface UserVehicleSearchDto {

@@ -81,6 +81,7 @@ model Vehicle {
   uuid          String                @unique @default(cuid())
   externalId    String?               @unique @map("external_id")
   url           String
+  name          String?
   description   String?
   year          Int?
   transmission  String?

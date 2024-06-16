@@ -27,6 +27,9 @@
   },
   "dependencies": {
     "@apollo/server": "^4.6.0",
+    "@apollo/utils.keyvadapter": "^3.1.0",
+    "@keyv/compress-gzip": "^1.2.3",
+    "@keyv/redis": "^2.8.5",
     "@logtail/pino": "^0.4.0",
     "@nestjs-modules/mailer": "^1.8.1",
     "@nestjs/apollo": "^11.0.5",
@@ -54,6 +57,7 @@
     "dinero.js": "^1.9.1",
     "graphql": "^16.6.0",
     "joi": "^17.7.1",
+    "keyv": "^4.5.4",
     "nest-raven": "^9.2.0",
     "nestjs-pino": "^3.2.0",
     "p-retry": "^5.1.2",

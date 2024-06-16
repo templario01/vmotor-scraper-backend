@@ -1,11 +1,11 @@
 import { HttpService } from '@nestjs/axios';
-import { NeoAutoSyncService } from '../../jobs/services/neo-auto-sync.service';
 import { EnvConfigService } from '../../config/env-config.service';
-import { MercadolibreSyncService } from '../../jobs/services/mercadolibre-sync.service';
 import { JwtService } from '@nestjs/jwt';
 import { MailerService } from '../../application/mailer/mailer.service';
 import { ProxyService } from '../../application/proxy/proxy.service';
-import { AutocosmosSyncService } from '../../jobs/services/autocosmos-sync.service';
+import { AutocosmosSyncService } from '../../jobs/autocosmos/autocosmos-sync.service';
+import { NeoAutoSyncService } from '../../jobs/neoauto/neoauto-sync.service';
+import { MercadolibreSyncService } from '../../jobs/mercadolibre/mercadolibre-sync.service';
 
 export const buildNestHttpServiceMock = () => {
   const nestHttpService = jest.mocked<HttpService>(HttpService as any, true);
@@ -33,7 +33,7 @@ export const buildNeoautoSyncServiceMock = () => {
     NeoAutoSyncService as any,
     true,
   );
-  neoautoSyncService.syncInventory = jest.fn();
+  neoautoSyncService.syncAll = jest.fn();
 
   return neoautoSyncService;
 };
@@ -43,7 +43,7 @@ export const buildMercadolibreSyncServiceMock = () => {
     MercadolibreSyncService as any,
     true,
   );
-  mercadolibreSyncService.syncInventory = jest.fn();
+  mercadolibreSyncService.syncAll = jest.fn();
 
   return mercadolibreSyncService;
 };
@@ -53,7 +53,7 @@ export const buildAutocosmosSyncServiceMock = () => {
     AutocosmosSyncService as any,
     true,
   );
-  autocosmosSyncService.syncInventory = jest.fn();
+  autocosmosSyncService.syncAll = jest.fn();
 
   return autocosmosSyncService;
 };

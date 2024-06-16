@@ -11,6 +11,7 @@ import { PrometheusModule } from '@willsoto/nestjs-prometheus';
 import { EnvVariablesConfig, envVariablesConfig } from './config/validator/env-variables';
 import { SentryModule } from './shared/sentry/sentry.module';
 import { GraphQLFormattedError } from 'graphql';
+import { RedisModule } from './settings/redis/redis.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { GraphQLFormattedError } from 'graphql';
       },
       playground: true,
     }),
+    RedisModule,
     JobsModule,
     PersistenceModule,
     ApiModule,

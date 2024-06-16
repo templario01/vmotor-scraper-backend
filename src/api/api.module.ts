@@ -9,6 +9,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthResolver } from './resolvers/auth.resolver';
 import { UserFavoriteVehicleResolver } from './resolvers/user-favorite-vehicle.resolver';
 import { SyncController } from './controllers/jobs.controller';
+import { RedisModule } from '../settings/redis/redis.module';
 
 const resolvers = [
   VehicleResolver,
@@ -20,7 +21,7 @@ const controllers = [HealthController, SyncController];
 const authGuardModules = [EnvConfigModule, PersistenceModule, JwtModule];
 
 @Module({
-  imports: [ApplicationModule, ...authGuardModules],
+  imports: [ApplicationModule, ...authGuardModules, RedisModule],
   controllers: [...controllers],
   providers: [...resolvers],
 })

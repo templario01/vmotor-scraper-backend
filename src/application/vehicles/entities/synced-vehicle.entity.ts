@@ -1,11 +1,7 @@
 import { Field, HideField, ID, ObjectType } from '@nestjs/graphql';
 import { Vehicle as PrismaVehicle } from '@prisma/client';
 import { Status, statusReturnType } from '../../../shared/dtos/status.enum';
-import {
-  PriceCurrency,
-  VehicleCondition,
-  typeofPriceCurrency,
-} from '../enums/vehicle.enums';
+import { Condition, PriceCurrency, typeofPriceCurrency } from '../enums/vehicle.enums';
 import { graphqlDateReturnType } from '../../../shared/dtos/decimal-scalar';
 import {
   WebsiteEntity,
@@ -33,7 +29,7 @@ export class SyncedVehicleEntity implements Vehicle {
   readonly status?: Status;
 
   @Field()
-  readonly condition: VehicleCondition;
+  readonly condition: Condition;
 
   @Field(() => ID)
   readonly uuid: string;
@@ -55,6 +51,9 @@ export class SyncedVehicleEntity implements Vehicle {
 
   @Field()
   readonly year: number;
+
+  @Field()
+  readonly name: string;
 
   @Field({ nullable: true })
   readonly transmission?: string;

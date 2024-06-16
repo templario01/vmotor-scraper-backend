@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
-import { IPaginatedVehicleEntity } from './entities/synced-vehicle.entity';
+import {
+  IPaginatedVehicleEntity,
+  SyncedVehicleEntity,
+} from './entities/synced-vehicle.entity';
 import { GetVehiclesArgs } from './inputs/get-vehicles.input';
 import { getWordsAndYear } from '../../shared/utils/vehicle.utils';
 import { Prisma } from '@prisma/client';
@@ -11,15 +14,20 @@ import {
   VehicleSearchWithNameDto,
 } from './dtos/user-vehicle-search.dto';
 import { SearchRepository } from '../../persistence/repositories/search.repository';
-import { BuildPrismaFiltersDto } from './dtos/vehicle.dto';
+import { BuildPrismaFiltersDto, Search } from './dtos/vehicle.dto';
 import { GetRecommendedVehiclesArgs } from './inputs/get-recommended-vehicles.input';
-import { VehicleCondition } from './enums/vehicle.enums';
+import { Condition } from './enums/vehicle.enums';
+import { RedisClient } from '../../settings/redis/redis.client';
+import { plainToInstance } from 'class-transformer';
+import { Status } from '../../shared/dtos/status.enum';
+import { PriceCurrency } from '../../shared/enums/currency.enum';
 
 @Injectable()
 export class VehicleService {
   constructor(
     private readonly vehicleRepository: VehicleRepository,
     private readonly searchRepository: SearchRepository,
+    private readonly redisClient: RedisClient,
   ) {}
 
   async getVehiclesByAdvancedSearch(
@@ -37,7 +45,7 @@ export class VehicleService {
           searchName,
           year,
           location: city,
-          condition: VehicleCondition[condition],
+          condition: Condition[condition],
         },
         userId,
       );
@@ -95,7 +103,7 @@ export class VehicleService {
     const location = city === 'Todas' ? undefined : city;
     const yearFilter: Prisma.VehicleWhereInput = year ? { year: { equals: year } } : {};
     const conditionFilter: Prisma.VehicleWhereInput = vehicleCondition
-      ? { condition: { equals: VehicleCondition[vehicleCondition] } }
+      ? { condition: { equals: Condition[vehicleCondition] } }
       : {};
     const locationFilter: Prisma.VehicleWhereInput = location
       ? {
@@ -136,7 +144,7 @@ export class VehicleService {
           description: { mode: 'insensitive', contains: keyword },
         })),
         { year },
-        { condition: VehicleCondition[condition] },
+        { condition: Condition[condition] },
       ],
     }));
 
@@ -148,6 +156,36 @@ export class VehicleService {
         ...specificSearches,
       ],
     };
+  }
+
+  public async findRecommendedVehicles(): Promise<SyncedVehicleEntity[]> {
+    const searches = await this.getAllSearches();
+    const vehicles = await this.vehicleRepository.getRecommendedVehicles(searches);
+    const uniqueVehicles = vehicles.reduce((acc, vehicle) => {
+      if (!acc.some((existingVehicle) => existingVehicle.id === vehicle.id)) {
+        acc.push(vehicle);
+      }
+      return acc;
+    }, []);
+
+    return uniqueVehicles.map(
+      ({ condition, currency, mileage, price, status, originalPrice, ...vehicle }) =>
+        plainToInstance(SyncedVehicleEntity, <SyncedVehicleEntity>{
+          ...vehicle,
+          status: Status[status],
+          condition: Condition[condition],
+          currency: PriceCurrency[currency],
+          mileage: mileage?.toNumber(),
+          price: price?.toNumber(),
+          originalPrice: originalPrice?.toNumber(),
+        }),
+    );
+  }
+
+  private async getAllSearches(): Promise<Search[]> {
+    const key = Buffer.from('getVehiclesByAdvancedSearch').toString('base64');
+    const data = await this.redisClient.adapter.get(key);
+    return JSON.parse(data).data;
   }
 
   private async saveVehicleSearch(

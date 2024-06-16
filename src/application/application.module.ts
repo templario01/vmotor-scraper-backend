@@ -3,8 +3,6 @@ import { VehicleService } from './vehicles/vehicle.service';
 import { PersistenceModule } from '../persistence/persistence.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { EnvConfigModule } from '../config/env-config.module';
-import { MercadolibreService } from './mercadolibre/mercadolibre.service';
-import { NeoautoService } from './neoauto/neoauto.service';
 import { AutocosmosService } from './autocosmos/autocosmos.service';
 import { CurrencyConverterApiService } from './currency-converter-api-v1/currency-converter.service';
 import { HttpModule } from '@nestjs/axios';
@@ -17,12 +15,11 @@ import { VehicleSyncService } from './vehicles/vehicle-sync.service';
 import { UserService } from './user/services/user.service';
 import { UserFavoriteVehicleService } from './user/services/user-favorite-vehicle.service';
 import { UserSearchService } from './user/services/user-search.service';
+import { RedisModule } from '../settings/redis/redis.module';
 
 const providers = [
   VehicleService,
   VehicleSyncService,
-  MercadolibreService,
-  NeoautoService,
   AutocosmosService,
   CurrencyConverterApiService,
   AuthService,
@@ -52,6 +49,7 @@ const providers = [
     EnvConfigModule,
     HttpModule,
     MailerModule,
+    RedisModule,
   ],
   providers: [...providers],
   exports: [...providers],

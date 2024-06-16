@@ -14,6 +14,9 @@ export class VehicleEntity {
   @Field({ nullable: true })
   readonly year?: number;
 
+  @Field()
+  readonly name: string;
+
   @Field({ nullable: true })
   readonly transmission?: string;
 

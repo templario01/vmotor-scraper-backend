@@ -1,13 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../services/prisma.service';
-import { Vehicle } from '@prisma/client';
-import { CreateVehicleDto } from '../../application/vehicles/dtos/create-vehicle.dto';
+import { Prisma, Vehicle } from '@prisma/client';
 import {
+  Condition,
   PriceCurrency,
-  VehicleCondition,
   VehicleStatusEnum,
 } from '../../application/vehicles/enums/vehicle.enums';
-import { UpdateInventoryStatus } from '../../application/vehicles/dtos/vehicle.dto';
+import {
+  Search,
+  UpdateInventoryStatus,
+} from '../../application/vehicles/dtos/vehicle.dto';
 import {
   IPaginatedVehicleEntity,
   SyncedVehicleEntity,
@@ -15,6 +17,8 @@ import {
 import { Status } from '../../shared/dtos/status.enum';
 import { IEdgeType } from '../../shared/utils/pagination/cursor-pagination';
 import { GetVehiclesWhereInputDto } from '../../application/vehicles/dtos/get-vehicles.dto';
+import { CreateVehicleDto } from '../../shared/dtos/vehicle.dto';
+import { getWordsAndYear } from '../../shared/utils/vehicle.utils';
 
 @Injectable()
 export class VehicleRepository {
@@ -35,7 +39,7 @@ export class VehicleRepository {
       ({ status, condition, mileage, price, currency, originalPrice, ...result }) => ({
         ...result,
         status: Status[status],
-        condition: VehicleCondition[condition],
+        condition: Condition[condition],
         currency: PriceCurrency[currency],
         mileage: mileage?.toNumber(),
         price: price?.toNumber(),
@@ -64,50 +68,68 @@ export class VehicleRepository {
 
   async upsert({ vehicle, websiteId }: CreateVehicleDto): Promise<Vehicle> {
     try {
-      return this.prisma.vehicle.upsert({
+      const upsert = await this.prisma.vehicle.upsert({
         where: {
           externalId: vehicle?.externalId,
         },
         create: {
           ...vehicle,
           websiteId,
-          status: 'ACTIVE',
+          currency: PriceCurrency[vehicle.currency],
+          status: VehicleStatusEnum.ACTIVE,
         },
         update: {
           ...vehicle,
           websiteId,
-          status: 'ACTIVE',
+          currency: PriceCurrency[vehicle.currency],
+          status: VehicleStatusEnum.ACTIVE,
         },
       });
+      return upsert;
     } catch (error) {
       return null;
     }
   }
 
-  async updateStatusForAllInventory({
-    syncedVehiclesIds,
-    websiteId,
-    vehicleCondition,
-  }: UpdateInventoryStatus) {
-    return this.prisma.vehicle.updateMany({
+  async updateStatusForAllInventory(data: UpdateInventoryStatus) {
+    const { syncedVehiclesIds, websiteId, vehicleCondition } = data;
+    const result = await this.prisma.vehicle.updateMany({
       where: {
-        AND: [
-          {
-            website: {
-              id: websiteId,
-            },
-          },
-          {
-            externalId: {
-              notIn: syncedVehiclesIds,
-            },
-          },
-          { ...(vehicleCondition && { condition: vehicleCondition }) },
-        ],
+        website: {
+          id: websiteId,
+        },
+        externalId: {
+          notIn: syncedVehiclesIds,
+        },
+        status: VehicleStatusEnum.ACTIVE,
+        ...(vehicleCondition && { condition: vehicleCondition }),
       },
       data: {
         status: VehicleStatusEnum.INACTIVE,
       },
     });
+
+    return result;
+  }
+
+  public async getRecommendedVehicles(data: Search[]): Promise<Vehicle[]> {
+    const vehicles = await Promise.all(
+      data.map(async (search) => {
+        const { keywords } = getWordsAndYear(search.searchName);
+        const matchKeywords: Prisma.Enumerable<Prisma.VehicleWhereInput> = keywords.map(
+          (keyWord) => ({
+            description: { mode: 'insensitive', contains: keyWord },
+          }),
+        );
+        const vehicle = await this.prisma.vehicle.findFirst({
+          where: {
+            AND: [...matchKeywords, { status: VehicleStatusEnum.ACTIVE }],
+          },
+          orderBy: { price: 'asc' },
+        });
+        return vehicle;
+      }),
+    );
+    return vehicles;
   }
 }

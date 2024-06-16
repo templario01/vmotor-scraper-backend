@@ -1,17 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { NeoAutoSyncService } from './neo-auto-sync.service';
-import { MercadolibreSyncService } from './mercadolibre-sync.service';
 import { EnvConfigService } from '../../config/env-config.service';
 import { Environment } from '../../config/dtos/config.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { getDurationTime } from '../../shared/utils/time.utils';
-import { AutocosmosSyncService } from './autocosmos-sync.service';
-import { AutocosmosVehicleConditionEnum } from '../../application/autocosmos/enums/atocosmos.enum';
 import { ProxyService } from '../../application/proxy/proxy.service';
-import { NeoautoVehicleConditionEnum } from '../../application/neoauto/enums/neoauto.enum';
 import { getLaunchOptions } from '../../shared/utils/puppeter.utils';
 import * as puppeteer from 'puppeteer';
 import { Browser as PuppeteerBrowser } from 'puppeteer';
+import { AutocosmosSyncService } from '../autocosmos/autocosmos-sync.service';
+import { AutocosmosCondition } from '../autocosmos/enums/autocosmos.enum';
+import { NeoAutoSyncService } from '../neoauto/neoauto-sync.service';
+import { MercadolibreSyncService } from '../mercadolibre/mercadolibre-sync.service';
+import { NeoautoCondition } from '../neoauto/enums/neoauto.enums';
 
 @Injectable()
 export class InventorySyncService {
@@ -42,17 +42,11 @@ export class InventorySyncService {
     const browser: PuppeteerBrowser = await puppeteer.launch(options);
 
     await Promise.all([
-      this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.NEW),
-      this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.USED),
-      this.autocosmosSyncService.syncInventory(
-        browser,
-        AutocosmosVehicleConditionEnum.NEW,
-      ),
-      this.autocosmosSyncService.syncInventory(
-        browser,
-        AutocosmosVehicleConditionEnum.USED,
-      ),
-      this.mercadolibreSyncService.syncInventory(browser),
+      this.neoautoSyncService.syncAll(browser, NeoautoCondition.NEW),
+      this.neoautoSyncService.syncAll(browser, NeoautoCondition.USED),
+      this.autocosmosSyncService.syncAll(browser, AutocosmosCondition.NEW),
+      this.autocosmosSyncService.syncAll(browser, AutocosmosCondition.USED),
+      this.mercadolibreSyncService.syncAll(browser),
     ]);
     await browser.close();
 
