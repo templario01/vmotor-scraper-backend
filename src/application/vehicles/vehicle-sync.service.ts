@@ -11,6 +11,7 @@ import { AutocosmosSyncService } from '../../jobs/autocosmos/autocosmos-sync.ser
 import { AutocosmosCondition } from '../../jobs/autocosmos/enums/autocosmos.enum';
 import { MercadolibreSyncService } from '../../jobs/mercadolibre/mercadolibre-sync.service';
 import { NeoAutoSyncService } from '../../jobs/neoauto/neoauto-sync.service';
+import { NeoautoCondition } from '../../jobs/neoauto/enums/neoauto.enums';
 
 @Injectable()
 export class VehicleSyncService {
@@ -34,9 +35,9 @@ export class VehicleSyncService {
     Promise.all([
       this.autocosmosSyncService.syncAll(browser, AutocosmosCondition.NEW),
       this.autocosmosSyncService.syncAll(browser, AutocosmosCondition.USED),
-      /*       this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.NEW),
-      this.neoautoSyncService.syncInventory(browser, NeoautoVehicleConditionEnum.USED),
-      this.mercadolibreSyncService.syncInventory(browser), */
+      this.neoautoSyncService.syncAll(browser, NeoautoCondition.NEW),
+      this.neoautoSyncService.syncAll(browser, NeoautoCondition.USED),
+      this.mercadolibreSyncService.syncAll(browser),
     ]).then(() => {
       this.logger.log('sync process finished successfully');
       browser.close();

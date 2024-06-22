@@ -7,11 +7,12 @@ import { WebsiteRepository } from '../../persistence/repositories/website.reposi
 import { VehicleRepository } from '../../persistence/repositories/vehicle.repository';
 import { CreateVehicleDto } from '../../shared/dtos/vehicle.dto';
 import { Condition } from '../../application/vehicles/enums/vehicle.enums';
-import { Logger } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 
-export class AutopiaInventory {
+@Injectable()
+export class AutopiaSyncService {
   private readonly AUTOPIA_URL = process.env.AUTOPIA_URL;
-  private readonly logger = new Logger(AutopiaInventory.name);
+  private readonly logger = new Logger(AutopiaSyncService.name);
 
   constructor(
     private readonly websiteRepository: WebsiteRepository,
