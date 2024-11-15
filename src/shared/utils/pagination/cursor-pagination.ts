@@ -8,7 +8,7 @@ export class ICursorPagination {
 
 @ArgsType()
 export class CursorPagination implements ICursorPagination {
-  @Field(() => Int, { nullable: true, defaultValue: 10 })
+  @Field(() => Int, { nullable: true, defaultValue: 20 })
   take?: number;
 
   @Field(() => String, { nullable: true })

@@ -52,11 +52,13 @@ export class TrackingSearchInterceptor implements NestInterceptor {
           data: [...data, newSearch],
         });
         this.logger.verbose(
-          `key: ${key} -  search: ${JSON.stringify(newSearches)} - TTL: ${3600}`,
+          `key: ${key} -  search: ${JSON.stringify(newSearches)} - TTL: ${
+            this.ONE_MONTH_TTL
+          }`,
         );
         return from(
           this.redisClient.adapter.set(key, newSearches, {
-            ttl: 3600,
+            ttl: this.ONE_MONTH_TTL,
           }),
         );
       }),

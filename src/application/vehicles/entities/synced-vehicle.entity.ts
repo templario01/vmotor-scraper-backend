@@ -43,8 +43,8 @@ export class SyncedVehicleEntity implements Vehicle {
   @Field(graphqlDateReturnType)
   readonly updatedAt: Date;
 
-  @Field()
-  readonly description: string;
+  @Field({ nullable: true })
+  readonly description?: string;
 
   @Field()
   readonly externalId: string;

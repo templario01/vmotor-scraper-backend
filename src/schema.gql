@@ -69,12 +69,12 @@ enum PriceCurrency {
 }
 
 type Query {
-  getFavoriteVehicles(after: String, take: Int = 10): PaginatedVehicleEntity!
+  getFavoriteVehicles(after: String, take: Int = 20): PaginatedVehicleEntity!
   getGeneralRecommendedVehicles: [SyncedVehicleEntity!]!
-  getRecommendedVehicles(after: String, take: Int = 10): PaginatedVehicleEntity!
-  getSearchHistory(after: String, take: Int = 10): PaginatedUserSearchEntity!
+  getRecommendedVehicles(after: String, take: Int = 20): PaginatedVehicleEntity!
+  getSearchHistory(after: String, take: Int = 20): PaginatedUserSearchEntity!
   getUserInfo: UserEntity!
-  getVehiclesByAdvancedSearch(after: String, city: String, condition: GetVehicleCondition, searchName: String, take: Int = 10): PaginatedVehicleEntity!
+  getVehiclesByAdvancedSearch(after: String, city: String, condition: GetVehicleCondition, searchName: String, take: Int = 20): PaginatedVehicleEntity!
 }
 
 input SignInInput {
@@ -97,7 +97,7 @@ type SyncedVehicleEntity {
   condition: String!
   createdAt: DateTime!
   currency: PriceCurrency!
-  description: String!
+  description: String
   externalId: String!
   frontImage: String
   images: String
@@ -126,10 +126,10 @@ type ToggleUserNotificationsEntity {
 
 type UserEntity {
   email: String!
-  favoriteVehicles(after: String, take: Int = 10): PaginatedVehicleEntity
+  favoriteVehicles(after: String, take: Int = 20): PaginatedVehicleEntity
   hasActiveNotifications: Boolean!
   lastSession: DateTime!
-  searches(after: String, take: Int = 10): PaginatedUserSearchEntity
+  searches(after: String, take: Int = 20): PaginatedUserSearchEntity
   uuid: ID!
 }
 
